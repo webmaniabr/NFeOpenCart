@@ -1,0 +1,1506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modification>
+   <id>Insert new fields to registration form</id>
+   <author>WebmaniaBR</author>
+   <file name="catalog/view/theme/*/template/account/register.tpl">
+       <operation>
+           <search position="before" offset="1"><![CDATA[
+           <td><span class="required">*</span> <?php echo $entry_firstname; ?></td>
+           ]]></search>
+           <add><![CDATA[
+             <tr>
+               <td>Tipo de Pessoa</td>
+               <td>
+                 <?php if($doctype == 'cnpj'): ?>
+                 <input type="radio" name="doctype" value="cpf" /> Pessoa Física
+                 <input type="radio" name="doctype" value="cnpj" checked/> Pessoa Jurídica
+                 <?php else: ?>
+                 <input type="radio" name="doctype" value="cpf" checked/> Pessoa Física
+                 <input type="radio" name="doctype" value="cnpj" /> Pessoa Jurídica
+                 <?php endif; ?>
+
+               </td>
+             </tr>
+             <tr id="cpf-group" <?php if($doctype == 'cnpj') echo 'style="display:none;"' ?>>
+               <td><span class="required">*</span> CPF</td>
+               <td><input type="text" name="cpf" id="cpf" value="<?php echo $cpf; ?>"/>
+               <?php if ($error_cpf) { ?>
+               <span class="error"><?php echo $error_cpf; ?></span>
+               <?php } ?></td>
+             </tr>
+             <tr class="cnpj-group" <?php if($doctype == 'cnpj') echo 'style="display:table-row;"' ?>>
+               <td><span class="required">*</span> Razão Social</td>
+               <td><input type="text" name="razao_social" value="<?php echo $razao_social; ?>"/>
+               <?php if ($error_razao_social) { ?>
+               <span class="error"><?php echo $error_razao_social; ?></span>
+               <?php } ?></td>
+             </td>
+             </tr>
+             <tr class="cnpj-group" <?php if($doctype == 'cnpj') echo 'style="display:table-row;"' ?>>
+               <td><span class="required">*</span> CNPJ</td>
+               <td><input type="text" name="cnpj" id="cnpj" value="<?php echo $cnpj; ?>"/>
+               <?php if ($error_cnpj) { ?>
+               <span class="error"><?php echo $error_cnpj; ?></span>
+               <?php } ?></td>
+             </tr>
+             <tr class="cnpj-group" <?php if($doctype == 'cnpj') echo 'style="display:table-row;"' ?>>
+               <td><span class="required">*</span> Inscrição Estadual</td>
+               <td><input type="text" name="cnpj_ie" value="<?php echo $cnpj_ie; ?>"/>
+               <?php if ($error_cnpj_ie) { ?>
+               <span class="error"><?php echo $error_cnpj_ie; ?></span>
+               <?php } ?></td>
+             </td>
+             </tr>
+
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="before" offset="1"><![CDATA[
+           <td><span class="required">*</span> <?php echo $entry_city; ?></td>
+           ]]></search>
+           <add><![CDATA[
+             <tr>
+               <td><span class="required">*</span> Número</td>
+               <td>
+                 <input type="text" name="address_number" value="<?php echo $address_number; ?>"/>
+                 <?php if ($error_address_number) { ?>
+                 <span class="error"><?php echo $error_address_number; ?></span>
+                 <?php } ?></td>
+               </td>
+             </tr>
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="replace" offset="4"><![CDATA[
+           <td><span id="postcode-required" class="required">*</span> <?php echo $entry_postcode; ?></td>
+           ]]></search>
+           <add><![CDATA[
+
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="before" offset="1"><![CDATA[
+           <td><span class="required">*</span> <?php echo $entry_address_1; ?></td>
+           ]]></search>
+           <add><![CDATA[
+             <tr>
+               <td><span id="postcode-required" class="required">*</span> <?php echo $entry_postcode; ?></td>
+               <td><input type="text" name="postcode" value="<?php echo $postcode; ?>" />
+                 <?php if ($error_postcode) { ?>
+                 <span class="error"><?php echo $error_postcode; ?></span>
+                 <?php } ?></td>
+             </tr>
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="after" offset="1"><![CDATA[
+           <h2><?php echo $text_your_address; ?></h2>
+           ]]></search>
+           <add><![CDATA[
+             <div class="correios-loading"></div>
+           ]]></add>
+       </operation>
+       <operation info="Error address 2">
+           <search position="replace"><![CDATA[
+             <td><input type="text" name="address_2" value="<?php echo $address_2; ?>" /></td>
+           ]]></search>
+           <add><![CDATA[
+             <td><input type="text" name="address_2" value="<?php echo $address_2; ?>" />
+             <?php if ($error_address_2) { ?>
+             <span class="error"><?php echo $error_address_2; ?></span>
+             <?php } ?></td>
+           ]]></add>
+       </operation>
+
+   </file>
+   <file name="catalog/view/theme/*/template/checkout/register.tpl">
+       <operation>
+           <search position="after"><![CDATA[
+           <h2><?php echo $text_your_details; ?></h2>
+           ]]></search>
+           <add><![CDATA[
+             <span class="required">*</span> Tipo de pessoa<br />
+             <input type="radio" name="doctype" value="cpf" checked /> Pessoa Física
+             <input type="radio" name="doctype" value="cnpj" /> Pessoa Jurídica <br /> <br />
+             <div id="cpf-group">
+               <span class="required">*</span> CPF <br />
+               <input type="text" name="cpf" id="cpf" class="large-field"/>
+             </div>
+             <div class="cnpj-group">
+               <span class="required">*</span> Razão Social <br />
+               <input type="text" name="razao_social" id="razao-social" class="large-field"/><br /><br/>
+               <span class="required">*</span> CNPJ <br />
+               <input type="text" name="cnpj" id="cnpj" class="large-field"/> <br /><br />
+               <span class="required">*</span> Inscrição Estadual <br />
+               <input type="text" name="cnpj_ie" id="cnpj_ie" class="large-field"/> <br />
+             </div>
+             <br />
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="before"><![CDATA[
+           <span class="required">*</span> <?php echo $entry_city; ?><br />
+           ]]></search>
+           <add><![CDATA[
+             <span class="required">*</span> Número<br />
+             <input type="text" name="address_number" value="" class="large-field" />
+             <br />
+             <br />
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="before"><![CDATA[
+           <h2><?php echo $text_your_address; ?></h2>
+           ]]></search>
+           <add><![CDATA[
+             <div class="correios-loading"></div>
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="replace" offset="4"><![CDATA[
+           <span id="payment-postcode-required" class="required">*</span> <?php echo $entry_postcode; ?><br />
+           ]]></search>
+           <add><![CDATA[
+
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="before"><![CDATA[
+          <span class="required">*</span> <?php echo $entry_address_1; ?><br />
+           ]]></search>
+           <add><![CDATA[
+             <span id="payment-postcode-required" class="required">*</span> <?php echo $entry_postcode; ?><br />
+             <input type="text" name="postcode" value="<?php echo $postcode; ?>" class="large-field" />
+             <br />
+             <br />
+            ]]></add>
+       </operation>
+
+
+
+   </file>
+   <file name="catalog/controller/checkout/register.php">
+     <operation info="Rename address 2">
+         <search position="replace"><![CDATA[
+         $this->data['entry_address_2'] = $this->language->get('entry_address_2')
+         ]]></search>
+         <add><![CDATA[
+           $this->data['entry_address_2'] = 'Bairro';
+         ]]></add>
+     </operation>
+       <operation>
+           <search position="before"><![CDATA[
+           if ((utf8_strlen($this->request->post['telephone']) < 3) || (utf8_strlen($this->request->post['telephone']) > 32)) {
+           ]]></search>
+           <add><![CDATA[
+             if ($this->request->post['doctype'] == 'cpf' && ((utf8_strlen($this->request->post['cpf']) < 1) || (utf8_strlen($this->request->post['cpf']) > 32) || $this->getChild('module/webmaniabrnfe/validaCPF', array($this->request->post['cpf'])) === false)) {
+               $json['error']['cpf'] = 'CPF Inválido!';
+             }
+
+            if ($this->request->post['doctype'] == 'cnpj' && ((utf8_strlen($this->request->post['cnpj']) < 1) || (utf8_strlen($this->request->post['cnpj']) > 32) || $this->getChild('module/webmaniabrnfe/validaCNPJ', array($this->request->post['cnpj'])) === false)) {
+             $json['error']['cnpj'] = 'CNPJ Inválido!';
+           }
+
+           if ((utf8_strlen($this->request->post['address_number']) < 1) || (utf8_strlen($this->request->post['address_number']) > 32)) {
+            $json['error']['address_number'] = 'Número inválido!';
+          }
+
+          if ((utf8_strlen($this->request->post['address_2']) < 1) || (utf8_strlen($this->request->post['address_2']) > 32)) {
+           $json['error']['address_2'] = 'Bairro deve conter entre 3 e 32 caracteres!';
+         }
+
+          if ( $this->request->post['doctype'] == 'cnpj' && ((utf8_strlen(trim($this->request->post['cnpj_ie'])) < 1) || (utf8_strlen(trim($this->request->post['cnpj_ie'])) > 32))) {
+            $json['error']['cnpj_ie'] = 'Inscrição estadual inválida!';
+          }
+
+          if ($this->request->post['doctype'] == 'cnpj'){
+            if ((utf8_strlen(trim($this->request->post['razao_social'])) < 1) || (utf8_strlen(trim($this->request->post['razao_social'])) > 50)) {
+              $json['error']['razao_social'] = 'Razão social obrigatória!';
+            }
+          }
+           ]]></add>
+       </operation>
+   </file>
+   <file name="catalog/view/theme/*/template/checkout/guest.tpl">
+       <operation>
+           <search position="after"><![CDATA[
+           <h2><?php echo $text_your_details; ?></h2>
+           ]]></search>
+           <add><![CDATA[
+             <span class="required">*</span> Tipo de pessoa<br />
+             <input type="radio" name="doctype" value="cpf" checked /> Pessoa Física
+             <input type="radio" name="doctype" value="cnpj" /> Pessoa Jurídica <br /> <br />
+             <div id="cpf-group">
+               <span class="required">*</span> CPF <br />
+               <input type="text" name="cpf" id="cpf" class="large-field"/>
+             </div>
+             <div class="cnpj-group">
+               <span class="required">*</span> CNPJ <br />
+               <input type="text" name="cnpj" id="cnpj" class="large-field"/> <br /><br />
+               <span class="required">*</span> Inscrição Estadual <br />
+               <input type="text" name="cnpj_ie" class="large-field"/> <br />
+             </div>
+             <br />
+            ]]></add>
+       </operation>
+   </file>
+   <file name="catalog/controller/checkout/guest.php">
+       <operation>
+           <search position="before"><![CDATA[
+            if ((utf8_strlen($this->request->post['firstname']) < 1) || (utf8_strlen($this->request->post['firstname']) > 32)) {
+           ]]></search>
+           <add><![CDATA[
+             if ($this->request->post['doctype'] == 'cpf' && ((utf8_strlen($this->request->post['cpf']) < 1) || (utf8_strlen($this->request->post['cpf']) > 32) || $this->getChild('module/webmaniabrnfe/validaCPF', array($this->request->post['cpf'])) === false)) {
+               $json['error']['cpf'] = 'CPF Inválido!';
+             }
+
+            if ($this->request->post['doctype'] == 'cnpj' && ((utf8_strlen($this->request->post['cnpj']) < 1) || (utf8_strlen($this->request->post['cnpj']) > 32) || $this->getChild('module/webmaniabrnfe/validaCNPJ', array($this->request->post['cnpj'])) === false)) {
+             $json['error']['cnpj'] = 'CNPJ Inválido!';
+           }
+            ]]></add>
+       </operation>
+   </file>
+   <file name="catalog/view/theme/*/template/checkout/checkout.tpl">
+       <operation>
+           <search position="before"><![CDATA[
+           if (json['error']['firstname']) {
+           ]]></search>
+           <add><![CDATA[
+             if (json['error']['cpf']) {
+     					$('#payment-address input[name=\'cpf\']').after('<span class="error">' + json['error']['cpf'] + '</span>');
+     				}
+
+            if (json['error']['cnpj']) {
+             $('#payment-address input[name=\'cnpj\']').after('<span class="error">' + json['error']['cnpj'] + '</span>');
+           }
+
+           if (json['error']['razao_social']) {
+            $('#payment-address input[name=\'razao_social\']').after('<span class="error">' + json['error']['razao_social'] + '</span>');
+          }
+
+          if (json['error']['cnpj_ie']) {
+           $('#payment-address input[name=\'cnpj_ie\']').after('<span class="error">' + json['error']['cnpj_ie'] + '</span>');
+         }
+
+         if (json['error']['address_number']) {
+          $('#payment-address input[name=\'address_number\']').after('<span class="error">' + json['error']['address_number'] + '</span>');
+        }
+
+        if (json['error']['address_2']) {
+         $('#payment-address input[name=\'address_2\']').after('<span class="error">' + json['error']['address_2'] + '</span>');
+       }
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="before" offset="1"><![CDATA[
+           $('#shipping-address input[name=\'firstname\']').after('<span class="error">' + json['error']['firstname'] + '</span>');
+           ]]></search>
+           <add><![CDATA[
+
+         if (json['error']['address_number']) {
+          $('#shipping-address input[name=\'address_number\']').after('<span class="error">' + json['error']['address_number'] + '</span>');
+        }
+
+        if (json['error']['address_2']) {
+         $('#shipping-address input[name=\'address_2\']').after('<span class="error">' + json['error']['address_2'] + '</span>');
+       }
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="after"><![CDATA[
+           $('#payment-address .checkout-content').html(html);
+           ]]></search>
+           <add><![CDATA[
+             $(document).trigger('start-correios');
+           ]]></add>
+       </operation>
+
+
+
+   </file>
+   <file name="catalog/view/theme/*/template/account/edit.tpl">
+       <operation>
+           <search position="before" offset="1"><![CDATA[
+           <td><span class="required">*</span> <?php echo $entry_firstname; ?></td>
+           ]]></search>
+           <add><![CDATA[
+             <tr>
+               <td>Tipo de Pessoa</td>
+               <td>
+                 <?php if($doctype == 'cnpj'): ?>
+                 <input type="radio" name="doctype" value="cpf" /> Pessoa Física
+                 <input type="radio" name="doctype" value="cnpj" checked/> Pessoa Jurídica
+                 <?php else: ?>
+                 <input type="radio" name="doctype" value="cpf" checked /> Pessoa Física
+                 <input type="radio" name="doctype" value="cnpj" /> Pessoa Jurídica
+                 <?php endif; ?>
+               </td>
+             </tr>
+             <tr id="cpf-group" <?php if($doctype == 'cnpj') echo 'style="display:none;"'?>>
+               <td><span class="required">*</span> CPF</td>
+               <td><input type="text" name="cpf" id="cpf" value="<?php echo $cpf; ?>"/>
+               <?php if ($error_cpf) { ?>
+               <span class="error"><?php echo $error_cpf; ?></span>
+               <?php } ?></td>
+               </td>
+             </tr>
+             <tr class="cnpj-group" <?php if($doctype == 'cnpj') echo 'style="display:table-row;"' ?>>
+               <td><span class="required">*</span> Razão Social</td>
+               <td><input type="text" name="razao_social" value="<?php echo $razao_social; ?>"/>
+               <?php if ($error_razao_social) { ?>
+               <span class="error"><?php echo $error_razao_social; ?></span>
+               <?php } ?></td>
+             </td>
+             </tr>
+             <tr class="cnpj-group" <?php if($doctype == 'cnpj') echo 'style="display:table-row;"'?>>
+               <td><span class="required">*</span> CNPJ</td>
+               <td><input type="text" name="cnpj" id="cnpj" value="<?php echo $cnpj; ?>"/>
+               <?php if ($error_cnpj) { ?>
+               <span class="error"><?php echo $error_cnpj; ?></span>
+               <?php } ?></td>
+               </td>
+             </tr>
+             <tr class="cnpj-group" <?php if($doctype == 'cnpj') echo 'style="display:table-row;"'?>>
+               <td><span class="required">*</span> Inscrição Estadual</td>
+               <td><input type="text" name="cnpj_ie" value="<?php echo $cnpj_ie; ?>"/>
+               <?php if ($error_cnpj_ie) { ?>
+               <span class="error"><?php echo $error_cnpj_ie; ?></span>
+               <?php } ?></td>
+             </td>
+             </tr>
+            ]]></add>
+       </operation>
+   </file>
+   <file name="catalog/controller/account/edit.php">
+       <operation>
+           <search position="before"><![CDATA[
+           if (isset($this->request->post['firstname'])) {
+           ]]></search>
+           <add><![CDATA[
+
+             if (isset($this->request->post['cpf'])) {
+              $this->data['doctype'] = $this->request->post['doctype'];
+             } elseif (isset($customer_info)) {
+          			$this->data['doctype'] = $customer_info['document_type'];
+          		} else {
+          			$this->data['doctype'] = 'cpf';
+          		}
+
+             if (isset($this->request->post['cpf'])) {
+         			$this->data['cpf'] = $this->request->post['cpf'];
+         		} elseif (isset($customer_info)) {
+         			$this->data['cpf'] = $customer_info['document_number'];
+         		} else {
+         			$this->data['cpf'] = '';
+         		}
+
+            if (isset($this->request->post['cnpj'])) {
+             $this->data['cnpj'] = $this->request->post['cnpj'];
+           } elseif (isset($customer_info)) {
+             $this->data['cnpj'] = $customer_info['document_number'];
+           } else {
+             $this->data['cnpj'] = '';
+           }
+
+            if (isset($this->request->post['cnpj_ie'])) {
+             $this->data['cnpj_ie'] = $this->request->post['cnpj_ie'];
+           } elseif (isset($customer_info)) {
+             $this->data['cnpj_ie'] = $customer_info['pj_ie'];
+           }else{
+            $this->data['cnpj_ie'] = '';
+           }
+
+           if (isset($this->request->post['razao_social'])) {
+            $this->data['razao_social'] = $this->request->post['razao_social'];
+          } elseif (isset($customer_info)) {
+            $this->data['razao_social'] = $customer_info['razao_social'];
+          }else {
+            $this->data['razao_social'] = '';
+          }
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="after"><![CDATA[
+           protected function validate() {
+           ]]></search>
+           <add><![CDATA[
+
+             if ($this->request->post['doctype'] == 'cpf' && ((utf8_strlen($this->request->post['cpf']) < 1) || (utf8_strlen($this->request->post['cpf']) > 32) || $this->getChild('module/webmaniabrnfe/validaCPF', array($this->request->post['cpf'])) == false )) {
+         			$this->error['cpf'] = 'CPF Inválido!';
+         		}
+
+            if ($this->request->post['doctype'] == 'cnpj' && ((utf8_strlen($this->request->post['cnpj']) < 1) || (utf8_strlen($this->request->post['cnpj']) > 32) || $this->getChild('module/webmaniabrnfe/validaCNPJ', array($this->request->post['cnpj'])) == false )) {
+             $this->error['cnpj'] = 'CNPJ Inválido!';
+           }
+
+           if ( $this->request->post['doctype'] == 'cnpj' && ((utf8_strlen(trim($this->request->post['cnpj_ie'])) < 1) || (utf8_strlen(trim($this->request->post['cnpj_ie'])) > 32))) {
+             $this->error['cnpj_ie'] = 'Inscrição estadual inválida!';
+           }
+
+           if ($this->request->post['doctype'] == 'cnpj'){
+             if ((utf8_strlen(trim($this->request->post['razao_social'])) < 1) || (utf8_strlen(trim($this->request->post['razao_social'])) > 50)) {
+               $this->error['razao_social'] = 'Razão social obrigatória!';
+             }
+           }
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="before"><![CDATA[
+           if (isset($this->error['firstname'])) {
+           ]]></search>
+           <add><![CDATA[
+             if (isset($this->error['cpf'])) {
+               $this->data['error_cpf'] = $this->error['cpf'];
+             } else {
+               $this->data['error_cpf'] = '';
+             }
+
+             if (isset($this->error['cnpj'])) {
+               $this->data['error_cnpj'] = $this->error['cnpj'];
+             } else {
+               $this->data['error_cnpj'] = '';
+             }
+
+             if (isset($this->error['address_number'])) {
+               $this->data['error_address_number'] = $this->error['address_number'];
+             } else {
+               $this->data['error_address_number'] = '';
+             }
+
+             if (isset($this->error['cnpj_ie'])) {
+              $this->data['error_cnpj_ie'] = $this->error['cnpj_ie'];
+             } else {
+              $this->data['error_cnpj_ie'] = '';
+             }
+
+             if (isset($this->error['razao_social'])) {
+              $this->data['error_razao_social'] = $this->error['razao_social'];
+             } else {
+              $this->data['error_razao_social'] = '';
+             }
+            ]]></add>
+       </operation>
+   </file>
+   <file name="catalog/view/theme/*/template/account/address_form.tpl">
+       <operation>
+           <search position="replace" offset="4"><![CDATA[
+           <td><span id="postcode-required" class="required">*</span> <?php echo $entry_postcode; ?></td>
+           ]]></search>
+           <add><![CDATA[
+
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="before" offset="1"><![CDATA[
+           <td><span class="required">*</span> <?php echo $entry_address_1; ?></td>
+           ]]></search>
+           <add><![CDATA[
+             <tr>
+               <td><span id="postcode-required" class="required">*</span> <?php echo $entry_postcode; ?></td>
+               <td><input type="text" name="postcode" value="<?php echo $postcode; ?>" />
+                 <?php if ($error_postcode) { ?>
+                 <span class="error"><?php echo $error_postcode; ?></span>
+                 <?php } ?></td>
+             </tr>
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="after" offset="1"><![CDATA[
+           <h2><?php echo $text_edit_address; ?></h2>
+           ]]></search>
+           <add><![CDATA[
+             <div class="correios-loading"></div>
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="before" offset="1"><![CDATA[
+           <td><span class="required">*</span> <?php echo $entry_city; ?></td>
+           ]]></search>
+           <add><![CDATA[
+             <tr>
+               <td><span class="required">*</span> Número</td>
+               <td>
+                 <input type="text" name="address_number" value="<?php echo $address_number; ?>"/>
+                 <?php if ($error_address_number) { ?>
+                 <span class="error"><?php echo $error_address_number; ?></span>
+                 <?php } ?></td>
+               </td>
+             </tr>
+            ]]></add>
+       </operation>
+       <operation>
+         <search position="replace"><![CDATA[
+         <td><input type="text" name="address_2" value="<?php echo $address_2; ?>" /></td>
+         ]]></search>
+         <add><![CDATA[
+           <td><input type="text" name="address_2" value="<?php echo $address_2; ?>" />
+           <?php if ($error_address_2) { ?>
+           <span class="error"><?php echo $error_address_2; ?></span>
+           <?php } ?></td>
+
+          ]]></add>
+
+       </operation>
+
+
+   </file>
+   <file name="catalog/controller/account/address.php">
+       <operation>
+           <search position="before"><![CDATA[
+           if (isset($this->request->post['address_1'])) {
+           ]]></search>
+           <add><![CDATA[
+
+             if (isset($this->request->post['address_number'])) {
+         			$this->data['address_number'] = $this->request->post['address_number'];
+         		} elseif (!empty($address_info)) {
+         			$this->data['address_number'] = $address_info['address_number'];
+         		} else {
+         			$this->data['address_number'] = '';
+         		}
+
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="before"><![CDATA[
+           if (isset($this->error['firstname'])) {
+           ]]></search>
+           <add><![CDATA[
+             if (isset($this->error['address_number'])) {
+         			$this->data['error_address_number'] = $this->error['address_number'];
+         		} else {
+         			$this->data['error_address_number'] = '';
+         		}
+
+            if (isset($this->error['address_2'])) {
+             $this->data['error_address_2'] = $this->error['address_2'];
+           } else {
+             $this->data['error_address_2'] = '';
+           }
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="before"><![CDATA[
+           if ((utf8_strlen($this->request->post['firstname']) < 1) || (utf8_strlen($this->request->post['firstname']) > 32)) {
+           ]]></search>
+           <add><![CDATA[
+             if ((utf8_strlen($this->request->post['address_number']) < 1) || (utf8_strlen($this->request->post['address_number']) > 32)) {
+         			$this->error['address_number'] = 'Número do endereço inválido!';
+         		}
+
+            if ((utf8_strlen($this->request->post['address_2']) < 3) || (utf8_strlen($this->request->post['address_2']) > 32)) {
+             $this->error['address_2'] = 'Bairro deve conter entre 2 e 32 caracteres!';
+           }
+            ]]></add>
+       </operation>
+
+
+
+
+   </file>
+   <file name="catalog/model/account/address.php">
+       <operation>
+           <search position="after"><![CDATA[
+           'address_2'      => $address_query->row['address_2'],
+           ]]></search>
+           <add><![CDATA[
+             'address_number' => $address_query->row['address_number'],
+            ]]></add>
+       </operation>
+       <operation>
+           <search position="after"><![CDATA[
+           public function editAddress($address_id, $data) {
+           ]]></search>
+           <add><![CDATA[
+            $this->db->query("UPDATE " . DB_PREFIX . "address SET address_number = '" . (int)$data['address_number'] . "' WHERE address_id  = '" . (int)$address_id . "' AND customer_id = '" . (int)$this->customer->getId() . "'");
+            ]]></add>
+       </operation>
+
+
+   </file>
+
+
+
+
+   <file name="catalog/controller/account/register.php">
+       <operation>
+           <search position="after"><![CDATA[
+           protected function validate() {
+           ]]></search>
+           <add><![CDATA[
+             if ($this->request->post['doctype'] == 'cpf' && ((utf8_strlen($this->request->post['cpf']) < 1) || (utf8_strlen($this->request->post['cpf']) > 32) || $this->getChild('module/webmaniabrnfe/validaCPF', array($this->request->post['cpf'])) == false )) {
+         			$this->error['cpf'] = 'CPF Inválido!';
+         		}
+
+            if ($this->request->post['doctype'] == 'cnpj' && ((utf8_strlen($this->request->post['cnpj']) < 1) || (utf8_strlen($this->request->post['cnpj']) > 32) || $this->getChild('module/webmaniabrnfe/validaCNPJ', array($this->request->post['cnpj'])) == false )) {
+             $this->error['cnpj'] = 'CNPJ Inválido!';
+           }
+
+            if ((utf8_strlen($this->request->post['address_number']) < 1) || (utf8_strlen($this->request->post['address_number']) > 32)) {
+             $this->error['address_number'] = 'Número inválido!';
+           }
+
+           if ((utf8_strlen(trim($this->request->post['address_2'])) < 1) || (utf8_strlen(trim($this->request->post['address_2'])) > 32)) {
+             $this->error['address_2'] = 'Bairro deve conter entre 2 e 32 caracteres!';
+           }
+
+           if ( $this->request->post['doctype'] == 'cnpj' && ((utf8_strlen(trim($this->request->post['cnpj_ie'])) < 1) || (utf8_strlen(trim($this->request->post['cnpj_ie'])) > 32))) {
+             $this->error['cnpj_ie'] = 'Inscrição estadual inválida!';
+           }
+
+           if ($this->request->post['doctype'] == 'cnpj'){
+             if ((utf8_strlen(trim($this->request->post['razao_social'])) < 1) || (utf8_strlen(trim($this->request->post['razao_social'])) > 50)) {
+               $this->error['razao_social'] = 'Razão social obrigatória!';
+             }
+           }
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="before"><![CDATA[
+           if (isset($this->error['firstname'])) {
+           ]]></search>
+           <add><![CDATA[
+             if (isset($this->error['cpf'])) {
+               $this->data['error_cpf'] = $this->error['cpf'];
+             } else {
+               $this->data['error_cpf'] = '';
+             }
+
+             if (isset($this->error['cnpj'])) {
+               $this->data['error_cnpj'] = $this->error['cnpj'];
+             } else {
+               $this->data['error_cnpj'] = '';
+             }
+
+             if (isset($this->error['address_number'])) {
+               $this->data['error_address_number'] = $this->error['address_number'];
+             } else {
+               $this->data['error_address_number'] = '';
+             }
+
+             if (isset($this->error['address_2'])) {
+               $this->data['error_address_2'] = $this->error['address_2'];
+             } else {
+               $this->data['error_address_2'] = '';
+             }
+
+             if (isset($this->error['cnpj_ie'])) {
+         			$this->data['error_cnpj_ie'] = $this->error['cnpj_ie'];
+         		} else {
+         			$this->data['error_cnpj_ie'] = '';
+         		}
+
+             if (isset($this->error['razao_social'])) {
+         			$this->data['error_razao_social'] = $this->error['razao_social'];
+         		} else {
+         			$this->data['error_razao_social'] = '';
+         		}
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="before"><![CDATA[
+           if (isset($this->request->post['firstname'])) {
+           ]]></search>
+           <add><![CDATA[
+             if (isset($this->request->post['cpf'])) {
+         			$this->data['cpf'] = $this->request->post['cpf'];
+         		} else {
+         			$this->data['cpf'] = '';
+         		}
+
+            if (isset($this->request->post['cnpj'])) {
+             $this->data['cnpj'] = $this->request->post['cnpj'];
+           } else {
+             $this->data['cnpj'] = '';
+           }
+
+           if (isset($this->request->post['address_number'])) {
+            $this->data['address_number'] = $this->request->post['address_number'];
+          } else {
+            $this->data['address_number'] = '';
+          }
+
+            if (isset($this->request->post['doctype'])) {
+             $this->data['doctype'] = $this->request->post['doctype'];
+           } else {
+             $this->data['doctype'] = '';
+           }
+
+           if (isset($this->request->post['cnpj_ie'])) {
+            $this->data['cnpj_ie'] = $this->request->post['cnpj_ie'];
+          } else {
+            $this->data['cnpj_ie'] = '';
+          }
+
+          if (isset($this->request->post['razao_social'])) {
+           $this->data['razao_social'] = $this->request->post['razao_social'];
+         } else {
+           $this->data['razao_social'] = '';
+         }
+           ]]></add>
+       </operation>
+       <operation info="Rename address 2">
+           <search position="replace"><![CDATA[
+           $this->data['entry_address_2'] = $this->language->get('entry_address_2')
+           ]]></search>
+           <add><![CDATA[
+             $this->data['entry_address_2'] = 'Bairro';
+           ]]></add>
+       </operation>
+
+
+
+
+
+   </file>
+
+   <file name="catalog/model/account/customer.php">
+       <operation>
+           <search position="after"><![CDATA[
+           $customer_id = $this->db->getLastId();
+           ]]></search>
+           <add><![CDATA[
+            if($data['doctype'] == 'cpf'){
+              $document_number = preg_replace("/[^0-9]/","",$data['cpf']);
+            }elseif($data['doctype'] == 'cnpj'){
+              $document_number = preg_replace("/[^0-9]/","",$data['cnpj']);
+            }
+
+           $this->db->query("UPDATE " . DB_PREFIX . "customer SET document_type = '" . $this->db->escape($data['doctype']) . "', document_number = '" . $this->db->escape($document_number) . "' WHERE customer_id = '" . (int)$customer_id . "'");
+
+           if($data['doctype'] == 'cnpj'){
+           $this->db->query("UPDATE " . DB_PREFIX . "customer SET pj_ie = '" . $this->db->escape($data['cnpj_ie']) . "', razao_social = '" . $this->db->escape($data['razao_social']) . "' WHERE customer_id = '" . (int)$customer_id . "'");
+           }
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="after"><![CDATA[
+           $address_id = $this->db->getLastId();
+           ]]></search>
+           <add><![CDATA[
+            $this->db->query("UPDATE " . DB_PREFIX . "address SET address_number = '" . $this->db->escape($data['address_number']) . "' WHERE address_id = '" . (int)$address_id . "'");
+           ]]></add>
+       </operation>
+       <operation>
+           <search position="after"><![CDATA[
+           $this->db->query("UPDATE " . DB_PREFIX . "customer SET firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', fax = '" . $this->db->escape($data['fax']) . "' WHERE customer_id = '" . (int)$this->customer->getId() . "'");
+           ]]></search>
+           <add><![CDATA[
+             if($data['doctype'] == 'cpf'){
+             $document_number = preg_replace("/[^0-9]/","",$data['cpf']);
+             }elseif($data['doctype'] == 'cnpj'){
+             $document_number = preg_replace("/[^0-9]/","",$data['cnpj']);
+             }
+
+
+
+             $this->db->query("UPDATE " . DB_PREFIX . "customer SET document_type =  '" . $this->db->escape($data['doctype']) . "', document_number =  '" . $this->db->escape($document_number)  . "' WHERE customer_id = '" . (int)$this->customer->getId() . "'");
+
+             if($data['doctype'] == 'cnpj'){
+             $this->db->query("UPDATE " . DB_PREFIX . "customer SET pj_ie = '" . $this->db->escape($data['cnpj_ie']) . "', razao_social = '" . $this->db->escape($data['razao_social']) . "' WHERE customer_id = '" . (int)$this->customer->getId() . "'");
+             }
+           ]]></add>
+       </operation>
+   </file>
+   <file name="catalog/view/theme/*/template/common/header.tpl">
+		<operation> <!-- adiciona javascript de mascara e opções  -->
+			<search position="after" ><![CDATA[
+			<?php echo $google_analytics; ?>
+			]]></search>
+			<add><![CDATA[
+        <link rel="stylesheet" href="admin/view/stylesheet/wmbr_style.css" />
+			  <script type="text/javascript" src="catalog/view/javascript/wmbr_script.js"></script>
+        <script type="text/javascript" src="catalog/view/javascript/jquery.mask.min.js"></script>
+        <script type="text/javascript" src="catalog/view/javascript/correios.min.js"></script>
+			]]></add>
+		</operation>
+	</file>
+  <file name="admin/view/template/common/header.tpl">
+   <operation> <!-- adiciona javascript de mascara e opções  -->
+     <search position="before" ><![CDATA[
+     </head>
+     ]]></search>
+     <add><![CDATA[
+       <link rel="stylesheet" href="./view/stylesheet/wmbr_style.css" />
+       <script type="text/javascript" src="../catalog/view/javascript/wmbr_script.js"></script>
+       <script type="text/javascript" src="../catalog/view/javascript/jquery.mask.min.js"></script>
+       <script type="text/javascript" src="../catalog/view/javascript/correios.min.js"></script>
+     ]]></add>
+   </operation>
+   <operation info="Insert header warning-message">
+       <search position="after" offset="4"><![CDATA[
+       <li><a class="top" href="<?php echo $logout; ?>"><?php echo $text_logout; ?></a></li>
+       ]]></search>
+       <add><![CDATA[
+         <?php if($logged): ?>
+        <?php if(isset($status_sefaz)): ?>
+        <div class="alert-wmbr warning header-alert"><?php echo $status_sefaz; ?></div>
+        <?php endif; ?>
+        <?php if(isset($validade_certificado)): ?>
+        <div class="alert-wmbr warning header-alert"><?php echo $validade_certificado; ?></div>
+        <?php endif; ?>
+        <?php endif; ?>
+       ]]></add>
+   </operation>
+ </file>
+ <file name="admin/controller/common/header.php">
+     <operation info="Insert header warning message">
+         <search position="before"><![CDATA[
+         $this->template = 'common/header.tpl';
+         ]]></search>
+         <add><![CDATA[
+           $this->getChild('module/webmaniabrnfe/displayStatusSefaz');
+           $this->getChild('module/webmaniabrnfe/displayMessageCertificado');
+           if(isset($this->session->data['status_sefaz'])){
+           $this->data['status_sefaz'] = $this->session->data['status_sefaz'];
+          }
+          if(isset($this->session->data['validade_certificado'])){
+          $this->data['validade_certificado'] = $this->session->data['validade_certificado'];
+         }
+         ]]></add>
+     </operation>
+ </file>
+  <file name="admin/view/template/sale/order_list.tpl">
+   <operation>
+     <search position="before" ><![CDATA[
+     <td class="left"><?php if ($sort == 'status') { ?>
+     ]]></search>
+     <add><![CDATA[
+       <td class="left">
+         <a href="<?php echo $sort_customer; ?>">Status NF-e</a>
+       </td>
+     ]]></add>
+   </operation>
+   <operation>
+     <search position="before" ><![CDATA[
+     <td><select name="filter_order_status_id">
+     ]]></search>
+     <add><![CDATA[
+       <td>- - -</td>
+     ]]></add>
+   </operation>
+   <operation>
+     <search position="after" ><![CDATA[
+     <div class="buttons">
+     ]]></search>
+     <add><![CDATA[
+       <div class="buttons"><a onclick="$('#form').attr('action', '<?php echo $emitirnfe; ?>'); $('#form').submit();" class="button">Emitir NF-e</a></div>
+     ]]></add>
+   </operation>
+
+
+   <operation>
+     <search position="before" ><![CDATA[
+     <td class="left"><?php echo $order['status']; ?></td>
+     ]]></search>
+     <add><![CDATA[
+       <?php if($order['status_nfe'] == 0){ ?>
+         <td class="left"><div class="nfe-status nao-emitida">Não emitida</div></td>
+      <?php }else if($order['status_nfe'] == 1){ ?>
+         <td class="left"><div class="nfe-status emitida">Emitida</div></td>
+      <?php } ?>
+     ]]></add>
+   </operation>
+ </file>
+ <file name="admin/model/sale/order.php">
+  <operation>
+    <search position="replace" ><![CDATA[
+    $sql = "SELECT o.order_id, CONCAT(o.firstname, ' ', o.lastname) AS customer, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS status, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified FROM `" . DB_PREFIX . "order` o";
+    ]]></search>
+    <add><![CDATA[
+      $sql = "SELECT o.order_id, CONCAT(o.firstname, ' ', o.lastname) AS customer, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS status, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified, o.status_nfe FROM `" . DB_PREFIX . "order` o";
+    ]]></add>
+  </operation>
+</file>
+<file name="admin/controller/common/header.php">
+ <operation>
+   <search position="before" ><![CDATA[
+   $this->template = 'common/header.tpl';
+   ]]></search>
+   <add><![CDATA[
+     $this->getChild('module/webmaniabrnfe/displayStatusSefaz');
+   ]]></add>
+ </operation>
+</file>
+
+ <file name="admin/controller/sale/order.php">
+  <operation>
+    <search position="after" ><![CDATA[
+    'selected'      => isset($this->request->post['selected']) && in_array($result['order_id'], $this->request->post['selected']),
+    ]]></search>
+    <add><![CDATA[
+      'status_nfe' => $result['status_nfe'],
+    ]]></add>
+  </operation>
+  <operation>
+    <search position="after" ><![CDATA[
+    $this->data['invoice'] = $this->url->link('sale/order/invoice', 'token=' . $this->session->data['token'], 'SSL');
+    ]]></search>
+    <add><![CDATA[
+    $this->data['emitirnfe'] = $this->url->link('module/webmaniabrnfe/emitirnfe', 'token=' . $this->session->data['token'], 'SSL');
+    ]]></add>
+  </operation>
+  <operation>
+    <search position="before" ><![CDATA[
+    if (isset($this->session->data['success'])) {
+    ]]></search>
+    <add><![CDATA[
+      if (isset($this->session->data['error_warning'])) {
+  			$this->data['error_warning'] = $this->session->data['error_warning'];
+        unset($this->session->data['error_warning']);
+        }
+    ]]></add>
+  </operation>
+</file>
+<file name="admin/view/template/catalog/product_form.tpl">
+    <operation info="Add custom tab to product config">
+        <search position="replace"><![CDATA[
+        <div id="tabs" class="htabs"><a href="#tab-general"><?php echo $tab_general; ?></a><a href="#tab-data"><?php echo $tab_data; ?></a><a href="#tab-links"><?php echo $tab_links; ?></a><a href="#tab-attribute"><?php echo $tab_attribute; ?></a><a href="#tab-option"><?php echo $tab_option; ?></a><a href="#tab-profile"><?php echo $tab_profile; ?></a><a href="#tab-discount"><?php echo $tab_discount; ?></a><a href="#tab-special"><?php echo $tab_special; ?></a><a href="#tab-image"><?php echo $tab_image; ?></a><a href="#tab-reward"><?php echo $tab_reward; ?></a><a href="#tab-design"><?php echo $tab_design; ?></a></div>
+        ]]></search>
+        <add><![CDATA[
+          <div id="tabs" class="htabs"><a href="#tab-general"><?php echo $tab_general; ?></a><a href="#tab-data"><?php echo $tab_data; ?></a><a href="#tab-links"><?php echo $tab_links; ?></a><a href="#tab-attribute"><?php echo $tab_attribute; ?></a><a href="#tab-option"><?php echo $tab_option; ?></a><a href="#tab-profile"><?php echo $tab_profile; ?></a><a href="#tab-discount"><?php echo $tab_discount; ?></a><a href="#tab-special"><?php echo $tab_special; ?></a><a href="#tab-image"><?php echo $tab_image; ?></a><a href="#tab-reward"><?php echo $tab_reward; ?></a><a href="#tab-design"><?php echo $tab_design; ?></a><a href="#tab-nfe">WebmaniaBR NF-e</a></div>
+        ]]></add>
+    </operation>
+    <operation info="Add custom tab content to product config">
+        <search position="before"><![CDATA[
+        <div id="tab-design">
+        ]]></search>
+        <add><![CDATA[
+          <div id="tab-nfe">
+            <table class="form">
+              <tr>
+                <td>Classe de Imposto</td>
+                <td><input type="text" name="classe_imposto" value="<?php echo $classe_imposto; ?>" placeholder="Classe de Imposto" id="input-classe-imposto" class="form-control" /></td>
+              </tr>
+              <tr>
+                <td>Código de Barras EAN</td>
+                <td><input type="text" name="ean_barcode" value="<?php echo $ean_barcode; ?>" placeholder="Código de Barras EAN" id="input-ean-barcode" class="form-control" /></td>
+              </tr>
+              <tr>
+                <td>Código NCM</td>
+                <td><input type="text" name="ncm_code" value="<?php echo $ncm_code; ?>" placeholder="Código NCM" id="input-ncm-code" class="form-control" /></td>
+              </tr>
+              <tr>
+                <td>Código CEST</td>
+                <td><input type="text" name="cest_code" value="<?php echo $cest_code; ?>" placeholder="Código CEST" id="input-cest-code" class="form-control" /></td>
+              </tr>
+              <tr>
+                <td>Origem</td>
+                <td><select name="product_source" class="form-control" style="max-width:200px">
+                <option value="-1">Selecionar</option>
+                <?php
+                $options = array(
+                '0' => '0 - Nacional, exceto as indicadas nos códigos 3, 4, 5 e 8',
+                '1' => '1 - Estrangeira - Importação direta, exceto a indicada no código 6',
+                '2' => '2 - Estrangeira - Adquirida no mercado interno, exceto a indicada no código 7',
+                '3' => '3 - Nacional, mercadoria ou bem com Conteúdo de Importação superior a 40% e inferior ou igual a 70%',
+                '4' => '4 - Nacional, cuja produção tenha sido feita em conformidade com os processos produtivos básicos de que tratam as legislações citadas nos Ajustes',
+                '5' => '5 - Nacional, mercadoria ou bem com Conteúdo de Importação inferior ou igual a 40%',
+                '6' => '6 - Estrangeira - Importação direta, sem similar nacional, constante em lista da CAMEX e gás natural',
+                '7' => '7 - Estrangeira - Adquirida no mercado interno, sem similar nacional, constante lista CAMEX e gás natural',
+                '8' => '8 - Nacional, mercadoria ou bem com Conteúdo de Importação superior a 70%',
+                );
+
+                foreach($options as $value => $option){
+                $selected = '';
+                if($value == $product_source){
+                  $selected = 'selected';
+                }
+                  echo '<option value="'.$value.'" '.$selected.'>'.$option.'</option>';
+                }
+
+                ?>
+              </select></td>
+              </tr>
+            </table>
+          </div>
+
+        ]]></add>
+    </operation>
+</file>
+<file name="admin/controller/catalog/product.php">
+  <operation info="Assign custom fields variables">
+      <search position="before"><![CDATA[
+      if (isset($this->request->post['model'])) {
+      ]]></search>
+      <add><![CDATA[
+        if (isset($this->request->post['classe_imposto'])) {
+          $this->data['classe_imposto'] = $this->request->post['classe_imposto'];
+        } elseif (!empty($product_info)) {
+          $this->data['classe_imposto'] = $product_info['classe_imposto'];
+        } else {
+          $this->data['classe_imposto'] = '';
+        }
+
+        if (isset($this->request->post['ean_barcode'])) {
+          $this->data['ean_barcode'] = $this->request->post['ean_barcode'];
+        } elseif (!empty($product_info)) {
+          $this->data['ean_barcode'] = $product_info['ean_barcode'];
+        } else {
+          $this->data['ean_barcode'] = '';
+        }
+
+        if (isset($this->request->post['ncm_code'])) {
+          $this->data['ncm_code'] = $this->request->post['ncm_code'];
+        } elseif (!empty($product_info)) {
+          $this->data['ncm_code'] = $product_info['ncm_code'];
+        } else {
+          $this->data['ncm_code'] = '';
+        }
+
+        if (isset($this->request->post['cest_code'])) {
+          $this->data['classe_imposto'] = $this->request->post['cest_code'];
+        } elseif (!empty($product_info)) {
+          $this->data['cest_code'] = $product_info['cest_code'];
+        } else {
+          $this->data['cest_code'] = '';
+        }
+
+        if (isset($this->request->post['product_source'])) {
+          $this->data['product_source'] = $this->request->post['product_source'];
+        } elseif (!empty($product_info)) {
+          $this->data['product_source'] = $product_info['product_source'];
+        } else {
+          $this->data['product_source'] = '';
+        }
+      ]]></add>
+  </operation>
+</file>
+<file name="admin/model/catalog/product.php">
+    <operation info="Update product with custom info">
+        <search position="after"><![CDATA[
+        public function editProduct($product_id, $data) {
+        ]]></search>
+        <add><![CDATA[
+          $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape($data['classe_imposto']) . "', ean_barcode = '" . $this->db->escape($data['ean_barcode']) . "', ncm_code = '" . $this->db->escape($data['ncm_code']) . "', cest_code = '" . $this->db->escape($data['cest_code']) . "', product_source = '" . $this->db->escape($data['product_source']) . "' WHERE product_id = '" . (int)$product_id . "'");
+        ]]></add>
+    </operation>
+  </file>
+  <file name="catalog/controller/checkout/payment_address.php,catalog/controller/checkout/shipping_address.php">
+      <operation>
+          <search position="before"><![CDATA[
+          if (empty($this->request->post['address_id'])) {
+          ]]></search>
+          <add><![CDATA[
+            $user_id = (int)$this->customer->getId();
+            $this->load->model('account/customer');
+            $customer = $this->model_account_customer->getCustomer($user_id);
+            $msg = '';
+
+            if(empty($customer['document_number'])){
+              $url = $this->url->link('account/edit');
+              $msg .= '<li>Esta conta não possui nenhum número de documento definido. Edite sua conta e insira o número do CPF/CNPJ para continuar. <a href="'.$url.'">Editar conta</a></li>';
+            }
+
+            $result = $this->model_account_address->getAddress($this->request->post['address_id']);
+    				if(empty($result['address_number'])){
+    					$url = $this->url->link('account/address/edit', 'address_id=' . $this->request->post['address_id'], true);
+    					$msg .= '<li>Este endereço não possui nenhum número definido. Caso você tenha definido o número no mesmo campo que o endereço, vá até sua conta e edite-o, inserindo o número no campo denominado "Número". <a href="'.$url.'">Editar endereço</a></li>';
+    				}
+
+            if(empty($result['address_number']) || empty($customer['document_number'])){
+              $json['error']['warning'] = $msg;
+            }
+          ]]></add>
+      </operation>
+      <operation>
+        <search position="before"><![CDATA[
+        if ((utf8_strlen($this->request->post['firstname']) < 1) || (utf8_strlen($this->request->post['firstname']) > 32)) {
+        ]]></search>
+        <add><![CDATA[
+          if ((utf8_strlen($this->request->post['address_number']) < 1) || (utf8_strlen($this->request->post['address_number']) > 32)) {
+           $json['error']['address_number'] = 'Número inválido!';
+         }
+
+         if ((utf8_strlen($this->request->post['address_2']) < 1) || (utf8_strlen($this->request->post['address_2']) > 32)) {
+          $json['error']['address_2'] = 'Bairro deve conter entre 3 e 32 caracteres!';
+        }
+        ]]></add>
+      </operation>
+      <operation>
+        <search position="replace"><![CDATA[
+        $this->data['entry_address_2'] = $this->language->get('entry_address_2');
+        ]]></search>
+        <add><![CDATA[
+          $this->data['entry_address_2'] = 'Bairro';
+        ]]></add>
+      </operation>
+    </file>
+    <file name="catalog/view/theme/*/template/checkout/payment_address.tpl">
+        <operation>
+            <search position="replace" offset="1"><![CDATA[
+            <td><span id="payment-postcode-required" class="required">*</span> <?php echo $entry_postcode; ?></td>
+            ]]></search>
+            <add><![CDATA[
+
+            ]]></add>
+        </operation>
+        <operation>
+            <search position="before" offset="1"><![CDATA[
+            <td><span class="required">*</span> <?php echo $entry_address_1; ?></td>
+            ]]></search>
+            <add><![CDATA[
+              <tr>
+                <td><span id="payment-postcode-required" class="required">*</span> <?php echo $entry_postcode; ?></td>
+                <td><input type="text" name="postcode" value="" class="large-field" /></td>
+              </tr>
+            ]]></add>
+        </operation>
+        <operation>
+            <search position="before" offset="1"><![CDATA[
+            <td><span class="required">*</span> <?php echo $entry_city; ?></td>
+            ]]></search>
+            <add><![CDATA[
+              <tr>
+                <td><span id="payment-address-nuimber-required" class="required">*</span> Número</td>
+                <td><input type="text" name="address_number" value="" class="large-field" /></td>
+              </tr>
+            ]]></add>
+        </operation>
+        <operation>
+            <search position="after"><![CDATA[
+            <div id="payment-new" style="display: <?php echo ($addresses ? 'none' : 'block'); ?>;">
+            ]]></search>
+            <add><![CDATA[
+              <div class="correios-loading"></div>
+            ]]></add>
+        </operation>
+      </file>
+      <file name="catalog/view/theme/*/template/checkout/shipping_address.tpl">
+          <operation>
+              <search position="replace" offset="1"><![CDATA[
+              <td><span id="shipping-postcode-required" class="required">*</span> <?php echo $entry_postcode; ?></td>
+              ]]></search>
+              <add><![CDATA[
+
+              ]]></add>
+          </operation>
+          <operation>
+              <search position="before" offset="1"><![CDATA[
+              <td><span class="required">*</span> <?php echo $entry_address_1; ?></td>
+              ]]></search>
+              <add><![CDATA[
+                <tr>
+                  <td><span id="shipping-postcode-required" class="required">*</span> <?php echo $entry_postcode; ?></td>
+                  <td><input type="text" name="postcode" value="" class="large-field" /></td>
+                </tr>
+              ]]></add>
+          </operation>
+          <operation>
+              <search position="before" offset="1"><![CDATA[
+              <td><span class="required">*</span> <?php echo $entry_city; ?></td>
+              ]]></search>
+              <add><![CDATA[
+                <tr>
+                  <td><span id="shipping-address-nuimber-required" class="required">*</span> Número</td>
+                  <td><input type="text" name="address_number" value="" class="large-field" /></td>
+                </tr>
+              ]]></add>
+          </operation>
+          <operation>
+              <search position="after"><![CDATA[
+              <div id="shipping-new" style="display: <?php echo ($addresses ? 'none' : 'block'); ?>;">
+              ]]></search>
+              <add><![CDATA[
+                <div class="correios-loading"></div>
+              ]]></add>
+          </operation>
+        </file>
+        <file name="admin/view/template/sale/customer_form.tpl">
+          <operation info="Insert new document type fields">
+              <search position="after" offset="1"><![CDATA[
+              <div id="tab-customer" class="vtabs-content">
+              ]]></search>
+              <add><![CDATA[
+                <tr>
+                  <td>Tipo de Pessoa</td>
+                  <td>
+                    <?php if($doctype == 'cnpj'): ?>
+                    <input type="radio" name="doctype" value="cpf" /> Pessoa Física
+                    <input type="radio" name="doctype" value="cnpj" checked/> Pessoa Jurídica
+                    <?php else: ?>
+                    <input type="radio" name="doctype" value="cpf" checked/> Pessoa Física
+                    <input type="radio" name="doctype" value="cnpj" /> Pessoa Jurídica
+                    <?php endif; ?>
+
+                  </td>
+                </tr>
+                <tr id="cpf-group" <?php if($doctype == 'cnpj') echo 'style="display:none;"' ?>>
+                  <td><span class="required">*</span> CPF</td>
+                  <td><input type="text" name="cpf" id="cpf" value="<?php if($doctype != 'cnpj') echo $document_number; ?>"/>
+                  <?php if ($error_cpf) { ?>
+                  <span class="error"><?php echo $error_cpf; ?></span>
+                  <?php } ?></td>
+                </tr>
+                <tr class="cnpj-group" <?php if($doctype == 'cnpj') echo 'style="display:table-row;"' ?>>
+                  <td><span class="required">*</span> Razão Social</td>
+                  <td><input type="text" name="razao_social" value="<?php if($doctype == 'cnpj') echo $razao_social; ?>"/>
+                  <?php if ($error_razao_social) { ?>
+                  <span class="error"><?php echo $error_razao_social; ?></span>
+                  <?php } ?></td>
+                </td>
+                </tr>
+                <tr class="cnpj-group" <?php if($doctype == 'cnpj') echo 'style="display:table-row;"' ?>>
+                  <td><span class="required">*</span> CNPJ</td>
+                  <td><input type="text" name="cnpj" id="cnpj" value="<?php if($doctype == 'cnpj') echo $document_number; ?>"/>
+                  <?php if ($error_cnpj) { ?>
+                  <span class="error"><?php echo $error_cnpj; ?></span>
+                  <?php } ?></td>
+                </tr>
+                <tr class="cnpj-group" <?php if($doctype == 'cnpj') echo 'style="display:table-row;"' ?>>
+                  <td><span class="required">*</span> Inscrição Estadual</td>
+                  <td><input type="text" name="cnpj_ie" value="<?php if($doctype == 'cnpj') echo $cnpj_ie; ?>"/>
+                  <?php if ($error_cnpj_ie) { ?>
+                  <span class="error"><?php echo $error_cnpj_ie; ?></span>
+                  <?php } ?></td>
+                </td>
+                </tr>
+              ]]></add>
+          </operation>
+
+          <operation info="Add address error">
+              <search position="replace"><![CDATA[
+              <td><input type="text" name="address[<?php echo $address_row; ?>][address_2]" value="<?php echo $address['address_2']; ?>" /></td>
+              ]]></search>
+              <add><![CDATA[
+                <td><input type="text" name="address[<?php echo $address_row; ?>][address_2]" value="<?php echo $address['address_2']; ?>" />
+                <?php if (isset($error_address_address_2[$address_row])) { ?>
+                <span class="error"><?php echo $error_address_address_2[$address_row]; ?></span>
+                <?php } ?></td>
+              ]]></add>
+          </operation>
+          <operation info="Add address number">
+              <search position="before" offset="2"><![CDATA[
+              <td><input type="text" name="address[<?php echo $address_row; ?>][address_2]" value="<?php echo $address['address_2']; ?>" />
+              ]]></search>
+              <add><![CDATA[
+                <tr>
+                  <td><span class="required">*</span> Número</td>
+                  <td><input type="text" name="address[<?php echo $address_row; ?>][address_number]" value="<?php echo $address['address_number']; ?>" />
+                    <?php if (isset($error_address_address_number[$address_row])) { ?>
+                    <span class="error"><?php echo $error_address_address_number[$address_row]; ?></span>
+                    <?php } ?></td>
+                </tr>
+              ]]></add>
+          </operation>
+          <operation info="Add address number">
+              <search position="after" offset="1"><![CDATA[
+              html += '      <td><input type="text" name="address[' + address_row + '][address_1]" value="" /></td>';
+              ]]></search>
+              <add><![CDATA[
+                html += '    <tr>';
+                html += '      <td><span class="required">*</span> Número</td>';
+                html += '      <td><input type="text" name="address[' + address_row + '][address_number]" value="" /></td>';
+                html += '    </tr>';
+              ]]></add>
+          </operation>
+          <operation info="Trigger Event">
+              <search position="after"><![CDATA[
+              $('#tab-general').append(html);
+              ]]></search>
+              <add><![CDATA[
+                $(document).trigger('add-address', [address_row]);
+              ]]></add>
+          </operation>
+          </file>
+          <file name="admin/controller/sale/customer.php">
+              <operation info="Custom fields admin">
+                  <search position="before"><![CDATA[
+                  if ((utf8_strlen($this->request->post['firstname']) < 1) || (utf8_strlen($this->request->post['firstname']) > 32)) {
+                  ]]></search>
+                  <add><![CDATA[
+
+                    if ($this->request->post['doctype'] == 'cpf' && ((utf8_strlen($this->request->post['cpf']) < 1) || (utf8_strlen($this->request->post['cpf']) > 32) || $this->getChild('module/webmaniabrnfe/validaCPF', array($this->request->post['cpf'])) == false )) {
+                			$this->error['cpf'] = 'CPF Inválido!';
+                		}
+
+                   if ($this->request->post['doctype'] == 'cnpj' && ((utf8_strlen($this->request->post['cnpj']) < 1) || (utf8_strlen($this->request->post['cnpj']) > 32) || $this->getChild('module/webmaniabrnfe/validaCNPJ', array($this->request->post['cnpj'])) == false )) {
+                    $this->error['cnpj'] = 'CNPJ Inválido!';
+                  }
+
+                  if ( $this->request->post['doctype'] == 'cnpj' && ((utf8_strlen(trim($this->request->post['cnpj_ie'])) < 1) || (utf8_strlen(trim($this->request->post['cnpj_ie'])) > 32))) {
+                    $this->error['cnpj_ie'] = 'Inscrição estadual inválida!';
+                  }
+
+                  if ($this->request->post['doctype'] == 'cnpj'){
+                    if ((utf8_strlen(trim($this->request->post['razao_social'])) < 1) || (utf8_strlen(trim($this->request->post['razao_social'])) > 50)) {
+                      $this->error['razao_social'] = 'Razão social obrigatória!';
+                    }
+                  }
+
+                  ]]></add>
+              </operation>
+              <operation info="Define error variable">
+                  <search position="before"><![CDATA[
+                  if (isset($this->error['firstname'])) {
+                  ]]></search>
+                  <add><![CDATA[
+                    if (isset($this->error['cpf'])) {
+                      $this->data['error_cpf'] = $this->error['cpf'];
+                    } else {
+                      $this->data['error_cpf'] = '';
+                    }
+                    if (isset($this->error['cnpj'])) {
+                      $this->data['error_cnpj'] = $this->error['cnpj'];
+                    } else {
+                      $this->data['error_cnpj'] = '';
+                    }
+
+
+                    if (isset($this->error['cnpj_ie'])) {
+                      $this->data['error_cnpj_ie'] = $this->error['cnpj_ie'];
+                    } else {
+                      $this->data['error_cnpj_ie'] = '';
+                    }
+
+                    if (isset($this->error['razao_social'])) {
+                      $this->data['error_razao_social'] = $this->error['razao_social'];
+                    } else {
+                      $this->data['error_razao_social'] = '';
+                    }
+                  ]]></add>
+              </operation>
+              <operation info="Define requested POST vars">
+                  <search position="before"><![CDATA[
+                  if (isset($this->request->post['firstname'])) {
+                  ]]></search>
+                  <add><![CDATA[
+
+                    if (isset($this->request->post['doctype'])) {
+                     $this->data['doctype'] = $this->request->post['doctype'];
+                   } elseif (!empty($customer_info)) {
+                     $this->data['doctype'] = $customer_info['document_type'];
+                   }else {
+                     $this->data['doctype'] = '';
+                   }
+
+                    if (isset($this->request->post['doctype'])) {
+                      if($this->request->post['doctype'] == 'cpf'){
+                        $this->data['document_number'] = $this->request->post['cpf'];
+                      }elseif($this->request->post['doctype'] == 'cnpj'){
+                        $this->data['document_number'] = $this->request->post['cnpj'];
+                      }
+                   } elseif (!empty($customer_info)) {
+                     $this->data['document_number'] = $customer_info['document_number'];
+                   }else {
+                     $this->data['document_number'] = '';
+                   }
+
+                  if (isset($this->request->post['cnpj_ie'])) {
+                   $this->data['cnpj_ie'] = $this->request->post['cnpj_ie'];
+                 } elseif (!empty($customer_info)) {
+                   $this->data['cnpj_ie'] = $customer_info['pj_ie'];
+                 }else {
+                   $this->data['cnpj_ie'] = '';
+                 }
+
+
+                 if (isset($this->request->post['razao_social'])) {
+                  $this->data['razao_social'] = $this->request->post['razao_social'];
+                } elseif (!empty($customer_info)) {
+                  $this->data['razao_social'] = $customer_info['razao_social'];
+                }else {
+                  $this->data['razao_social'] = '';
+                }
+                  ]]></add>
+              </operation>
+              <operation info="Rename Address 2">
+                  <search position="replace"><![CDATA[
+                  $this->data['entry_address_2'] = $this->language->get('entry_address_2');
+                  ]]></search>
+                  <add><![CDATA[
+                  $this->data['entry_address_2'] = 'Bairro';
+                  ]]></add>
+              </operation>
+              <operation info="Address 2 Required">
+                  <search position="before"><![CDATA[
+                  if (isset($this->error['address_address_1'])) {
+                  ]]></search>
+                  <add><![CDATA[
+                    if (isset($this->error['address_address_2'])) {
+                			$this->data['error_address_address_2'] = $this->error['address_address_2'];
+                		} else {
+                			$this->data['error_address_address_2'] = '';
+                		}
+
+                    if (isset($this->error['address_address_number'])) {
+                			$this->data['error_address_address_number'] = $this->error['address_address_number'];
+                		} else {
+                			$this->data['error_address_address_number'] = '';
+                		}
+                  ]]></add>
+              </operation>
+              <operation info="Address 2 and number Error">
+                  <search position="after"><![CDATA[
+                foreach ($this->request->post['address'] as $key => $value) {
+                  ]]></search>
+                  <add><![CDATA[
+                    if ((utf8_strlen($value['address_2']) < 3) || (utf8_strlen($value['address_2']) > 32)) {
+                      $this->error['address_address_2'][$key] = 'Bairro deve conter entre 3 e 32 caracteres';
+            				}
+
+
+
+                    if ((utf8_strlen($value['address_number']) < 3) || (utf8_strlen($value['address_number']) > 32)) {
+            					$this->error['address_address_number'][$key] = 'Número obrigatório';
+            				}
+                  ]]></add>
+              </operation>
+            </file>
+            <file name="admin/model/sale/customer.php">
+                <operation info="Insert document type and number into DB after user inserted">
+                    <search position="after"><![CDATA[
+                    $customer_id = $this->db->getLastId();
+                    ]]></search>
+                    <add><![CDATA[
+                      if($data['doctype'] == 'cpf'){
+                      $document_number = preg_replace("/[^0-9]/","",$data['cpf']);
+                      }elseif($data['doctype'] == 'cnpj'){
+                      $document_number = preg_replace("/[^0-9]/","",$data['cnpj']);
+                      }
+
+                     $this->db->query("UPDATE " . DB_PREFIX . "customer SET document_type = '" . $this->db->escape($data['doctype']) . "', document_number = '" . $this->db->escape($document_number) . "' WHERE customer_id = '" . (int)$customer_id . "'");
+
+                     if($data['doctype'] == 'cnpj'){
+                     $this->db->query("UPDATE " . DB_PREFIX . "customer SET pj_ie = '" . $this->db->escape($data['cnpj_ie']) . "', razao_social = '" . $this->db->escape($data['razao_social']) . "' WHERE customer_id = '" . (int)$customer_id . "'");
+                     }
+                    ]]></add>
+                </operation>
+                <operation info="Insert addess number into DB after address inserted">
+                    <search position="after"><![CDATA[
+                    $address_id = $this->db->getLastId();
+                    ]]></search>
+                    <add><![CDATA[
+                     $this->db->query("UPDATE " . DB_PREFIX . "address SET address_number = '" . $this->db->escape($address['address_number']) . "' WHERE address_id = '" . (int)$address_id . "' AND customer_id = '" . (int)$customer_id . "'");
+                    ]]></add>
+                </operation>
+                <operation>
+                    <search position="after"><![CDATA[
+                    $this->db->query("UPDATE " . DB_PREFIX . "customer SET firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', fax = '" . $this->db->escape($data['fax']) . "', newsletter = '" . (int)$data['newsletter'] . "', customer_group_id = '" . (int)$data['customer_group_id'] . "', status = '" . (int)$data['status'] . "' WHERE customer_id = '" . (int)$customer_id . "'");
+                    ]]></search>
+                    <add><![CDATA[
+                      if($data['doctype'] == 'cpf'){
+                      $document_number = preg_replace("/[^0-9]/","",$data['cpf']);
+                      }elseif($data['doctype'] == 'cnpj'){
+                      $document_number = preg_replace("/[^0-9]/","",$data['cnpj']);
+                      }
+
+
+
+                      $this->db->query("UPDATE " . DB_PREFIX . "customer SET document_type =  '" . $this->db->escape($data['doctype']) . "', document_number =  '" . $this->db->escape($document_number)  . "' WHERE customer_id = '" . (int)$customer_id . "'");
+
+                      if($data['doctype'] == 'cnpj'){
+                      $this->db->query("UPDATE " . DB_PREFIX . "customer SET pj_ie = '" . $this->db->escape($data['cnpj_ie']) . "', razao_social = '" . $this->db->escape($data['razao_social']) . "' WHERE customer_id = '" . (int)$customer_id . "'");
+                      }
+                    ]]></add>
+                </operation>
+                <operation>
+                    <search position="after"><![CDATA[
+                    'address_1'      => $address_query->row['address_1'],
+                    ]]></search>
+                    <add><![CDATA[
+                      'address_number'      => $address_query->row['address_number'],
+                    ]]></add>
+                </operation>
+            </file>
+</modification>

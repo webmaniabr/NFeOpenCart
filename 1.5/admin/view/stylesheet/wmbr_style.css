@@ -1,0 +1,64 @@
+.cnpj-group{
+  display: none;
+}
+
+.nfe-status{
+  border-radius:12px;
+  color:#FFF;
+  text-align: center;
+  font-weight: 600;
+  padding:2px;
+}
+
+.nfe-status.nao-emitida{
+  background-color:#D22222;
+}
+
+.nfe-status.emitida{
+  background-color:#189427;
+}
+
+.form-control.padded-input{
+  padding: 5px;
+    width: 260px;
+    margin-bottom: 10px;
+    margin-top:5px
+}
+
+.control-label.bigger-font{
+  font-size:15px;
+}
+
+.wmbr-module-title{
+  font-size:18px;
+}
+
+#content .content{
+  position: relative;
+}
+
+.correios-loading{
+  position: absolute;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background: #FFF;
+    background-image:url(../module/images/spinner.gif) ;
+    background-repeat:no-repeat;
+    background-position: center;
+    background-size:250px;
+    opacity:0.5;
+    display: none;
+}
+
+.alert-wmbr{
+  margin-top: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.checkout-content .right,
+#payment-new,
+#shipping-new{
+  position: relative;
+}
