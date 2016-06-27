@@ -1,6 +1,6 @@
 # NFeOpenCart - Nota Fiscal Eletrônica para OpenCart
 
-Através do emissor de Nota Fiscal da WebmaniaBR®, você conta com a emissão e arquivamento das suas notas fiscais, cálculo automático de impostos, geração do Danfe para impressão e envio automático de e-mails para os clientes. **Instale o módulo grátis do OpenCart e contrate um dos planos de Nota Fiscal Eletrônica da WebmaniaBR® a partir de R$29,90/mês: [Assine agora mesmo](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/).**
+Através do emissor de Nota Fiscal da WebmaniaBR®, você conta com a emissão e arquivamento das suas notas fiscais, cálculo automático de impostos, geração do Danfe para impressão e envio automático de e-mails para os clientes. Instale o módulo grátis do OpenCart e contrate um dos planos de Nota Fiscal Eletrônica da WebmaniaBR® a partir de R$29,90/mês: [Assine agora mesmo](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/).
 
 **Emissor de NF-e da WebmaniaBR®:** https://webmaniabr.com/smartsales/nota-fiscal-eletronica/ 
 **Documentação da REST API:** https://webmaniabr.com/docs/rest-api-nfe/
@@ -38,15 +38,15 @@ Explicação técnica: O vQmod é um inovador sistema de substituição de arqui
 
 **OpenCart 1.5**
 
-- **Configuração do Módulo NF-e:** https://webmaniabr.com/atendimento/nfe/opencart/configuracao-modulo-nf-e-opencart-15/.
-- **Emissão de NF-e:** https://webmaniabr.com/atendimento/nfe/opencart/emissao-de-nfe-opencart-15/.
-- **Cadastro de NCM:** https://webmaniabr.com/atendimento/nfe/opencart/cadastro-de-ncm-opencart-15/.
+- Configuração do Módulo NF-e: https://webmaniabr.com/atendimento/nfe/opencart/configuracao-modulo-nf-e-opencart-15/.
+- Emissão de NF-e: https://webmaniabr.com/atendimento/nfe/opencart/emissao-de-nfe-opencart-15/.
+- Cadastro de NCM: https://webmaniabr.com/atendimento/nfe/opencart/cadastro-de-ncm-opencart-15/.
 
 **OpenCart 2.0 ou superior***
 
-- **Configuração do Módulo NF-e:** https://webmaniabr.com/atendimento/nfe/opencart/configuracao-modulo-nf-e-opencart-20/.
-- **Emissão de NF-e:** https://webmaniabr.com/atendimento/nfe/opencart/emissao-de-nfe-opencart-20/.
-- **Cadastro de NCM:** https://webmaniabr.com/atendimento/nfe/opencart/cadastro-de-ncm-opencart-20/.
+- Configuração do Módulo NF-e: https://webmaniabr.com/atendimento/nfe/opencart/configuracao-modulo-nf-e-opencart-20/.
+- Emissão de NF-e: https://webmaniabr.com/atendimento/nfe/opencart/emissao-de-nfe-opencart-20/.
+- Cadastro de NCM: https://webmaniabr.com/atendimento/nfe/opencart/cadastro-de-ncm-opencart-20/.
  
 ## Controle das Notas Fiscais
 
