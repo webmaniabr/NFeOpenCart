@@ -37,18 +37,18 @@ Explicação técnica: O vQmod é um inovador sistema de substituição de arqui
 
 ## Instruções
 
+**OpenCart 2.0 ou superior**
+
+- [Configuração do Módulo NF-e](https://webmaniabr.com/atendimento/nfe/opencart/configuracao-modulo-nf-e-opencart-20/)
+- [Emissão de NF-e](https://webmaniabr.com/atendimento/nfe/opencart/emissao-de-nfe-opencart-20/)
+- [Cadastro de NCM](https://webmaniabr.com/atendimento/nfe/opencart/cadastro-de-ncm-opencart-20/)
+
 **OpenCart 1.5**
 
 - [Configuração do Módulo NF-e](https://webmaniabr.com/atendimento/nfe/opencart/configuracao-modulo-nf-e-opencart-15/)
 - [Emissão de NF-e](https://webmaniabr.com/atendimento/nfe/opencart/emissao-de-nfe-opencart-15/)
 - [Cadastro de NCM](https://webmaniabr.com/atendimento/nfe/opencart/cadastro-de-ncm-opencart-15/)
 
-**OpenCart 2.0 ou superior**
-
-- [Configuração do Módulo NF-e](https://webmaniabr.com/atendimento/nfe/opencart/configuracao-modulo-nf-e-opencart-20/)
-- [Emissão de NF-e](https://webmaniabr.com/atendimento/nfe/opencart/emissao-de-nfe-opencart-20/)
-- [Cadastro de NCM](https://webmaniabr.com/atendimento/nfe/opencart/cadastro-de-ncm-opencart-20/)
- 
 ## Controle das Notas Fiscais
 
 Você pode gerenciar todas as Notas Fiscais e realizar a impressão do Danfe no painel da WebmaniaBR®. Simples e fácil.
