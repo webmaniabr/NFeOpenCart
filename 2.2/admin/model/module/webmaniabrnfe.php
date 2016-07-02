@@ -1,6 +1,14 @@
 <?php
-class ModelModuleWebmaniaBRNfe extends Model {
+class ModelModuleWebmaniaBRNFe extends Model {
+    
 	public function getNfeInfo($order_data, $products_data){
+        
+        global $registry;
+        require_once (__DIR__.'/../../controller/nfe/functions.php');
+        require_once (__DIR__.'/../../controller/module/webmaniabrnfe.php');
+        $NFeFunctions = new NFeFunctions;
+        $controller = new ControllerModuleWebmaniaBRNFe($registry);
+        
 		$this->load->model('setting/setting');
 		$this->load->model('catalog/product');
 		$this->load->model('customer/customer');
@@ -9,10 +17,25 @@ class ModelModuleWebmaniaBRNfe extends Model {
 		$total = 0;
 		$order_totals = $this->model_sale_order->getOrderTotals($order_data['order_id']);
 		$module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
-		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
 
-		$address_row = $this->db->query("SELECT address_number FROM " . DB_PREFIX . "address WHERE address_id='" .(int)$customer_info['address_id']. "' AND customer_id='".$order_data['customer_id']."'");
-		$address_number = $address_row->row['address_number'];
+		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
+		$custom_fields_customer = json_decode($customer_info['custom_field'], true);
+
+		$custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+		$documento = $NFeFunctions->get_value_from_fields( 'tipo_pessoa', $custom_fields_ids, $custom_fields_customer );
+
+		if($documento == $NFeFunctions->get_value_from_fields( 'pessoa_fisica', $custom_fields_ids, $custom_fields_customer )){
+			$tipo_pessoa = 'cpf';
+            $document_number = $NFeFunctions->get_value_from_fields( 'cpf', $custom_fields_ids, $custom_fields_customer );
+		}elseif($documento == $NFeFunctions->get_value_from_fields( 'pessoa_juridica', $custom_fields_ids, $custom_fields_customer )){
+			$tipo_pessoa = 'cnpj';
+			$document_number = $NFeFunctions->get_value_from_fields( 'cnpj', $custom_fields_ids, $custom_fields_customer );
+			$insc_est = $NFeFunctions->get_value_from_fields( 'insc_est', $custom_fields_ids, $custom_fields_customer );
+			$razao_social = $NFeFunctions->get_value_from_fields( 'razao_social', $custom_fields_ids, $custom_fields_customer );
+		}
+
+		$address_number = $order_data['shipping_custom_field'][$NFeFunctions->get_value_from_fields( 'numero', $custom_fields_ids, $custom_fields_customer )];
+		$complemento = $order_data['shipping_custom_field'][$NFeFunctions->get_value_from_fields( 'complemento', $custom_fields_ids, $custom_fields_customer )];
 
 		$shipping_total = 0;
 		foreach($order_totals as $order_total){
@@ -88,34 +111,33 @@ class ModelModuleWebmaniaBRNfe extends Model {
 			);
 		}
 
-		 if ($customer_info['document_type'] == 'cpf'){
+
+		 if ($tipo_pessoa == 'cpf'){
 				 $data['cliente'] = array(
-						 'cpf' => $customer_info['document_number'], // (pessoa fisica) Número do CPF
+						 'cpf' => $controller->cpf($document_number), // (pessoa fisica) Número do CPF
 						 'nome_completo' => $order_data['customer'], // (pessoa fisica) Nome completo
 						 'endereco' => $order_data['shipping_address_1'],//$order_data['shipping_address_1'], // Endereço de entrega dos produtos
-						 'complemento' => '',//$address->other, // Complemento do endereço de entrega
+						 'complemento' => $complemento, //$address->other, // Complemento do endereço de entrega
 						 'numero' => $address_number, //$address_custom['nfe_number'], // Número do endereço de entrega
 						 'bairro' => $order_data['shipping_address_2'], // Bairro do endereço de entrega
 						 'cidade' => $order_data['shipping_city'],//$order_data['shipping_city'], // Cidade do endereço de entrega
 						 'uf' => $order_data['shipping_zone_code'], // Estado do endereço de entrega
-						 'cep' => $order_data['shipping_postcode'],//$order_data['shipping_postcode'], // CEP do endereço de entrega
+						 'cep' => $controller->cep($order_data['shipping_postcode']),//$order_data['shipping_postcode'], // CEP do endereço de entrega
 						 'telefone' => $order_data['telephone'],//$order_data['telephone'], // Telefone do cliente
 						 'email' => $order_data['email'] // E-mail do cliente para envio da NF-e
 				 );
-		 }else if($customer_info['document_type'] == 'cnpj'){
-			 $razao_social_row = $this->db->query('SELECT razao_social FROM '. DB_PREFIX .'customer WHERE customer_id = ' . (int)$order_data['customer_id']);
-			 $razao_social = $razao_social_row->row['razao_social'];
+		 }else if($tipo_pessoa == 'cnpj'){
 			 $data['cliente'] = array(
-				 'cnpj' => $customer_info['document_number'], // (pessoa jurídica) Número do CNPJ
+				 'cnpj' => $controller->cnpj($document_number), // (pessoa jurídica) Número do CNPJ
 				 'razao_social' => $razao_social, // (pessoa jurídica) Razão Social
-				 'ie' => $customer_info['pj_ie'], // (pessoa jurídica) Número da Inscrição Estadual
+				 'ie' => $insc_est, // (pessoa jurídica) Número da Inscrição Estadual
 				 'endereco' => $order_data['shipping_address_1'], // Endereço de entrega dos produtos
-				 'complemento' => '', // Complemento do endereço de entrega
+				 'complemento' => $complemento, // Complemento do endereço de entrega
 				 'numero' => $address_number, // Número do endereço de entrega
 				 'bairro' => $order_data['shipping_address_2'], // Bairro do endereço de entrega
 				 'cidade' => $order_data['shipping_city'], // Cidade do endereço de entrega
 				 'uf' => $order_data['shipping_zone_code'], // Estado do endereço de entrega
-				 'cep' => $order_data['shipping_postcode'], // CEP do endereço de entrega
+				 'cep' => $controller->cep($order_data['shipping_postcode']), // CEP do endereço de entrega
 				 'telefone' => $order_data['telephone'], // Telefone do cliente
 				 'email' => $order_data['email'] // E-mail do cliente para envio da NF-e
 			 );

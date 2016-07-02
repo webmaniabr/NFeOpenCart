@@ -1,0 +1,1204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modification>
+   <id>Insert new fields to registration form</id>
+   <author>WebmaniaBR</author>
+   <file name="admin/model/sale/order.php">
+     <operation info="Get NF-e Status from DB">
+       <search position="replace" ><![CDATA[
+       $sql = "SELECT o.order_id, CONCAT(o.firstname, ' ', o.lastname) AS customer, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS order_status, o.shipping_code, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified FROM `" . DB_PREFIX . "order` o";
+       ]]></search>
+       <add><![CDATA[
+       $sql = "SELECT o.order_id, CONCAT(o.firstname, ' ', o.lastname) AS customer, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS order_status, o.shipping_code, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified, o.status_nfe FROM `" . DB_PREFIX . "order` o";
+       ]]></add>
+     </operation>
+   </file>
+   <file name="admin/controller/sale/order.php">
+     <operation info="Assign NF-E Status value to array key">
+       <search position="before" ><![CDATA[
+       'order_status'  => $result['order_status'],
+       ]]></search>
+       <add><![CDATA[
+       'status_nfe'  => $result['status_nfe'],
+       ]]></add>
+     </operation>
+     <operation info="Add custom BULK action">
+       <search position="after" ><![CDATA[
+       $data['shipping'] = $this->url->link('sale/order/shipping', 'token=' . $this->session->data['token'], true);
+       ]]></search>
+       <add><![CDATA[
+       $data['emitir_nfe'] = $this->url->link('module/webmaniabrnfe/emitirNFe', 'token=' . $this->session->data['token'], true);
+       ]]></add>
+     </operation>
+     <operation info="Add custom BULK action">
+       <search position="before" ><![CDATA[
+       $this->response->setOutput($this->load->view('sale/order_list', $data));
+       ]]></search>
+       <add><![CDATA[
+       if(isset($this->session->data['success'])){
+       $data['success'] = $this->session->data['success'];
+       unset($this->session->data['success']);
+       }
+
+       if(isset($this->session->data['error_warning'])){
+       $data['error_warning'] = $this->session->data['error_warning'];
+       unset($this->session->data['error_warning']);
+       }
+       ]]></add>
+     </operation>
+     <operation info="Add Backend Info">
+       <search position="before" ><![CDATA[
+       // Payment Address
+       ]]></search>
+       <add><![CDATA[
+       $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+       if(isset($order_info['payment_custom_field'][$custom_fields_ids['numero']])){
+        $address_number = $order_info['payment_custom_field'][$custom_fields_ids['numero']];
+       }else{
+       $address_number = '';
+       }
+
+       if(isset($order_info['payment_custom_field'][$custom_fields_ids['complemento']])){
+        $complemento = $order_info['payment_custom_field'][$custom_fields_ids['complemento']];
+       }else{
+       $complemento = '';
+       }
+
+       ]]></add>
+     </operation>
+     <operation info="Add Backend Info">
+       <search position="after" ><![CDATA[
+       'address_1' => $order_info['payment_address_1'],
+       ]]></search>
+       <add><![CDATA[
+       'address_number' => $address_number,
+       'complemento' => $complemento,
+       ]]></add>
+     </operation>
+     <operation info="Add Backend Info">
+       <search position="before" ><![CDATA[
+       // Shipping Address
+       ]]></search>
+       <add><![CDATA[
+       $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+       if(isset($order_info['shipping_custom_field'][$custom_fields_ids['numero']])){
+        $address_number = $order_info['shipping_custom_field'][$custom_fields_ids['numero']];
+       }else{
+       $address_number = '';
+       }
+
+       if(isset($order_info['shipping_custom_field'][$custom_fields_ids['complemento']])){
+        $complemento = $order_info['shipping_custom_field'][$custom_fields_ids['complemento']];
+       }else{
+       $complemento = '';
+       }
+
+       ]]></add>
+     </operation>
+     <operation info="Add Backend Info">
+       <search position="after" ><![CDATA[
+       'address_1' => $order_info['shipping_address_1'],
+       ]]></search>
+       <add><![CDATA[
+       'address_number' => $address_number,
+       'complemento' => $complemento,
+       ]]></add>
+     </operation>
+   </file>
+
+   <file name="admin/view/template/common/header.tpl">
+    <operation info="Include module CSS">
+      <search position="before" ><![CDATA[
+      </head>
+      ]]></search>
+      <add><![CDATA[
+        <link rel="stylesheet" href="./view/stylesheet/wmbr_style.css" />
+        <script type="text/javascript" src="../catalog/view/javascript/wmbr_script.js"></script>
+        <script type="text/javascript" src="../catalog/view/javascript/jquery.mask.min.js"></script>
+        <script type="text/javascript" src="../catalog/view/javascript/correios.min.js"></script>
+      ]]></add>
+    </operation>
+  </file>
+   <file name="admin/view/template/sale/order_list.tpl">
+    <operation info="Insert new column to orders table">
+      <search position="before" offset="1" ><![CDATA[
+      <a href="<?php echo $sort_status; ?>" class="<?php echo strtolower($order); ?>"><?php echo $column_status; ?></a>
+      ]]></search>
+      <add><![CDATA[
+        <td class="text-left">
+          <a href="<?php echo $sort_customer; ?>">Status NF-e</a>
+        </td>
+      ]]></add>
+    </operation>
+    <operation info="Insert new column to orders table">
+      <search position="before" ><![CDATA[
+      <td class="text-left"><?php echo $order['order_status']; ?></td>
+      ]]></search>
+      <add><![CDATA[
+        <?php if($order['status_nfe'] == 0){ ?>
+          <td class="text-left"><div class="nfe-status nao-emitida">Não emitida</div></td>
+       <?php }else if($order['status_nfe'] == 1){ ?>
+          <td class="text-left"><div class="nfe-status emitida">Emitida</div></td>
+       <?php } ?>
+      ]]></add>
+    </operation>
+    <operation info="Replace colspan 8 for colspan 9 due to new column">
+      <search position="replace"><![CDATA[
+      <td class="text-center" colspan="8"><?php echo $text_no_results; ?></td>
+      ]]></search>
+      <add><![CDATA[
+      <td class="text-center" colspan="9"><?php echo $text_no_results; ?></td>
+      ]]></add>
+    </operation>
+    <operation info="Add Bulk Action Button">
+      <search position="before"><![CDATA[
+      <button type="submit" id="button-shipping" form="form-order" formaction="<?php echo $shipping; ?>" data-toggle="tooltip" title="<?php echo $button_shipping_print; ?>" class="btn btn-info"><i class="fa fa-truck"></i></button>
+      ]]></search>
+      <add><![CDATA[
+      <button type="submit" id="button-emitir-nfe" form="form-order" formaction="<?php echo $emitir_nfe; ?>" data-toggle="tooltip" title="Emitir Notas Fiscais" class="btn btn-info"><i class="fa fa-file-text-o"></i> Emitir NF-e</button>
+      ]]></add>
+    </operation>
+    <operation info="Remove target _blank">
+      <search position="before"><![CDATA[
+      $('#button-shipping, #button-invoice').on('click', function(e) {
+      ]]></search>
+      <add><![CDATA[
+      $('#button-emitir-nfe').on('click', function(e) {
+        $('#form-order').removeAttr('target');
+      });
+      ]]></add>
+    </operation>
+    <operation info="Add Success and Warning messages">
+      <search position="after" offset="4"><![CDATA[
+      <ul class="breadcrumb">
+      ]]></search>
+      <add><![CDATA[
+        <?php if(isset($success)): ?>
+        <div class="alert-wmbr alert-success"><?php echo $success; ?></div>
+        <?php endif; ?>
+
+        <?php if(isset($error_warning)): ?>
+        <div class="alert-wmbr alert-danger"><?php echo $error_warning ?></div>
+        <?php endif; ?>
+      ]]></add>
+    </operation>
+  </file>
+
+  <file name="admin/controller/common/footer.php">
+      <operation info="Insert vars">
+          <search position="before"><![CDATA[
+          return $this->load->view('common/footer', $data);
+          ]]></search>
+          <add><![CDATA[
+            if(isset($this->request->get['route'])){
+              $route = $this->request->get['route'];
+              if($route == 'customer/customer/add' || $route == 'customer/customer/edit'){
+                $data['run_script'] = true;
+                $this->load->model('setting/setting');
+            		$module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
+            		if(isset($module_settings['webmaniabrnfe_fill_address'])){
+            			if($module_settings['webmaniabrnfe_fill_address'] == 'on'){
+            				$data['fill_address'] = true;
+            			}
+            		}
+
+            		if(isset($module_settings['webmaniabrnfe_mask_fields'])){
+            			if($module_settings['webmaniabrnfe_mask_fields'] == 'on'){
+            				$data['mask_fields'] = true;
+            			}
+            		}
+              }
+            }
+
+            if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
+              $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+              $data['pessoa_fisica'] = $custom_fields_ids['pessoa_fisica'];
+              $data['pessoa_juridica'] = $custom_fields_ids['pessoa_juridica'];
+              $data['custom_field_id'] = $custom_fields_ids['tipo_pessoa'];
+              $data['razao_social'] = $custom_fields_ids['razao_social'];
+              $data['insc_est'] = $custom_fields_ids['insc_est'];
+              $data['cpf'] = $custom_fields_ids['cpf'];
+              $data['cnpj'] = $custom_fields_ids['cnpj'];
+              if(isset($this->request->post['custom_field']['account'])){
+                $data['option_selected'] = $this->request->post['custom_field']['account'];
+              }
+            }
+
+          ]]></add>
+      </operation>
+  </file>
+  <file name="admin/view/template/common/footer.tpl">
+   <operation info="Include module CSS and JS">
+     <search position="before" ><![CDATA[
+     <footer id="footer"><?php echo $text_footer; ?><br /><?php echo $text_version; ?></footer></div>
+     ]]></search>
+     <add><![CDATA[
+       <script type="text/javascript" src="../catalog/view/javascript/jquery.mask.min.js"></script>
+       <script type="text/javascript" src="../catalog/view/javascript/correios.min.js"></script>
+
+       <?php if(isset($fill_address)): ?>
+       <script>
+         correios.init( 'qS4SKlmAXR21h7wrBMcs0SZyXauLqo5m', 'nkKkInYJ5QvogYn1xj4lk7w3hkhA8qzruoKzuLf6UyBtSIJL' );
+         $('input[name="postcode"]').correios( 'input[name="address_1"]', 'input[name="address_2"]', 'input[name="city"]', 'input[name="zone_id"]', '.correios-loading' );
+
+         $(document).on('start-correios', function(){
+           correios.init( 'qS4SKlmAXR21h7wrBMcs0SZyXauLqo5m', 'nkKkInYJ5QvogYn1xj4lk7w3hkhA8qzruoKzuLf6UyBtSIJL' );
+           $('input[name="postcode"]').correios( 'input[name="address_1"]', 'input[name="address_2"]', 'input[name="city"]', 'input[name="zone_id"]', '.correios-loading' );
+           $('#input-payment-cpf').mask('999.999.999-99');
+           $('#input-payment-cnpj').mask('99.999.999/9999-99');
+         });
+       </script>
+       <?php endif; ?>
+
+       <?php if(isset($mask_fields)): ?>
+       <script>
+       var cpf_element;
+       var cnpj_element;
+       var cep_element = $('input[name="postcode"]');
+
+
+       var pf_id = <?php echo $cpf; ?>;
+       var pj_id = <?php echo $cnpj; ?>;
+       cpf_element = $('input[name="custom_field[account]['+pf_id+']"]');
+       if(cpf_element.length == 0) cpf_element = $('input[name="custom_field['+pf_id+']"]');
+
+       cnpj_element = $(document).find('input[name="custom_field[account]['+pj_id+']"]');
+       if(cnpj_element.length == 0) cnpj_element = $('input[name="custom_field['+pj_id+']"]');
+
+
+
+       cpf_element.mask('999.999.999-99');
+       cnpj_element.mask('99.999.999/9999-99');
+       cep_element.mask('99999-999');
+        </script>
+       <?php endif; ?>
+
+       <?php if(isset($run_script)): ?>
+       <script>
+         var pessoa_fisica_value = <?php echo $pessoa_fisica ?>;
+         var pessoa_juridica_value = <?php echo $pessoa_juridica ?>;
+         var custom_field_id = <?php echo $custom_field_id; ?>;
+         var pj_id = <?php echo $cnpj; ?>;
+         var pf_id = <?php echo $cpf; ?>;
+         var razao_social_id = <?php echo $razao_social; ?>;
+         var insc_est_id = <?php echo $insc_est; ?>;
+         var pessoa_active = <?php if(isset($option_selected[$custom_field_id])) echo $option_selected[$custom_field_id]; else echo "''"; ?>;
+         var intervalId;
+         var cnpj_element;
+         var ie_element;
+         var rs_element;
+         var cpf_element;
+         var radio_element;
+         var radio_class;
+
+
+
+
+
+
+
+
+         var elementsInit = function(){
+
+         cnpj_element = $(document).find('input[name="custom_field[account]['+pj_id+']"]').parents('.form-group');
+         if(cnpj_element.length == 0) cnpj_element = $('input[name="custom_field['+pj_id+']"]').parents('.form-group');
+
+
+         ie_element = $('input[name="custom_field[account]['+insc_est_id+']"]').parents('.form-group');
+         if(ie_element.length == 0) ie_element = $('input[name="custom_field['+insc_est_id+']"]').parents('.form-group');
+
+         rs_element = $('input[name="custom_field[account]['+razao_social_id+']"]').parents('.form-group');
+         if(rs_element.length == 0) rs_element = $('input[name="custom_field['+razao_social_id+']"]').parents('.form-group');
+
+         cpf_element = $('input[name="custom_field[account]['+pf_id+']"]').parents('.form-group');
+         if(cpf_element.length == 0) cpf_element = $('input[name="custom_field['+pf_id+']"]').parents('.form-group');
+
+         radio_element = $('input[name="custom_field[account]['+custom_field_id+']"]');
+         radio_class = 'input[name="custom_field[account]['+custom_field_id+']"]';
+
+
+         if(radio_element.length == 0 ){
+          radio_element = $('input[name="custom_field['+custom_field_id+']"]');
+          radio_class = 'input[name="custom_field['+custom_field_id+']"]';
+         }
+
+
+         if(pessoa_active == pessoa_juridica_value){
+           setTimeout(function(){
+           cnpj_element.addClass('cnpj-group');
+           ie_element.addClass('cnpj-group');
+           rs_element.addClass('cnpj-group');
+
+           cpf_element.css('display', 'none');
+           $('.cnpj-group').addClass('active');
+           }, 100);
+         }else{
+           setTimeout(function(){
+
+           cnpj_element.addClass('cnpj-group');
+           ie_element.addClass('cnpj-group');
+           rs_element.addClass('cnpj-group');
+           $('.cnpj-group').css('display', 'none');
+           cpf_element.addClass('active');
+           }, 500);
+           $('.custom-field').find(radio_class).first().attr('checked', 'checked');
+
+         }
+
+         if (rs_element.length > 0 && cnpj_element.length > 0 && ie_element.length > 0 && cpf_element.length > 0 ){
+         $(document).on('change', radio_class, function(event, element){
+
+           var val = $(radio_class+':checked').val();
+
+           if(val == pessoa_fisica_value && !cpf_element.hasClass('active')){
+           $('.cnpj-group').each(function(){
+               $(this).fadeToggle(200);
+               $(this).removeClass('active');
+           });
+
+             setTimeout(function(){
+             cpf_element.addClass('active').fadeToggle(200);
+             }, 200);
+
+
+
+           }else if(val == pessoa_juridica_value){
+             cpf_element.removeClass('active').fadeToggle(200, 'swing', function(){
+               $('.cnpj-group').each(function(){
+                 if(!$(this).hasClass('active')){
+                   $(this).fadeToggle(200);
+                   $(this).addClass('active');
+                 }
+               });
+             });
+           }
+         });
+         clearInterval(intervalId);
+         }
+
+         }
+
+
+         if($('#collapse-checkout-option').length == 0){
+          intervalId = setInterval( elementsInit, 100 );
+         }
+
+
+         $(document).on('click', '#button-account', function(){
+           intervalId = setInterval( elementsInit, 100 );
+         });
+       </script>
+       <?php endif; ?>
+
+     ]]></add>
+   </operation>
+ </file>
+
+ <file name="admin/controller/customer/customer.php">
+   <operation info="Validate Custom Fields">
+   <search position="after"><![CDATA[
+   $custom_fields = $this->model_customer_custom_field->getCustomFields(array('filter_customer_group_id' => $this->request->post['customer_group_id']));
+   ]]></search>
+   <add><![CDATA[
+     $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+   ]]></add>
+   </operation>
+   <operation info="Validate Custom Fields">
+       <search position="before"><![CDATA[
+       if (($custom_field['location'] == 'account') && $custom_field['required'] &&
+       ]]></search>
+       <add><![CDATA[
+         if($custom_field['location'] == 'account'){
+         $tipo_pessoa = $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']];
+         if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
+
+           if($custom_field['name'] == 'CPF'){
+           $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+           $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+             if($valid === false){
+               $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
+               continue;
+             }
+           }
+
+           if($custom_field['name'] == 'CNPJ' || $custom_field['name'] == 'Razão Social' || $custom_field['name'] == 'Inscrição Estadual'){
+             continue;
+           }
+         }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
+         if($custom_field['name'] == 'CNPJ'){
+         $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+         $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+           if($valid === false){
+             $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
+             continue;
+           }
+         }
+           if($custom_field['name'] == 'CPF'){
+             continue;
+           }
+         }
+         }
+
+       ]]></add>
+   </operation>
+ </file>
+
+
+  <file name="catalog/controller/common/footer.php">
+      <operation info="Insert vars">
+          <search position="before"><![CDATA[
+          return $this->load->view('common/footer', $data);
+          ]]></search>
+          <add><![CDATA[
+            if(isset($this->request->get['route'])){
+              $route = $this->request->get['route'];
+              if($route == 'account/register' || $route == 'checkout/checkout' || $route == 'account/edit'){
+                $data['run_script'] = true;
+                $this->load->model('setting/setting');
+            		$module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
+            		if(isset($module_settings['webmaniabrnfe_fill_address'])){
+            			if($module_settings['webmaniabrnfe_fill_address'] == 'on'){
+            				$data['fill_address'] = true;
+            			}
+            		}
+
+            		if(isset($module_settings['webmaniabrnfe_mask_fields'])){
+            			if($module_settings['webmaniabrnfe_mask_fields'] == 'on'){
+            				$data['mask_fields'] = true;
+            			}
+            		}
+              }
+
+              if($route == 'account/address/edit' || $route == 'account/address/add'){
+              $this->load->model('setting/setting');
+              $module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
+              if(isset($module_settings['webmaniabrnfe_fill_address'])){
+                if($module_settings['webmaniabrnfe_fill_address'] == 'on'){
+                  $data['fill_address'] = true;
+                }
+              }
+
+              if(isset($module_settings['webmaniabrnfe_mask_fields'])){
+                if($module_settings['webmaniabrnfe_mask_fields'] == 'on'){
+                  $data['mask_fields'] = true;
+                }
+              }
+              }
+            }
+
+            if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
+              $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+              $data['pessoa_fisica'] = $custom_fields_ids['pessoa_fisica'];
+              $data['pessoa_juridica'] = $custom_fields_ids['pessoa_juridica'];
+              $data['custom_field_id'] = $custom_fields_ids['tipo_pessoa'];
+              $data['razao_social'] = $custom_fields_ids['razao_social'];
+              $data['insc_est'] = $custom_fields_ids['insc_est'];
+              $data['cpf'] = $custom_fields_ids['cpf'];
+              $data['cnpj'] = $custom_fields_ids['cnpj'];
+              if(isset($this->request->post['custom_field']['account'])){
+                $data['option_selected'] = $this->request->post['custom_field']['account'];
+              }
+            }
+
+          ]]></add>
+      </operation>
+  </file>
+  <file name="catalog/view/theme/*/template/common/footer.tpl">
+   <operation info="Include module CSS and JS">
+     <search position="before" ><![CDATA[
+     </footer>
+     ]]></search>
+     <add><![CDATA[
+       <link rel="stylesheet" href="admin/view/stylesheet/wmbr_style.css" />
+       <script type="text/javascript" src="catalog/view/javascript/wmbr_script.js"></script>
+       <script type="text/javascript" src="catalog/view/javascript/jquery.mask.min.js"></script>
+       <script type="text/javascript" src="catalog/view/javascript/correios.min.js"></script>
+
+
+       <?php if(isset($fill_address)): ?>
+       <script>
+         correios.init( 'qS4SKlmAXR21h7wrBMcs0SZyXauLqo5m', 'nkKkInYJ5QvogYn1xj4lk7w3hkhA8qzruoKzuLf6UyBtSIJL' );
+         $('input[name="postcode"]').correios( 'input[name="address_1"]', 'input[name="address_2"]', 'input[name="city"]', 'input[name="zone_id"]', '.correios-loading' );
+
+         $(document).on('start-correios', function(){
+           correios.init( 'qS4SKlmAXR21h7wrBMcs0SZyXauLqo5m', 'nkKkInYJ5QvogYn1xj4lk7w3hkhA8qzruoKzuLf6UyBtSIJL' );
+           $('input[name="postcode"]').correios( 'input[name="address_1"]', 'input[name="address_2"]', 'input[name="city"]', 'input[name="zone_id"]', '.correios-loading' );
+           $('#input-payment-cpf').mask('999.999.999-99');
+           $('#input-payment-cnpj').mask('99.999.999/9999-99');
+         });
+       </script>
+       <?php endif; ?>
+
+       <?php if(isset($mask_fields)): ?>
+       <script>
+       var cpf_element;
+       var cnpj_element;
+       var cep_element = $('input[name="postcode"]');
+
+
+       var pf_id = <?php echo $cpf; ?>;
+       var pj_id = <?php echo $cnpj; ?>;
+       cpf_element = $('input[name="custom_field[account]['+pf_id+']"]');
+       if(cpf_element.length == 0) cpf_element = $('input[name="custom_field['+pf_id+']"]');
+
+       cnpj_element = $(document).find('input[name="custom_field[account]['+pj_id+']"]');
+       if(cnpj_element.length == 0) cnpj_element = $('input[name="custom_field['+pj_id+']"]');
+
+
+
+       cpf_element.mask('999.999.999-99');
+       cnpj_element.mask('99.999.999/9999-99');
+       cep_element.mask('99999-999');
+        </script>
+       <?php endif; ?>
+
+       <?php if(isset($run_script)): ?>
+       <script>
+         var pessoa_fisica_value = <?php echo $pessoa_fisica ?>;
+         var pessoa_juridica_value = <?php echo $pessoa_juridica ?>;
+         var custom_field_id = <?php echo $custom_field_id; ?>;
+         var pj_id = <?php echo $cnpj; ?>;
+         var pf_id = <?php echo $cpf; ?>;
+         var razao_social_id = <?php echo $razao_social; ?>;
+         var insc_est_id = <?php echo $insc_est; ?>;
+         var pessoa_active = <?php if(isset($option_selected[$custom_field_id])) echo $option_selected[$custom_field_id]; else echo "''"; ?>;
+         var intervalId;
+         var cnpj_element;
+         var ie_element;
+         var rs_element;
+         var cpf_element;
+         var radio_element;
+         var radio_class;
+
+
+
+
+
+
+
+
+         var elementsInit = function(){
+
+         cnpj_element = $(document).find('input[name="custom_field[account]['+pj_id+']"]').parents('.form-group');
+         if(cnpj_element.length == 0) cnpj_element = $('input[name="custom_field['+pj_id+']"]').parents('.form-group');
+
+
+         ie_element = $('input[name="custom_field[account]['+insc_est_id+']"]').parents('.form-group');
+         if(ie_element.length == 0) ie_element = $('input[name="custom_field['+insc_est_id+']"]').parents('.form-group');
+
+         rs_element = $('input[name="custom_field[account]['+razao_social_id+']"]').parents('.form-group');
+         if(rs_element.length == 0) rs_element = $('input[name="custom_field['+razao_social_id+']"]').parents('.form-group');
+
+         cpf_element = $('input[name="custom_field[account]['+pf_id+']"]').parents('.form-group');
+         if(cpf_element.length == 0) cpf_element = $('input[name="custom_field['+pf_id+']"]').parents('.form-group');
+
+         radio_element = $('input[name="custom_field[account]['+custom_field_id+']"]');
+         radio_class = 'input[name="custom_field[account]['+custom_field_id+']"]';
+
+
+         if(radio_element.length == 0 ){
+          radio_element = $('input[name="custom_field['+custom_field_id+']"]');
+          radio_class = 'input[name="custom_field['+custom_field_id+']"]';
+         }
+
+
+         if(pessoa_active == pessoa_juridica_value){
+           setTimeout(function(){
+           cnpj_element.addClass('cnpj-group');
+           ie_element.addClass('cnpj-group');
+           rs_element.addClass('cnpj-group');
+
+           cpf_element.css('display', 'none');
+           $('.cnpj-group').addClass('active');
+           }, 100);
+         }else{
+           setTimeout(function(){
+
+           cnpj_element.addClass('cnpj-group');
+           ie_element.addClass('cnpj-group');
+           rs_element.addClass('cnpj-group');
+           $('.cnpj-group').css('display', 'none');
+           cpf_element.addClass('active');
+           }, 500);
+           $('.custom-field').find(radio_class).first().attr('checked', 'checked');
+
+         }
+
+         if (rs_element.length > 0 && cnpj_element.length > 0 && ie_element.length > 0 && cpf_element.length > 0 ){
+         $(document).on('change', radio_class, function(event, element){
+
+           var val = $(radio_class+':checked').val();
+
+           if(val == pessoa_fisica_value && !cpf_element.hasClass('active')){
+           $('.cnpj-group').each(function(){
+               $(this).fadeToggle(200);
+               $(this).removeClass('active');
+           });
+
+             setTimeout(function(){
+             cpf_element.addClass('active').fadeToggle(200);
+             }, 200);
+
+
+
+           }else if(val == pessoa_juridica_value){
+             cpf_element.removeClass('active').fadeToggle(200, 'swing', function(){
+               $('.cnpj-group').each(function(){
+                 if(!$(this).hasClass('active')){
+                   $(this).fadeToggle(200);
+                   $(this).addClass('active');
+                 }
+               });
+             });
+           }
+         });
+         clearInterval(intervalId);
+         }
+
+         }
+
+
+         if($('#collapse-checkout-option').length == 0){
+          intervalId = setInterval( elementsInit, 100 );
+         }
+
+
+         $(document).on('click', '#button-account', function(){
+           intervalId = setInterval( elementsInit, 100 );
+         });
+       </script>
+       <?php endif; ?>
+
+     ]]></add>
+   </operation>
+ </file>
+
+
+  <file name="catalog/view/theme/*/template/account/register.tpl">
+    <operation info="Insert loading div">
+        <search position="after"><![CDATA[
+        <fieldset id="address">
+        ]]></search>
+        <add><![CDATA[
+          <div class="correios-loading"></div>
+        ]]></add>
+    </operation>
+  </file>
+  <file name="catalog/controller/account/register.php">
+    <operation info="Validate Custom Fields">
+    <search position="before" offset="1"><![CDATA[
+    if ($custom_field['required'] &&
+    ]]></search>
+    <add><![CDATA[
+        if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
+          $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+      }
+    ]]></add>
+    </operation>
+    <operation info="Validate Custom Fields">
+        <search position="before"><![CDATA[
+        if ($custom_field['required'] &&
+        ]]></search>
+        <add><![CDATA[
+          if(isset($custom_fields_ids)){
+          if($custom_field['location'] == 'account'){
+          $tipo_pessoa = $this->request->post['custom_field'][$custom_field['location']][$custom_fields_ids['tipo_pessoa']];
+          if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
+
+            if($custom_field['name'] == 'CPF'){
+            $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+            $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+              if($valid === false){
+                $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
+                continue;
+              }
+            }
+
+            if($custom_field['name'] == 'CNPJ' || $custom_field['name'] == 'Razão Social' || $custom_field['name'] == 'Inscrição Estadual'){
+              continue;
+            }
+          }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
+          if($custom_field['name'] == 'CNPJ'){
+          $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+          $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+            if($valid === false){
+              $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
+              continue;
+            }
+          }
+            if($custom_field['name'] == 'CPF'){
+              continue;
+            }
+          }
+          }
+          }
+
+        ]]></add>
+    </operation>
+      <operation info="Validate Custom Fields">
+      <search position="after"><![CDATA[
+      $data['header'] = $this->load->controller('common/header');
+      ]]></search>
+      <add><![CDATA[
+          if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
+        $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+        }
+      ]]></add>
+      </operation>
+      <operation info="Custom error message">
+          <search position="after"><![CDATA[
+          $this->error['custom_field'][$custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field_validate'), $custom_field['name']);
+          ]]></search>
+          <add><![CDATA[
+            echo $custom_field['name'];
+            if($custom_field['name'] == 'CPF'){
+              $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
+            }elseif($custom_field['name'] == 'CNPJ'){
+              $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
+            }
+          ]]></add>
+      </operation>
+
+      <operation info="Validate Custom Fields">
+          <search position="after"><![CDATA[
+          private function validate() {
+          ]]></search>
+          <add><![CDATA[
+
+            if ((utf8_strlen(trim($this->request->post['address_2'])) < 1) || (utf8_strlen(trim($this->request->post['address_2'])) > 32)) {
+        			$this->error['address_2'] = 'Bairro deve conter entre 2 e 32 caracteres!';
+        		}
+
+          ]]></add>
+      </operation>
+      <operation info="Define error variable">
+          <search position="before"><![CDATA[
+          if (isset($this->error['firstname'])) {
+          ]]></search>
+          <add><![CDATA[
+            if (isset($this->error['address_2'])) {
+        			$data['error_address_2'] = $this->error['address_2'];
+        		} else {
+        			$data['error_address_2'] = '';
+        		}
+          ]]></add>
+      </operation>
+      <operation info="Rename address 2">
+          <search position="replace"><![CDATA[
+          $data['entry_address_2'] = $this->language->get('entry_address_2');
+          ]]></search>
+          <add><![CDATA[
+            $data['entry_address_2'] = 'Bairro';
+          ]]></add>
+      </operation>
+  </file>
+  <file name="catalog/controller/checkout/register.php,catalog/controller/checkout/guest.php">
+    <operation info="Validate Custom Fields">
+    <search position="before"><![CDATA[
+    foreach ($custom_fields as $custom_field) {
+    ]]></search>
+    <add><![CDATA[
+        if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
+      $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+      }
+    ]]></add>
+    </operation>
+    <operation info="Validate Custom Fields">
+        <search position="after"><![CDATA[
+        foreach ($custom_fields as $custom_field) {
+        ]]></search>
+        <add><![CDATA[
+          if(isset($custom_fields_ids)){
+          if($custom_field['location'] == 'account'){
+          $tipo_pessoa = $this->request->post['custom_field'][$custom_field['location']][$custom_fields_ids['tipo_pessoa']];
+          if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
+
+            if($custom_field['name'] == 'CPF'){
+            $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+            $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+              if($valid === false){
+              $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
+                continue;
+              }
+            }
+
+            if($custom_field['name'] == 'CNPJ' || $custom_field['name'] == 'Razão Social' || $custom_field['name'] == 'Inscrição Estadual'){
+              continue;
+            }
+          }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
+          if($custom_field['name'] == 'CNPJ'){
+          $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+          $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+            if($valid === false){
+              $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
+              continue;
+            }
+          }
+            if($custom_field['name'] == 'CPF'){
+              continue;
+            }
+          }
+          }
+          }
+
+        ]]></add>
+    </operation>
+      <operation info="Validate Custom Fields">
+      <search position="before"><![CDATA[
+      $this->response->setOutput($this->load->view('checkout/register', $data));
+      ]]></search>
+      <add><![CDATA[
+          if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
+        $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+        }
+
+      ]]></add>
+      </operation>
+
+      <operation info="Rename address 2">
+          <search position="replace"><![CDATA[
+          $data['entry_address_2'] = $this->language->get('entry_address_2');
+          ]]></search>
+          <add><![CDATA[
+            $data['entry_address_2'] = 'Bairro';
+           ]]></add>
+      </operation>
+  </file>
+
+  <file name="catalog/view/theme/*/template/checkout/payment_address.tpl">
+      <operation info="Insert correios loading">
+          <search position="before"><![CDATA[
+          <form class="form-horizontal">
+          ]]></search>
+          <add><![CDATA[
+            <div class="correios-loading"></div>
+           ]]></add>
+      </operation>
+  </file>
+  <file name="catalog/controller/checkout/payment_address.php,catalog/controller/checkout/shipping_address.php">
+    <operation info="Rename address 2">
+        <search position="replace"><![CDATA[
+        $data['entry_address_2'] = $this->language->get('entry_address_2');
+        ]]></search>
+        <add><![CDATA[
+          $data['entry_address_2'] = 'Bairro';
+         ]]></add>
+    </operation>
+      <operation info="Change postcode position">
+          <search position="replace" offset="3"><![CDATA[
+          if ((utf8_strlen(trim($this->request->post['firstname'])) < 1) || (utf8_strlen(trim($this->request->post['firstname'])) > 32)) {
+          ]]></search>
+          <add><![CDATA[
+            if ((utf8_strlen(trim($this->request->post['address_2'])) < 1) || (utf8_strlen(trim($this->request->post['address_2'])) > 32)) {
+    					$json['error']['address_2'] = 'Bairro deve conter entre 2 e 32 caracteres!';
+    				}
+           ]]></add>
+      </operation>
+  </file>
+
+
+  <file name="catalog/view/theme/*/template/checkout/guest_shipping.tpl,catalog/view/theme/*/template/checkout/shipping_address.tpl">
+      <operation info="Insert correios loading">
+          <search position="before"><![CDATA[
+          <form class="form-horizontal">
+          ]]></search>
+          <add><![CDATA[
+            <div class="correios-loading"></div>
+           ]]></add>
+      </operation>
+  </file>
+  <file name="catalog/controller/account/edit.php">
+    <operation info="Validate Custom Fields">
+      <search position="before"><![CDATA[
+      foreach ($custom_fields as $custom_field) {
+      ]]></search>
+      <add><![CDATA[
+          if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
+        $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+        }
+      ]]></add>
+    </operation>
+    <operation info="Validate Custom Fields">
+        <search position="after"><![CDATA[
+        foreach ($custom_fields as $custom_field) {
+        ]]></search>
+        <add><![CDATA[
+          if($custom_field['location'] == 'address') continue;
+          if($custom_field['location'] == 'account'){
+          $tipo_pessoa = $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']];
+          if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
+
+            if($custom_field['name'] == 'CPF'){
+            $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+            $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+              if($valid === false){
+                $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
+                continue;
+              }
+            }
+
+            if($custom_field['name'] == 'CNPJ' || $custom_field['name'] == 'Razão Social' || $custom_field['name'] == 'Inscrição Estadual'){
+              continue;
+            }
+          }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
+          if($custom_field['name'] == 'CNPJ'){
+          $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+          $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+            if($valid === false){
+              $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
+              continue;
+            }
+          }
+            if($custom_field['name'] == 'CPF'){
+              continue;
+            }
+          }
+          }
+
+        ]]></add>
+    </operation>
+
+  </file>
+
+
+  <file name="catalog/controller/account/address.php">
+      <operation info="Assign error variable">
+          <search position="before"><![CDATA[
+          if (isset($this->error['firstname'])) {
+          ]]></search>
+          <add><![CDATA[
+
+            if (isset($this->error['address_2'])) {
+        			$data['error_address_2'] = $this->error['address_2'];
+        		} else {
+        			$data['error_address_2'] = '';
+        		}
+          ]]></add>
+      </operation>
+      <operation info="Rename address 2">
+          <search position="replace"><![CDATA[
+          $data['entry_address_2'] = $this->language->get('entry_address_2');
+          ]]></search>
+          <add><![CDATA[
+            $data['entry_address_2'] = 'Bairro';
+          ]]></add>
+      </operation>
+
+      <operation info="Assign variable">
+          <search position="before"><![CDATA[
+          if (isset($this->request->post['firstname'])) {
+          ]]></search>
+          <add><![CDATA[
+
+            if (isset($this->request->post['address_2'])) {
+        			$data['address_2'] = $this->request->post['address_2'];
+        		} elseif (!empty($address_info)) {
+        			$data['address_2'] = $address_info['address_2'];
+        		} else {
+        			$data['address_2'] = '';
+        		}
+          ]]></add>
+      </operation>
+      <operation info="Assign variable">
+          <search position="after"><![CDATA[
+          protected function validateForm() {
+          ]]></search>
+          <add><![CDATA[
+
+            if ((utf8_strlen(trim($this->request->post['address_2'])) < 1) || (utf8_strlen(trim($this->request->post['address_2'])) > 32)) {
+        			$this->error['address_2'] = 'Bairro deve conter entre 2 e 32 caracteres!';
+        		}
+          ]]></add>
+      </operation>
+  </file>
+
+
+  <file name="admin/controller/common/header.php">
+      <operation info="Insert header warning message">
+          <search position="before"><![CDATA[
+          return $this->load->view('common/header', $data);
+          ]]></search>
+          <add><![CDATA[
+
+            $this->load->controller('module/webmaniabrnfe/displayStatusSefaz');
+            $this->load->controller('module/webmaniabrnfe/displayMessageCertificado');
+
+
+            if(isset($this->session->data['status_sefaz'])){
+            $data['status_sefaz'] = $this->session->data['status_sefaz'];
+           }
+           if(isset($this->session->data['validade_certificado'])){
+           $data['validade_certificado'] = $this->session->data['validade_certificado'];
+          }
+          ]]></add>
+      </operation>
+  </file>
+
+
+  <file name="admin/view/template/common/header.tpl">
+      <operation info="Insert header warning-message">
+          <search position="after"><![CDATA[
+          </header>
+          ]]></search>
+          <add><![CDATA[
+            <?php if($logged): ?>
+            <?php if(isset($status_sefaz) ): ?>
+           <div class="alert-wmbr alert-danger header-alert"><?php echo $status_sefaz; ?></div>
+           <?php endif; ?>
+           <?php if(isset($validade_certificado)): ?>
+          <div class="alert-wmbr alert-danger header-alert"><?php echo $validade_certificado; ?></div>
+          <?php endif; ?>
+          <?php endif; ?>
+          ]]></add>
+      </operation>
+  </file>
+  <file name="admin/view/template/catalog/product_form.tpl">
+      <operation info="Add custom tab to product config">
+          <search position="after"><![CDATA[
+          <li><a href="#tab-design" data-toggle="tab"><?php echo $tab_design; ?></a></li>
+          ]]></search>
+          <add><![CDATA[
+          <li><a href="#tab-nfe-config" data-toggle="tab">WebmaniaBR NF-e</a></li>
+          ]]></add>
+      </operation>
+      <operation info="Add custom tab content to product config">
+          <search position="before"><![CDATA[
+          <div class="tab-pane" id="tab-design">
+          ]]></search>
+          <add><![CDATA[
+            <div class="tab-pane" id="tab-nfe-config">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-classe-imposto">Classe de Imposto</label>
+                <div class="col-sm-10">
+                  <input type="text" name="classe_imposto" value="<?php echo $classe_imposto; ?>" placeholder="Classe de Imposto" id="input-classe-imposto" class="form-control" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-ean-barcode">Código de Barras EAN</label>
+                <div class="col-sm-10">
+                  <input type="text" name="ean_barcode" value="<?php echo $ean_barcode; ?>" placeholder="Código de Barras EAN" id="input-ean-barcode" class="form-control" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-ncm-code">Código NCM</label>
+                <div class="col-sm-10">
+                  <input type="text" name="ncm_code" value="<?php echo $ncm_code; ?>" placeholder="Código NCM" id="input-ncm-code" class="form-control" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-cest-code">Código CEST</label>
+                <div class="col-sm-10">
+                  <input type="text" name="cest_code" value="<?php echo $cest_code; ?>" placeholder="Código CEST" id="input-cest-code" class="form-control" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Origem</label>
+                <div class="col-sm-10">
+                  <select name="product_source" class="form-control" />
+                  <option value="-1">Selecionar</option>
+                  <?php
+                  $options = array(
+                  '0' => '0 - Nacional, exceto as indicadas nos códigos 3, 4, 5 e 8',
+                  '1' => '1 - Estrangeira - Importação direta, exceto a indicada no código 6',
+                  '2' => '2 - Estrangeira - Adquirida no mercado interno, exceto a indicada no código 7',
+                  '3' => '3 - Nacional, mercadoria ou bem com Conteúdo de Importação superior a 40% e inferior ou igual a 70%',
+                  '4' => '4 - Nacional, cuja produção tenha sido feita em conformidade com os processos produtivos básicos de que tratam as legislações citadas nos Ajustes',
+                  '5' => '5 - Nacional, mercadoria ou bem com Conteúdo de Importação inferior ou igual a 40%',
+                  '6' => '6 - Estrangeira - Importação direta, sem similar nacional, constante em lista da CAMEX e gás natural',
+                  '7' => '7 - Estrangeira - Adquirida no mercado interno, sem similar nacional, constante lista CAMEX e gás natural',
+                  '8' => '8 - Nacional, mercadoria ou bem com Conteúdo de Importação superior a 70%',
+                  );
+
+                  foreach($options as $value => $option){
+                  $selected = '';
+                  if($value == $product_source){
+                    $selected = 'selected';
+                  }
+                    echo '<option value="'.$value.'" '.$selected.'>'.$option.'</option>';
+                  }
+
+                  ?>
+                </select>
+                </div>
+              </div>
+            </div>
+
+          ]]></add>
+      </operation>
+  </file>
+  <file name="admin/model/catalog/product.php">
+      <operation info="Update product with custom info">
+          <search position="after"><![CDATA[
+          public function editProduct($product_id, $data) {
+          ]]></search>
+          <add><![CDATA[
+            $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape($data['classe_imposto']) . "', ean_barcode = '" . $this->db->escape($data['ean_barcode']) . "', ncm_code = '" . $this->db->escape($data['ncm_code']) . "', cest_code = '" . $this->db->escape($data['cest_code']) . "', product_source = '" . $this->db->escape($data['product_source']) . "' WHERE product_id = '" . (int)$product_id . "'");
+          ]]></add>
+      </operation>
+    </file>
+    <file name="catalog/view/theme/*/template/checkout/checkout.tpl">
+        <operation info="Trigger Event in JS">
+            <search position="before"><![CDATA[
+            $('a[href=\'#collapse-payment-address\']').trigger('click');
+            ]]></search>
+            <add><![CDATA[
+              $(document).trigger('start-correios');
+            ]]></add>
+        </operation>
+        <operation info="Trigger Event in JS">
+            <search position="before"><![CDATA[
+            $('a[href=\'#collapse-shipping-address\']').trigger('click');
+            ]]></search>
+            <add><![CDATA[
+              $(document).trigger('start-correios');
+            ]]></add>
+        </operation>
+      </file>
+    <file name="admin/controller/catalog/product.php">
+      <operation info="Assign custom fields variables">
+          <search position="before"><![CDATA[
+          if (isset($this->request->post['model'])) {
+          ]]></search>
+          <add><![CDATA[
+            if (isset($this->request->post['classe_imposto'])) {
+        			$data['classe_imposto'] = $this->request->post['classe_imposto'];
+        		} elseif (!empty($product_info)) {
+        			$data['classe_imposto'] = $product_info['classe_imposto'];
+        		} else {
+        			$data['classe_imposto'] = '';
+        		}
+
+            if (isset($this->request->post['ean_barcode'])) {
+        			$data['ean_barcode'] = $this->request->post['ean_barcode'];
+        		} elseif (!empty($product_info)) {
+        			$data['ean_barcode'] = $product_info['ean_barcode'];
+        		} else {
+        			$data['ean_barcode'] = '';
+        		}
+
+            if (isset($this->request->post['ncm_code'])) {
+        			$data['ncm_code'] = $this->request->post['ncm_code'];
+        		} elseif (!empty($product_info)) {
+        			$data['ncm_code'] = $product_info['ncm_code'];
+        		} else {
+        			$data['ncm_code'] = '';
+        		}
+
+            if (isset($this->request->post['cest_code'])) {
+        			$data['classe_imposto'] = $this->request->post['cest_code'];
+        		} elseif (!empty($product_info)) {
+        			$data['cest_code'] = $product_info['cest_code'];
+        		} else {
+        			$data['cest_code'] = '';
+        		}
+
+            if (isset($this->request->post['product_source'])) {
+        			$data['product_source'] = $this->request->post['product_source'];
+        		} elseif (!empty($product_info)) {
+        			$data['product_source'] = $product_info['product_source'];
+        		} else {
+        			$data['product_source'] = '';
+        		}
+          ]]></add>
+      </operation>
+  </file>
+</modification>
