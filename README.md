@@ -3,7 +3,7 @@
 Através do emissor de Nota Fiscal da WebmaniaBR®, você conta com a emissão e arquivamento das suas notas fiscais, cálculo automático de impostos, geração do Danfe para impressão e envio automático de e-mails para os clientes. Instale o módulo grátis do OpenCart e contrate um dos planos de Nota Fiscal Eletrônica da WebmaniaBR® a partir de R$29,90/mês: <a href="https://webmaniabr.com/smartsales/nota-fiscal-eletronica/" target="_blank">Assine Agora</a>.
 
 - **Módulo compatível com as versões 2.0 e 2.2**
-- **Faça o download da última versão do módulo:** [Clique aqui](https://github.com/webmaniabr/NFeOpenCart/releases)
+- **Faça download da última versão do módulo:** [Clique aqui](https://github.com/webmaniabr/NFeOpenCart/releases)
 - Sobre o Emissor de NF-e da WebmaniaBR®: [Saiba mais](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
 - Documentação da REST API: [Visualizar](https://webmaniabr.com/docs/rest-api-nfe/)
 
