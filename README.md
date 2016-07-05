@@ -34,6 +34,12 @@ Pasta 2.2 = Compatível com a versão OpenCart 2.2
 Explicação técnica: O vQmod é um inovador sistema de substituição de arquivos através de um método conhecido como “virtual”. Na prática, ao invés de modificar os arquivos originais em PHP do OpenCart as instruções são alteradas em arquivos XML.
 ```
 
+## Adaptar página Finalizar Compra
+
+O módulo utiliza vQmod para inserir os campos obrigatórios na página de Finalizar Compra, Cadastro de novo cliente e Painel de controle para que as notas fiscais sejam emitidas corretamente. É importante que o tema da loja virtual siga o checkout padrão para que possa inserir os campos necessários, porém alterações podem ser feitas no arquivo /admin/controle/nfe/xml/nfe.ocmod.xml e /vqmod/xml/nfe.ocmod.xml.
+
+Havendo dúvidas de como manusear o arquivo e eventuais incompatibilidades com o seu tema, por favor, entre em contato no e-mail suporte@webmaniabr.com.
+
 ## Instruções
 
 **OpenCart 2.0 ou superior**
