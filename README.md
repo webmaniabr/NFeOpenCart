@@ -34,7 +34,7 @@ Explicação técnica: O vQmod é um inovador sistema de substituição de arqui
 
 O módulo utiliza vQmod para inserir os campos obrigatórios na página de Finalizar Compra, Cadastro de novo cliente e Painel de controle para que as notas fiscais sejam emitidas corretamente. É importante que o tema da loja virtual siga o checkout padrão para que possa inserir os campos necessários, porém alterações podem ser feitas nos seguintes arquivos
 
-- /admin/controle/nfe/xml/nfe.ocmod.xml
+- /admin/controller/nfe/xml/nfe.ocmod.xml
 - /vqmod/xml/nfe.ocmod.xml
 
 Havendo dúvidas de como manusear o arquivo e eventuais incompatibilidades com o seu tema, por favor, entre em contato no e-mail suporte@webmaniabr.com.
