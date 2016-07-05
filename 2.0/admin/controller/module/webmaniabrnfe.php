@@ -1,6 +1,6 @@
 <?php
 
-class ControllerModuleWebmaniabrNfe extends Controller {
+class ControllerModuleWebmaniaBRNFe extends Controller {
 
   private $error = array();
   public  $NFe = null;
@@ -282,7 +282,9 @@ class ControllerModuleWebmaniabrNfe extends Controller {
         if(strlen($success) > 0){
           $this->session->data['success'] = $success;
         }
-        $this->response->redirect($this->url->link('sale/order', 'token=' . $this->session->data['token'] . $url, 'SSL'));
+          
+        $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);  
+        $this->response->redirect($url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL'));
       }
 
     }

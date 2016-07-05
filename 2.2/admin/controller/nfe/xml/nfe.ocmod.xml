@@ -191,7 +191,7 @@
           <add><![CDATA[
             if(isset($this->request->get['route'])){
               $route = $this->request->get['route'];
-              if($route == 'customer/customer/add' || $route == 'customer/customer/edit'){
+              if($route == 'customer/customer/add' || $route == 'customer/customer/edit' || $route == 'sale/order/add'){
                 $data['run_script'] = true;
                 $this->load->model('setting/setting');
             		$module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
@@ -399,12 +399,12 @@
    $custom_fields = $this->model_customer_custom_field->getCustomFields(array('filter_customer_group_id' => $this->request->post['customer_group_id']));
    ]]></search>
    <add><![CDATA[
-     $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+   $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
    ]]></add>
    </operation>
    <operation info="Validate Custom Fields">
-       <search position="before"><![CDATA[
-       if (($custom_field['location'] == 'account') && $custom_field['required'] &&
+       <search position="after" index="2"><![CDATA[
+       foreach ($custom_fields as $custom_field) {
        ]]></search>
        <add><![CDATA[
          if($custom_field['location'] == 'account'){
@@ -429,6 +429,54 @@
          $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
            if($valid === false){
              $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
+             continue;
+           }
+         }
+           if($custom_field['name'] == 'CPF'){
+             continue;
+           }
+         }
+         }
+
+       ]]></add>
+   </operation>
+ </file>
+ <file name="catalog/controller/api/customer.php">
+   <operation info="Validate Custom Fields">
+   <search position="after"><![CDATA[
+   $custom_fields = $this->model_account_custom_field->getCustomFields($customer_group_id);
+   ]]></search>
+   <add><![CDATA[
+   $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+   ]]></add>
+   </operation>
+   <operation info="Validate Custom Fields">
+       <search position="after"><![CDATA[
+       foreach ($custom_fields as $custom_field) {
+       ]]></search>
+       <add><![CDATA[
+         if($custom_field['location'] == 'account'){
+         $tipo_pessoa = $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']];
+         if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
+
+           if($custom_field['name'] == 'CPF'){
+           $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+           $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+             if($valid === false){
+               $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
+               continue;
+             }
+           }
+
+           if($custom_field['name'] == 'CNPJ' || $custom_field['name'] == 'Razão Social' || $custom_field['name'] == 'Inscrição Estadual'){
+             continue;
+           }
+         }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
+         if($custom_field['name'] == 'CNPJ'){
+         $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+         $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+           if($valid === false){
+             $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
              continue;
            }
          }

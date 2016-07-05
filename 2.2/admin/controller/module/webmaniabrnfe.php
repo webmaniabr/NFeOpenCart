@@ -2,148 +2,146 @@
 
 class ControllerModuleWebmaniaBRNFe extends Controller {
 
-    private $error = array();
-    public  $NFe = null;
-    public  $module_settings = null;
+  private $error = array();
+  public  $NFe = null;
+  public  $module_settings = null;
 
-    function __construct( $registry ){
+  function __construct( $registry ){
 
-        $this->registry = $registry;
+      $this->registry = $registry;
 
-        require_once (__DIR__.'/../nfe/NFe.php');
-        require_once (__DIR__.'/../nfe/functions.php');
+      require_once (__DIR__.'/../nfe/NFe.php');
+      require_once (__DIR__.'/../nfe/functions.php');
 
-        $this->NFeFunctions = new NFeFunctions;
-        
-        if(!$this->NFeFunctions->isInstalled( $this, true )) return false;
-        if(!$this->checkAuthentication()) return false;
+      $this->NFeFunctions = new NFeFunctions;
 
-        $this->NFe = $this->getNFe();
-        $this->NFeFunctions = new NFeFunctions;
+      if(!$this->NFeFunctions->isInstalled( $this, true )) return false;
+      if(!$this->checkAuthentication()) return false;
 
+      $this->NFe = $this->getNFe();
+      $this->NFeFunctions = new NFeFunctions;
+
+  }
+
+  public function index() {
+
+    $this->load->language('module/webmaniabrnfe');
+
+    $this->document->setTitle($this->language->get('heading_title'));
+
+    // Load the Setting Model  (All of the OpenCart Module & General Settings are saved using this Model )
+    $this->load->model('setting/setting');
+
+    // Save settings if valid
+    if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
+      $this->model_setting_setting->editSetting('webmaniabrnfe', $this->request->post);
+
+      // Displays the success text on data save
+      $this->session->data['success'] = $this->language->get('text_success');
+
+      // Redirect to the Module Listing
+      $this->response->redirect($this->url->link('module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'));
     }
 
-    public function index() {
+    // Assign the language data for parsing it to view
+    $language_data = array(
+      'heading_title'       => 'heading_title',
+      'text_edit'           => 'text_edit',
+      'text_enabled'        => 'text_enabled',
+      'text_disabled'       => 'text_disabled',
+      'text_content_top'    => 'text_content_top',
+      'text_content_bottom' => 'text_content_bottom',
+      'text_column_left'    => 'text_column_left',
+      'text_column_right'   => 'text_column_right',
+      'entry_code'          => 'entry_code',
+      'entry_layout'        => 'entry_layout',
+      'entry_position'      => 'entry_position',
+      'entry_status'        => 'entry_status',
+      'entry_sort_order'    => 'entry_sort_order',
+      'button_save'         => 'button_save',
+      'button_edit'         => 'button_edit',
+      'button_cancel'       => 'button_cancel',
+      'button_add_module'   => 'button_add_module',
+      'button_remove'       => 'button_remove',
+    );
 
-        $this->load->language('module/webmaniabrnfe');
-
-        $this->document->setTitle($this->language->get('heading_title'));
-
-        // Load the Setting Model  (All of the OpenCart Module & General Settings are saved using this Model )
-        $this->load->model('setting/setting');
-
-        // Save settings if valid
-        if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-          $this->model_setting_setting->editSetting('webmaniabrnfe', $this->request->post);
-
-          // Displays the success text on data save
-          $this->session->data['success'] = $this->language->get('text_success');
-
-          // Redirect to the Module Listing
-          $this->response->redirect($this->url->link('module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'));
-        }
-
-        // Assign the language data for parsing it to view
-        $language_data = array(
-          'heading_title'       => 'heading_title',
-          'text_edit'           => 'text_edit',
-          'text_enabled'        => 'text_enabled',
-          'text_disabled'       => 'text_disabled',
-          'text_content_top'    => 'text_content_top',
-          'text_content_bottom' => 'text_content_bottom',
-          'text_column_left'    => 'text_column_left',
-          'text_column_right'   => 'text_column_right',
-          'entry_code'          => 'entry_code',
-          'entry_layout'        => 'entry_layout',
-          'entry_position'      => 'entry_position',
-          'entry_status'        => 'entry_status',
-          'entry_sort_order'    => 'entry_sort_order',
-          'button_save'         => 'button_save',
-          'button_edit'         => 'button_edit',
-          'button_cancel'       => 'button_cancel',
-          'button_add_module'   => 'button_add_module',
-          'button_remove'       => 'button_remove',
-        );
-
-        foreach($language_data as $key => $value){
-          $data[$key] = $this->language->get($value);
-        }
-
-        // Add warnings
-        if (isset($this->error['warning'])) {
-          $data['error_warning'] = $this->error['warning'];
-        } else {
-          $data['error_warning'] = '';
-        }
-
-        //Add success
-        if (isset($this->session->data['success'])) {
-          $data['success_message'] = $this->session->data['success'];
-        } else {
-          $data['success_message'] = '';
-        }
-
-        // This Block returns the error code if any
-        if (isset($this->error['code'])) {
-          $data['error_code'] = $this->error['code'];
-        } else {
-          $data['error_code'] = '';
-        }
-
-        // Making of Breadcrumbs to be displayed on site
-        $data['breadcrumbs'] = array();
-        $data['breadcrumbs'][] = array(
-          'text'      => $this->language->get('text_home'),
-          'href'      => $this->url->link('common/home', 'token=' . $this->session->data['token'], 'SSL'),
-          'separator' => false
-        );
-        $data['breadcrumbs'][] = array(
-          'text'      => $this->language->get('text_module'),
-          'href'      => $this->url->link('extension/module', 'token=' . $this->session->data['token'], 'SSL'),
-          'separator' => ' :: '
-        );
-        $data['breadcrumbs'][] = array(
-          'text'      => $this->language->get('heading_title'),
-          'href'      => $this->url->link('module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'),
-          'separator' => ' :: '
-        );
-
-        $data['action'] = $this->url->link('module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'); // URL to be directed when the save button is pressed
-
-        $data['cancel'] = $this->url->link('extension/module', 'token=' . $this->session->data['token'], 'SSL'); // URL to be redirected when cancel button is pressed
-
-        $settings_fields = array(
-          'consumer_key',
-          'consumer_secret',
-          'access_token',
-          'access_token_secret',
-          'operation_nature',
-          'sefaz_env',
-          'tax_class',
-          'ean_barcode',
-          'ncm_code',
-          'cest_code',
-          'product_source',
-          'fill_address',
-          'mask_fields',
-        );
-        foreach($settings_fields as $field){
-          if (isset($this->request->post[$field])) {
-            $data['webmaniabrnfe_'.$field] = $this->request->post['webmaniabrnfe_'.$field];
-          } else {
-            $data['webmaniabrnfe_'.$field] = $this->config->get('webmaniabrnfe_'.$field);
-          }
-        }
-
-          $data['header'] = $this->load->controller('common/header');
-          $data['column_left'] = $this->load->controller('common/column_left');
-          $data['footer'] = $this->load->controller('common/footer');
-
-          $this->response->setOutput($this->load->view('module/webmaniabrnfe.tpl', $data));
-
+    foreach($language_data as $key => $value){
+      $data[$key] = $this->language->get($value);
     }
 
+    // Add warnings
+    if (isset($this->error['warning'])) {
+      $data['error_warning'] = $this->error['warning'];
+    } else {
+      $data['error_warning'] = '';
+    }
 
+    //Add success
+    if (isset($this->session->data['success'])) {
+      $data['success_message'] = $this->session->data['success'];
+    } else {
+      $data['success_message'] = '';
+    }
+
+    // This Block returns the error code if any
+    if (isset($this->error['code'])) {
+      $data['error_code'] = $this->error['code'];
+    } else {
+      $data['error_code'] = '';
+    }
+
+    // Making of Breadcrumbs to be displayed on site
+    $data['breadcrumbs'] = array();
+    $data['breadcrumbs'][] = array(
+      'text'      => $this->language->get('text_home'),
+      'href'      => $this->url->link('common/home', 'token=' . $this->session->data['token'], 'SSL'),
+      'separator' => false
+    );
+    $data['breadcrumbs'][] = array(
+      'text'      => $this->language->get('text_module'),
+      'href'      => $this->url->link('extension/module', 'token=' . $this->session->data['token'], 'SSL'),
+      'separator' => ' :: '
+    );
+    $data['breadcrumbs'][] = array(
+      'text'      => $this->language->get('heading_title'),
+      'href'      => $this->url->link('module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'),
+      'separator' => ' :: '
+    );
+
+    $data['action'] = $this->url->link('module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'); // URL to be directed when the save button is pressed
+
+    $data['cancel'] = $this->url->link('extension/module', 'token=' . $this->session->data['token'], 'SSL'); // URL to be redirected when cancel button is pressed
+
+    $settings_fields = array(
+      'consumer_key',
+      'consumer_secret',
+      'access_token',
+      'access_token_secret',
+      'operation_nature',
+      'sefaz_env',
+      'tax_class',
+      'ean_barcode',
+      'ncm_code',
+      'cest_code',
+      'product_source',
+      'fill_address',
+      'mask_fields',
+    );
+    foreach($settings_fields as $field){
+      if (isset($this->request->post[$field])) {
+        $data['webmaniabrnfe_'.$field] = $this->request->post['webmaniabrnfe_'.$field];
+      } else {
+        $data['webmaniabrnfe_'.$field] = $this->config->get('webmaniabrnfe_'.$field);
+      }
+    }
+
+      $data['header'] = $this->load->controller('common/header');
+      $data['column_left'] = $this->load->controller('common/column_left');
+      $data['footer'] = $this->load->controller('common/footer');
+
+      $this->response->setOutput($this->load->view('module/webmaniabrnfe.tpl', $data));
+
+    }
 
     public function install(){
 
@@ -178,6 +176,8 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
     }
 
+
+
     /* Function that validates the data when Save Button is pressed */
     protected function validate() {
 
@@ -192,15 +192,12 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       } else {
         return false;
       }
-
     }
 
     //Languages for custom_field_description
     public function getLanguages(){
-
       $languages = $this->db->query("SELECT language_id FROM " . DB_PREFIX . "language");
       return $languages;
-
     }
 
     function getModuleSettings(){
@@ -231,7 +228,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       }
 
       return true;
-        
+
     }
 
     //Get NFe object and create in case it doesnt exist
@@ -285,7 +282,9 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
         if(strlen($success) > 0){
           $this->session->data['success'] = $success;
         }
-        $this->response->redirect($this->url->link('sale/order', 'token=' . $this->session->data['token'] . $url, 'SSL'));
+          
+        $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);  
+        $this->response->redirect($url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL'));
       }
 
     }
@@ -335,7 +334,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       }
 
     }
-    
+
     function is_cpf( $cpf = null ){
 
         return $this->NFeFunctions->is_cpf( $cpf );
@@ -385,4 +384,4 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
     }
 
-}
+  }

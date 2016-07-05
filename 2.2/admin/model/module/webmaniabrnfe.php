@@ -1,25 +1,27 @@
 <?php
 class ModelModuleWebmaniaBRNFe extends Model {
-    
+
 	public function getNfeInfo($order_data, $products_data){
-        
-        global $registry;
-        require_once (__DIR__.'/../../controller/nfe/functions.php');
-        require_once (__DIR__.'/../../controller/module/webmaniabrnfe.php');
-        $NFeFunctions = new NFeFunctions;
-        $controller = new ControllerModuleWebmaniaBRNFe($registry);
-        
+		
+		global $registry;
+		require_once (__DIR__.'/../../controller/nfe/functions.php');
+		require_once (__DIR__.'/../../controller/module/webmaniabrnfe.php');
+		$NFeFunctions = new NFeFunctions;
+		$controller = new ControllerModuleWebmaniaBRNFe($registry);
+
 		$this->load->model('setting/setting');
 		$this->load->model('catalog/product');
-		$this->load->model('customer/customer');
+		$this->load->model('sale/customer');
 		$this->load->model('sale/order');
 		$total_discounts = 0;
 		$total = 0;
 		$order_totals = $this->model_sale_order->getOrderTotals($order_data['order_id']);
 		$module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
 
-		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
-		$custom_fields_customer = json_decode($customer_info['custom_field'], true);
+		$customer_info = $this->model_sale_customer->getCustomer($order_data['customer_id']);
+
+		$custom_fields_customer = unserialize($customer_info['custom_field']);
+
 
 		$custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
 		$documento = $NFeFunctions->get_value_from_fields( 'tipo_pessoa', $custom_fields_ids, $custom_fields_customer );
@@ -42,9 +44,10 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			if($order_total['code'] == 'shipping'){
 				$shipping_total = $order_total['value'];
 			}
-			if($order_total['code'] == 'coupon'){
-				$total_discounts += abs($order_total['value']);
-			}
+			
+            if ($order_total['value'] < 0){
+                $total_discounts += abs($order_total['value']);
+            }
 
 			if($order_total['code'] == 'sub_total'){
 				$total = $order_total['value'];
@@ -62,13 +65,10 @@ class ModelModuleWebmaniaBRNFe extends Model {
      );
 
 		foreach ($products_data as $product){
-			$product_id = $product['product_id'];
+			
+            $product_id = $product['product_id'];
 			$product_info = $this->model_catalog_product->getProduct($product_id);
 			$product_discounts = $this->model_catalog_product->getProductDiscounts($product_id);
-			if($product['price'] != $product_info['price']){
-				$discount = $product_info['price'] - $product['price'];
-				$total_discounts += ($discount*$product['quantity']);
-			}
 
 			/*
 			* Specific product values
@@ -88,8 +88,16 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			$imposto_row = $this->db->query('SELECT classe_imposto FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$imposto = $imposto_row->row['classe_imposto'];
 			$peso = $product_info['weight'];
+            
+            $kg = explode('.', $peso);
+            if (strlen($kg[0]) >= 3) {
+
+                $peso = $peso / 1000;
+
+            }
 
 			if (!$peso) $peso = '0.100';
+            $peso = number_format($peso, 3, '.', '');
 			if (!$codigo_ean) $codigo_ean = $module_settings['webmaniabrnfe_ean_barcode'];
 			if (!$codigo_ncm) $codigo_ncm = $module_settings['webmaniabrnfe_ncm_code'];
 			if (!$codigo_cest) $codigo_cest = $module_settings['webmaniabrnfe_cest_code'];

@@ -1,5 +1,5 @@
 <?php
-class ModelModuleWebmaniaBRNfe extends Model {
+class ModelModuleWebmaniaBRNFe extends Model {
 
 	public function getNfeInfo($order_data, $products_data){
 		
@@ -44,9 +44,10 @@ class ModelModuleWebmaniaBRNfe extends Model {
 			if($order_total['code'] == 'shipping'){
 				$shipping_total = $order_total['value'];
 			}
-			if($order_total['code'] == 'coupon'){
-				$total_discounts += abs($order_total['value']);
-			}
+			
+            if ($order_total['value'] < 0){
+                $total_discounts += abs($order_total['value']);
+            }
 
 			if($order_total['code'] == 'sub_total'){
 				$total = $order_total['value'];
@@ -64,13 +65,10 @@ class ModelModuleWebmaniaBRNfe extends Model {
      );
 
 		foreach ($products_data as $product){
-			$product_id = $product['product_id'];
+			
+            $product_id = $product['product_id'];
 			$product_info = $this->model_catalog_product->getProduct($product_id);
 			$product_discounts = $this->model_catalog_product->getProductDiscounts($product_id);
-			if($product['price'] != $product_info['price']){
-				$discount = $product_info['price'] - $product['price'];
-				$total_discounts += ($discount*$product['quantity']);
-			}
 
 			/*
 			* Specific product values
@@ -90,8 +88,16 @@ class ModelModuleWebmaniaBRNfe extends Model {
 			$imposto_row = $this->db->query('SELECT classe_imposto FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$imposto = $imposto_row->row['classe_imposto'];
 			$peso = $product_info['weight'];
+            
+            $kg = explode('.', $peso);
+            if (strlen($kg[0]) >= 3) {
+
+                $peso = $peso / 1000;
+
+            }
 
 			if (!$peso) $peso = '0.100';
+            $peso = number_format($peso, 3, '.', '');
 			if (!$codigo_ean) $codigo_ean = $module_settings['webmaniabrnfe_ean_barcode'];
 			if (!$codigo_ncm) $codigo_ncm = $module_settings['webmaniabrnfe_ncm_code'];
 			if (!$codigo_cest) $codigo_cest = $module_settings['webmaniabrnfe_cest_code'];

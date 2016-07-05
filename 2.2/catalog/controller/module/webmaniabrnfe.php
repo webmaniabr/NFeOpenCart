@@ -33,6 +33,6 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       return $this->NFeFunctions->isInstalled( $this );
 
     }
-
+    
 }
 ?>

@@ -125,10 +125,10 @@ class NFeFunctions {
 
       $i = 0;
       $custom_fields = array();
-      $saved_fields = $class->db->query("SELECT value FROM ".DB_PREFIX."setting WHERE `code` = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
+      $saved_fields = $class->db->query("SELECT value FROM ".DB_PREFIX."setting WHERE code = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
       if ($saved_fields->num_rows == 0) $saved_fields = array();
       else { $saved_fields = $saved_fields->row['value']; $saved_fields = unserialize($saved_fields); }
-      $query = $class->db->query("SELECT a.custom_field_id, a.name, b.sort_order, b.location FROM ".DB_PREFIX."custom_field_description AS a INNER JOIN ".DB_PREFIX."custom_field AS b ON a.custom_field_id = b.custom_field_id WHERE a.language_id = '1' ORDER by b.sort_order ASC");
+      $query = $class->db->query("SELECT a.custom_field_id, a.name, b.sort_order, b.location FROM ".DB_PREFIX."custom_field_description AS a INNER JOIN ".DB_PREFIX."custom_field AS b ON a.custom_field_id = b.custom_field_id ORDER by b.sort_order ASC");
       $new_position_account = 6;
       $new_position_address = 4;
 
@@ -233,6 +233,7 @@ class NFeFunctions {
       if ($amb == 'backend'){
 
           $get_fields = $class->getCustomFields();
+
 
           if (!isset($tipo_pessoa)){
 
@@ -351,10 +352,12 @@ class NFeFunctions {
 
         $saved_fields[] = $custom_fields;
         $saved_fields = serialize($saved_fields);
-        if ($insert) $class->db->query("INSERT INTO ".DB_PREFIX."setting (`store_id`, `code`, `key`, `value`) VALUES (0, 'webmaniabrnfe', 'webmaniabrnfe_saved_fields', '$saved_fields')");
+
+        if ($insert) $class->db->query("INSERT INTO ".DB_PREFIX."setting (`store_id`, `code`, `key`, `value`) VALUES ('0', 'webmaniabrnfe', 'webmaniabrnfe_saved_fields', '$saved_fields')");
+
         else {
 
-            $query = $class->db->query("SELECT setting_id FROM ".DB_PREFIX."setting WHERE `code` = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
+            $query = $class->db->query("SELECT setting_id FROM ".DB_PREFIX."setting WHERE code = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
             $setting_id = $query->row['setting_id'];
             $class->db->query("UPDATE ".DB_PREFIX."setting SET value = '$saved_fields' WHERE setting_id = '$setting_id'");
 
