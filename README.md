@@ -14,12 +14,7 @@ Através do emissor de Nota Fiscal da WebmaniaBR®, você conta com a emissão e
 
 ## Instalação do Módulo
 
-O módulo de OpenCart da WebmaniaBR® é compatível com as versões 2.0 e 2.2. Para isso é necessário transferir todos os arquivos que estão dentro da pasta, de acordo com a versão da sua loja virtual. Por exemplo, caso a sua loja virtual seja a versão 2.2, envie todos os arquivos na raiz da sua loja que estão dentro da pasta 2.2.
-
-```
-Pasta 2.0 = Compatível com a versão OpenCart 2.0
-Pasta 2.2 = Compatível com a versão OpenCart 2.2
-```
+Após realizar o download da última versão ([Clique aqui](https://github.com/webmaniabr/NFeOpenCart/releases)), descompacte o arquivo zip e envie todos os arquivos na pasta raiz da sua loja virtual. A transferência pode ser realizada através do acesso FTP da sua hospedagem.
 
 ## Ativação do Módulo
 
