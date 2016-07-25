@@ -105,6 +105,27 @@
        'complemento' => $shipping_complemento,
        ]]></add>
      </operation>
+     <operation info="Get Nfe Info">
+       <search position="before" ><![CDATA[
+       $this->response->setOutput($this->load->view('sale/order_info.tpl', $data));
+       ]]></search>
+       <add><![CDATA[
+       $query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+       $url = $this->url->link('module/webmaniabrnfe/updateNFe', 'token=' . $this->session->data['token'], true);
+
+       if(isset($query->rows[0]['nfe_info'])){
+        $nfe_info = unserialize($query->rows[0]['nfe_info']);
+        $data['nfe_info'] = $nfe_info;
+        $data['url'] = $url;
+       }else{
+        $data['nfe_info'] = array();
+        $data['url'] = '';
+       }
+
+
+       ]]></add>
+
+     </operation>
    </file>
 
    <file name="admin/view/template/common/header.tpl">
@@ -1093,6 +1114,12 @@
           <add><![CDATA[
             <div class="tab-pane" id="tab-nfe-config">
               <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-ignorar-nfe">Ignorar produto ao emitir NFe</label>
+                <div class="col-sm-10">
+                  <input type="checkbox" name="ignorar_nfe" value="1" id="input-ignorar-nfe" class="form-control" style="margin-top:15px;" <?php if($ignorar_nfe == '1') echo 'checked'; ?> />
+                </div>
+              </div>
+              <div class="form-group">
                 <label class="col-sm-2 control-label" for="input-classe-imposto">Classe de Imposto</label>
                 <div class="col-sm-10">
                   <input type="text" name="classe_imposto" value="<?php echo $classe_imposto; ?>" placeholder="Classe de Imposto" id="input-classe-imposto" class="form-control" />
@@ -1157,7 +1184,7 @@
           public function editProduct($product_id, $data) {
           ]]></search>
           <add><![CDATA[
-            $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape($data['classe_imposto']) . "', ean_barcode = '" . $this->db->escape($data['ean_barcode']) . "', ncm_code = '" . $this->db->escape($data['ncm_code']) . "', cest_code = '" . $this->db->escape($data['cest_code']) . "', product_source = '" . $this->db->escape($data['product_source']) . "' WHERE product_id = '" . (int)$product_id . "'");
+            $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape($data['classe_imposto']) . "', ean_barcode = '" . $this->db->escape($data['ean_barcode']) . "', ncm_code = '" . $this->db->escape($data['ncm_code']) . "', cest_code = '" . $this->db->escape($data['cest_code']) . "', product_source = '" . $this->db->escape($data['product_source']) . "', ignorar_nfe = '" . $this->db->escape($data['ignorar_nfe']) . "' WHERE product_id = '" . (int)$product_id . "'");
           ]]></add>
       </operation>
     </file>
@@ -1210,7 +1237,7 @@
         		}
 
             if (isset($this->request->post['cest_code'])) {
-        			$data['classe_imposto'] = $this->request->post['cest_code'];
+        			$data['cest_code'] = $this->request->post['cest_code'];
         		} elseif (!empty($product_info)) {
         			$data['cest_code'] = $product_info['cest_code'];
         		} else {
@@ -1224,6 +1251,90 @@
         		} else {
         			$data['product_source'] = '';
         		}
+
+            if (isset($this->request->post['ignorar_nfe'])) {
+        			$data['ignorar_nfe'] = $this->request->post['ignorar_nfe'];
+        		} elseif (!empty($product_info)) {
+        			$data['ignorar_nfe'] = $product_info['ignorar_nfe'];
+        		} else {
+        			$data['ignorar_nfe'] = '';
+        		}
+          ]]></add>
+      </operation>
+  </file>
+  <file name="admin/view/template/sale/order_info.tpl">
+      <operation info="Insert NFe emitidas">
+          <search position="before"><![CDATA[
+          <div class="panel panel-default">
+          ]]></search>
+          <add><![CDATA[
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Notas Emitidas para este pedido</h3>
+              </div>
+              <div class="panel-body">
+                <?php if(empty($nfe_info)): ?>
+                <p>Nenhuma nota emitida</p>
+                <?php else: ?>
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                  <thead>
+                    <tr>
+                      <tr>
+                        <th id="columnname" class="manage-column column-columnname" scope="col" width="15%">Data</th>
+                        <th id="columnname" class="manage-column column-columnname" scope="col" width="5%">Série</th>
+                        <th id="columnname" class="manage-column column-columnname" scope="col" width="5%">Nº</th>
+                        <th id="columnname" class="manage-column column-columnname" scope="col" width="15%">RPS</th>
+                        <th id="columnname" class="manage-column column-columnname" scope="col">Código Verificação</th>
+                        <th id="columnname" class="manage-column column-columnname" scope="col" width="10%">Arquivo XML</th>
+                        <th id="columnname" class="manage-column column-columnname" scope="col" width="10%">Danfe</th>
+                        <th id="columnname" class="manage-column column-columnname" scope="col" width="10%">Status</th>
+                      </tr>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach($nfe_info as $order_nfe): ?>
+                      <tr><td class="column-columnname"><?php echo $order_nfe['data']; ?></td>
+                      <td class="column-columnname"><?php echo $order_nfe['n_serie']; ?></td>
+                      <td class="column-columnname"><?php echo $order_nfe['n_nfe']; ?></td>
+                      <td class="column-columnname"><?php echo $order_nfe['n_recibo']; ?></td>
+                      <td class="column-columnname"><?php echo $order_nfe['chave_acesso']; ?></td>
+                      <td class="column-columnname"><a target="_blank" href="<?php echo $order_nfe['url_xml']; ?>">Download XML</a></td>
+                      <td class="column-columnname"><a target="_blank" href="<?php echo $order_nfe['url_danfe']; ?>">Visualizar Nota</a></td>
+                      <td class="column-columnname" style="padding: 10px 10px;">
+                        <span class="nfe-status <?php echo $order_nfe['status']; ?>"><?php echo $order_nfe['status']; ?></span>
+                        <a href="<?php echo $url.'&order_id='.$order_id.'&atualizar=1&chave_acesso='.$order_nfe['chave_acesso']; ?>">Atualizar Status</a>
+                        </td></tr>
+                  <?php endforeach; ?>
+                  </tbody>
+                </table>
+                <style>
+
+
+        					.nfe-status {
+        						text-transform: capitalize;
+        						color: #FFF;
+            				padding: 2px 5px;
+        					}
+
+        					.nfe-status.aprovado {
+        						background-color: #46894b;
+        					}
+
+        					.nfe-status.reprovado,
+        					.nfe-status.cancelado {
+        						background-color: #ce3737;
+        					}
+
+        					.nfe-status.processando,
+        					.nfe-status.contingencia{
+        						background-color: #eccb28;
+        						color: #000;
+        						font-weight: 600;
+        					}
+        				</style>
+                <?php endif; ?>
+              </div>
+            </div>
           ]]></add>
       </operation>
   </file>

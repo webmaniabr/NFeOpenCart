@@ -1,6 +1,6 @@
 <?php
 
-class ControllerModuleWebmaniaBRNFe extends Controller {
+class ControllerModuleWebmaniabrNfe extends Controller {
 
   private $error = array();
   public  $NFe = null;
@@ -8,18 +8,18 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
   function __construct( $registry ){
 
-      $this->registry = $registry;
+    $this->registry = $registry;
 
-      require_once (__DIR__.'/../nfe/NFe.php');
-      require_once (__DIR__.'/../nfe/functions.php');
+    require_once (__DIR__.'/../nfe/NFe.php');
+    require_once (__DIR__.'/../nfe/functions.php');
 
-      $this->NFeFunctions = new NFeFunctions;
+    $this->NFeFunctions = new NFeFunctions;
 
-      if(!$this->NFeFunctions->isInstalled( $this, true )) return false;
-      if(!$this->checkAuthentication()) return false;
+    if(!$this->NFeFunctions->isInstalled( $this, true )) return false;
+    if(!$this->checkAuthentication()) return false;
 
-      $this->NFe = $this->getNFe();
-      $this->NFeFunctions = new NFeFunctions;
+    $this->NFe = $this->getNFe();
+    $this->NFeFunctions = new NFeFunctions;
 
   }
 
@@ -126,6 +126,8 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       'product_source',
       'fill_address',
       'mask_fields',
+      'fisco_inf',
+      'cons_inf',
     );
     foreach($settings_fields as $field){
       if (isset($this->request->post[$field])) {
@@ -135,253 +137,337 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       }
     }
 
-      $data['header'] = $this->load->controller('common/header');
-      $data['column_left'] = $this->load->controller('common/column_left');
-      $data['footer'] = $this->load->controller('common/footer');
+    $data['header'] = $this->load->controller('common/header');
+    $data['column_left'] = $this->load->controller('common/column_left');
+    $data['footer'] = $this->load->controller('common/footer');
 
-      $this->response->setOutput($this->load->view('module/webmaniabrnfe.tpl', $data));
+    $this->response->setOutput($this->load->view('module/webmaniabrnfe.tpl', $data));
 
+  }
+
+  public function install(){
+
+    // Install vqMod file
+    $filename = 'nfe.ocmod.xml';
+    $dest = __DIR__.'/../../../vqmod/xml/';
+    $file_copy = __DIR__.'/../nfe/xml/nfe.ocmod.xml';
+    $oc_mod_exist = file_exists($dest.$filename);
+
+    if($oc_mod_exist === false){
+      copy($file_copy, $dest.$filename);
     }
 
-    public function install(){
+    //Try to insert Required custom Fields on Install
+    $this->NFeFunctions->getCustomFieldsIds( $this );
 
-      // Install vqMod file
-      $filename = 'nfe.ocmod.xml';
-      $dest = __DIR__.'/../../../vqmod/xml/';
-      $file_copy = __DIR__.'/../nfe/xml/nfe.ocmod.xml';
-      $oc_mod_exist = file_exists($dest.$filename);
+    //Disable Guest Checkout
+    $store_id = $this->config->get('config_store_id');
+    $this->load->model('setting/setting');
+    $this->model_setting_setting->editSettingValue('config', 'config_checkout_guest', 0, $store_id);
 
-      if($oc_mod_exist === false){
-        copy($file_copy, $dest.$filename);
-      }
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'classe_imposto'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN classe_imposto VARCHAR (15), ADD COLUMN ean_barcode VARCHAR (15), ADD COLUMN ncm_code VARCHAR (15), ADD COLUMN cest_code VARCHAR (15), ADD COLUMN product_source VARCHAR (15) DEFAULT -1");
+    }
 
-      //Try to insert Required custom Fields on Install
-      $this->NFeFunctions->getCustomFieldsIds( $this );
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'ignorar_nfe'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN ignorar_nfe VARCHAR (5) DEFAULT 0");
+    }
 
-      //Disable Guest Checkout
-      $store_id = $this->config->get('config_store_id');
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'status_nfe'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN status_nfe BOOLEAN DEFAULT 0");
+    }
+
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_info'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_info TEXT");
+    }
+
+  }
+
+  public function uninstall(){
+
+    // Delete vqMod file
+    $filepath = __DIR__.'/../../../vqmod/xml/nfe.ocmod.xml';
+    $oc_mod_exist = file_exists($filepath);
+    if($oc_mod_exist === true){
+      unlink($filepath);
+    }
+
+  }
+
+
+
+  /* Function that validates the data when Save Button is pressed */
+  protected function validate() {
+
+    // Block to check the user permission to manipulate the module
+    if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe')) {
+      $this->error['warning'] = $this->language->get('error_permission');
+    }
+
+    // Block returns true if no error is found, else false if any error detected
+    if (!$this->error) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  //Languages for custom_field_description
+  public function getLanguages(){
+    $languages = $this->db->query("SELECT language_id FROM " . DB_PREFIX . "language");
+    return $languages;
+  }
+
+  function getModuleSettings(){
+    if(is_null($this->module_settings)){
       $this->load->model('setting/setting');
-      $this->model_setting_setting->editSettingValue('config', 'config_checkout_guest', 0, $store_id);
-
+      $this->module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
     }
 
-    public function uninstall(){
+    return $this->module_settings;
+  }
 
-      // Delete vqMod file
-      $filepath = __DIR__.'/../../../vqmod/xml/nfe.ocmod.xml';
-      $oc_mod_exist = file_exists($filepath);
-      if($oc_mod_exist === true){
-        unlink($filepath);
-      }
+  //Check if authentication values are set in module configuration
+  function checkAuthentication(){
 
-    }
+    $settings = $this->getModuleSettings();
+    $settings_arr = array(
+      'webmaniabrnfe_access_token',
+      'webmaniabrnfe_access_token_secret',
+      'webmaniabrnfe_consumer_key',
+      'webmaniabrnfe_consumer_secret',
+    );
 
-
-
-    /* Function that validates the data when Save Button is pressed */
-    protected function validate() {
-
-      // Block to check the user permission to manipulate the module
-      if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe')) {
-        $this->error['warning'] = $this->language->get('error_permission');
-      }
-
-      // Block returns true if no error is found, else false if any error detected
-      if (!$this->error) {
-        return true;
-      } else {
+    foreach($settings_arr as $setting_val){
+      if(!isset($settings[$setting_val]) || empty($settings[$setting_val])){
+        $this->session->data['status_sefaz'] = '<strong>Opencart NF-e:</strong> Informe as credenciais de acesso da aplicação em Extensões > Módulos > WebmaniaBR NF-e.';
         return false;
       }
     }
 
-    //Languages for custom_field_description
-    public function getLanguages(){
-      $languages = $this->db->query("SELECT language_id FROM " . DB_PREFIX . "language");
-      return $languages;
-    }
+    return true;
 
-    function getModuleSettings(){
-      if(is_null($this->module_settings)){
-        $this->load->model('setting/setting');
-        $this->module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
-      }
+  }
 
-      return $this->module_settings;
-    }
+  //Get NFe object and create in case it doesnt exist
+  function getNFe(){
 
-    //Check if authentication values are set in module configuration
-    function checkAuthentication(){
-
-      $settings = $this->getModuleSettings();
-      $settings_arr = array(
-        'webmaniabrnfe_access_token',
-        'webmaniabrnfe_access_token_secret',
-        'webmaniabrnfe_consumer_key',
-        'webmaniabrnfe_consumer_secret',
+    if( !is_object($this->NFe) ){
+      $module_settings = $this->getModuleSettings();
+      $settings = array(
+        'oauth_access_token'        => $module_settings['webmaniabrnfe_access_token'],
+        'oauth_access_token_secret' => $module_settings['webmaniabrnfe_access_token_secret'],
+        'consumer_key'              => $module_settings['webmaniabrnfe_consumer_key'],
+        'consumer_secret'           => $module_settings['webmaniabrnfe_consumer_secret'],
       );
-
-      foreach($settings_arr as $setting_val){
-        if(!isset($settings[$setting_val]) || empty($settings[$setting_val])){
-          $this->session->data['status_sefaz'] = '<strong>Opencart NF-e:</strong> Informe as credenciais de acesso da aplicação em Extensões > Módulos > WebmaniaBR NF-e.';
-          return false;
-        }
-      }
-
-      return true;
-
+      $this->NFe = new NFe($settings);
     }
 
-    //Get NFe object and create in case it doesnt exist
-    function getNFe(){
+    return $this->NFe;
 
-      if( !is_object($this->NFe) ){
-        $module_settings = $this->getModuleSettings();
-        $settings = array(
-            'oauth_access_token'        => $module_settings['webmaniabrnfe_access_token'],
-            'oauth_access_token_secret' => $module_settings['webmaniabrnfe_access_token_secret'],
-            'consumer_key'              => $module_settings['webmaniabrnfe_consumer_key'],
-            'consumer_secret'           => $module_settings['webmaniabrnfe_consumer_secret'],
-        );
-        $this->NFe = new NFe($settings);
-      }
+  }
 
-      return $this->NFe;
+  public function updateNFe(){
 
-    }
+    if( isset($this->request->get['atualizar']) && isset($this->request->get['chave_acesso']) ){
+      $chave_acesso =  $this->request->get['chave_acesso'];
+      $order_id = (int) $this->request->get['order_id'];
 
-    //Get order and customer info from Model and emit
-    public function emitirNfe(){
+      $response = $this->getNFe()->consultaNotaFiscal( $chave_acesso );
 
-      if (isset($this->request->post['selected'])) {
-        $this->load->model('sale/order');
-        $this->load->model('module/webmaniabrnfe');
-        $success = '';
-        $error = '';
-        foreach ($this->request->post['selected'] as $order_id) {
-          $order_info = $this->model_sale_order->getOrder($order_id);
-          $products_info = $this->model_sale_order->getOrderProducts($order_id);
-          $data = $this->model_module_webmaniabrnfe->getNfeInfo($order_info, $products_info);
-          $response = $this->NFe->emissaoNotaFiscal( $data );
-          if (isset($response->error) || $response->status == 'reprovado'){
-            if(isset($response->error)){
-              $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida ( '.$response->error.' )';
-            }elseif(isset($response->log->aProt[0]->xMotivo)){
-              $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida ( '.$response->log->aProt[0]->xMotivo.' )';
-            }else{
-              $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida';
-            }
-          }else{
-            $success .= '<p><i class="fa fa-check-circle"></i> NF-e do pedido #'.$order_id.' emitida com sucesso';
-            $query = $this->db->query("UPDATE " . DB_PREFIX . "order SET status_nfe = '1' WHERE order_id = $order_id");
-          }
-        }
+      if (isset($response->error)){
 
-        if(strlen($error) > 0){
-          $this->session->data['error_warning'] = $error;
-        }
-        if(strlen($success) > 0){
-          $this->session->data['success'] = $success;
-        }
-          
-        $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);  
-        $this->response->redirect($url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL'));
-      }
+        $this->session->data['error_warning'] = '<p>Erro: '.$response->error.'</p>';
+        return false;
 
-    }
-
-    //Get Sefaz status in case the last check was at least an hour ago
-    function displayStatusSefaz(){
-
-      if(!isset($this->session->data['sefaz_last_check'])){
-        $status = $this->getNFe()->statusSefaz();
-        $this->session->data['sefaz_last_check'] = time();
-        if($status === false){
-          $this->session->data['status_sefaz'] = 'Sefaz Offline';
-        }else{
-          if(isset($this->session->data['status_sefaz'])){
-            unset($this->session->data['status_sefaz']);
-          }
-        }
       }else{
-        $current = time();
-        $last_check = $this->session->data['sefaz_last_check'];
-        if(($current - $last_check) > 3600){
-          unset($this->session->data['sefaz_last_check']);
-        }
-      }
 
-    }
+        $new_status = $response->status;
+        $query_nfe_data = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+        $nfe_data = unserialize($query_nfe_data->rows[0]['nfe_info']);
 
-    //Get certificate expiration once a day
-    function displayMessageCertificado(){
-
-      if(!isset($this->session->data['certificado_last_check'])){
-        $validade = $this->getNFe()->validadeCertificado();
-        $this->session->data['certificado_last_check'] = time();
-        if(!is_object($validade) && $validade > 1 && $validade < 45){
-          $this->session->data['validade_certificado'] = 'Faltam '.$validade.' dias para expirar seu certificado digital.';
-        }else{
-          if(isset($this->session->data['validade_certificado'])){
-            unset($this->session->data['validade_certificado']);
+        foreach($nfe_data as &$order_nfe){
+          if($order_nfe['chave_acesso'] == $chave_acesso){
+            $order_nfe['status'] = $new_status;
           }
         }
-      }else{
-        $current = time();
-        $last_check = $this->session->data['certificado_last_check'];
-        if(($current - $last_check) > 86400){
-          unset($this->session->data['certificado_last_check']);
-        }
+
+        $nfe_data_str = serialize($nfe_data);
+
+        $query = $this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_info = '$nfe_data_str' WHERE order_id = $order_id");
+        $this->session->data['success'] = '<p><i class="fa fa-check-circle"></i> NF-e atualizada com sucesso';
+
+        $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
+        $this->response->redirect($url->link('sale/order/info&order_id='.$order_id, 'token=' . $this->session->data['token'], 'SSL'));
+
       }
-
-    }
-
-    function is_cpf( $cpf = null ){
-
-        return $this->NFeFunctions->is_cpf( $cpf );
-
-    }
-
-    function is_cnpj( $cnpj = null ){
-
-        return $this->NFeFunctions->is_cnpj( $cnpj );
-
-    }
-
-    function cpf( $string = null ){
-
-        return $this->NFeFunctions->cpf( $string );
-
-    }
-
-    function cnpj( $string = null ){
-
-        return $this->NFeFunctions->cnpj( $string );
-
-    }
-
-    function cep( $string = null ){
-
-        return $this->NFeFunctions->cep( $string );
-
-    }
-
-    function getCustomFields(){
-
-        return $this->NFeFunctions->getCustomFields( $this );
-
-    }
-
-    function getCustomFieldsIds(){
-
-        return $this->NFeFunctions->getCustomFieldsIds( $this, 'backend' );
-
-    }
-
-    //Check if module is installed
-    function isInstalled(){
-
-      return $this->NFeFunctions->isInstalled( $this, true );
 
     }
 
   }
+
+  //Get order and customer info from Model and emit
+  public function emitirNfe(){
+
+    if (isset($this->request->post['selected'])) {
+      $this->load->model('sale/order');
+      $this->load->model('module/webmaniabrnfe');
+      $success = '';
+      $error = '';
+      foreach ($this->request->post['selected'] as $order_id) {
+        $order_info = $this->model_sale_order->getOrder($order_id);
+        $products_info = $this->model_sale_order->getOrderProducts($order_id);
+        $data = $this->model_module_webmaniabrnfe->getNfeInfo($order_info, $products_info);
+        $response = $this->getNFe()->emissaoNotaFiscal( $data );
+        if (isset($response->error) || $response->status == 'reprovado'){
+          if(isset($response->error)){
+            $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida ( '.$response->error.' )';
+          }elseif(isset($response->log->aProt[0]->xMotivo)){
+            $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida ( '.$response->log->aProt[0]->xMotivo.' )';
+          }else{
+            $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida';
+          }
+        }else{
+
+          $previous_info_query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+          $previous_info = unserialize($previous_info_query->rows[0]['nfe_info']);
+          if(!$previous_info){
+            $previous_info = array();
+          }
+
+
+          $order_nfe_info = array(
+            'status'       => (string) $response->status,
+            'chave_acesso' => $response->chave,
+            'n_recibo'     => (int) $response->recibo,
+            'n_nfe'        => (int) $response->nfe,
+            'n_serie'      => (int) $response->serie,
+            'url_xml'      => (string) $response->xml,
+            'url_danfe'    => (string) $response->danfe,
+            'data'         => date('d/m/Y'),
+          );
+
+          $previous_info[] = $order_nfe_info;
+
+          $nfe_info_str = serialize($previous_info);
+
+          $query = $this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");
+          $query = $this->db->query("UPDATE " . DB_PREFIX . "order SET status_nfe = '1' WHERE order_id = $order_id");
+
+          $success .= '<p><i class="fa fa-check-circle"></i> NF-e do pedido #'.$order_id.' emitida com sucesso';
+
+        }
+      }
+
+      if(strlen($error) > 0){
+        $this->session->data['error_warning'] = $error;
+      }
+      if(strlen($success) > 0){
+        $this->session->data['success'] = $success;
+      }
+
+      $this->response->redirect($this->url->link('sale/order', 'token=' . $this->session->data['token'] . $url, 'SSL'));
+    }
+
+  }
+
+  //Get Sefaz status in case the last check was at least an hour ago
+  function displayStatusSefaz(){
+
+    if(!isset($this->session->data['sefaz_last_check'])){
+      $status = $this->getNFe()->statusSefaz();
+      $this->session->data['sefaz_last_check'] = time();
+      if($status === false){
+        $this->session->data['status_sefaz'] = 'Sefaz Offline';
+      }else{
+        if(isset($this->session->data['status_sefaz'])){
+          unset($this->session->data['status_sefaz']);
+        }
+      }
+    }else{
+      $current = time();
+      $last_check = $this->session->data['sefaz_last_check'];
+      if(($current - $last_check) > 3600){
+        unset($this->session->data['sefaz_last_check']);
+      }
+    }
+
+  }
+
+  //Get certificate expiration once a day
+  function displayMessageCertificado(){
+
+    if(!isset($this->session->data['certificado_last_check'])){
+      $validade = $this->getNFe()->validadeCertificado();
+      $this->session->data['certificado_last_check'] = time();
+      if(!is_object($validade) && $validade > 1 && $validade < 45){
+        $this->session->data['validade_certificado'] = 'Faltam '.$validade.' dias para expirar seu certificado digital.';
+      }else{
+        if(isset($this->session->data['validade_certificado'])){
+          unset($this->session->data['validade_certificado']);
+        }
+      }
+    }else{
+      $current = time();
+      $last_check = $this->session->data['certificado_last_check'];
+      if(($current - $last_check) > 86400){
+        unset($this->session->data['certificado_last_check']);
+      }
+    }
+
+  }
+
+  function is_cpf( $cpf = null ){
+
+    return $this->NFeFunctions->is_cpf( $cpf );
+
+  }
+
+  function is_cnpj( $cnpj = null ){
+
+    return $this->NFeFunctions->is_cnpj( $cnpj );
+
+  }
+
+  function cpf( $string = null ){
+
+    return $this->NFeFunctions->cpf( $string );
+
+  }
+
+  function cnpj( $string = null ){
+
+    return $this->NFeFunctions->cnpj( $string );
+
+  }
+
+  function cep( $string = null ){
+
+    return $this->NFeFunctions->cep( $string );
+
+  }
+
+  function getCustomFields(){
+
+    return $this->NFeFunctions->getCustomFields( $this );
+
+  }
+
+  function getCustomFieldsIds(){
+
+    return $this->NFeFunctions->getCustomFieldsIds( $this, 'backend' );
+
+  }
+
+  //Check if module is installed
+  function isInstalled(){
+
+    return $this->NFeFunctions->isInstalled( $this, true );
+
+  }
+
+}

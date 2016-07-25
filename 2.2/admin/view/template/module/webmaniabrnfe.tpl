@@ -136,7 +136,23 @@
 
           </div>
 
+          <h4><strong>Informações Complementares (Opcional)</strong></h4>
+          <div class="form-group">
+            <div class="form-group">
+              <label class="control-label col-sm-2">Informações ao Fisco:</label>
+              <div class="col-sm-10">
+                <textarea maxlength="2000" class="form-control" name="webmaniabrnfe_fisco_inf"><?php echo $webmaniabrnfe_fisco_inf ?></textarea>
+              </div>
+            </div>
 
+            <div class="form-group">
+              <label class="control-label col-sm-2">Informações Complementares ao Consumidor:</label>
+              <div class="col-sm-10">
+                <textarea maxlength="2000" class="form-control" name="webmaniabrnfe_cons_inf"><?php echo $webmaniabrnfe_cons_inf; ?></textarea>
+              </div>
+            </div>
+          </div>
+          
           <h4><strong>Opções adicionais</strong></h4>
           <div class="form-group">
             <div class="form-group">
