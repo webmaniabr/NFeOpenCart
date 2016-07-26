@@ -12,11 +12,11 @@ Através do emissor de Nota Fiscal da WebmaniaBR®, você conta com a emissão e
 - Contrate um dos planos de Nota Fiscal Eletrônica da WebmaniaBR® a partir de R$29,90/mês: [Assine Agora](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
 - Instale o módulo grátis do OpenCart da WebmaniaBR® e configure conforme instruções.
 
-## Instalação do Módulo
+## Instalação
 
 Após realizar o download da última versão ([Clique aqui](https://github.com/webmaniabr/NFeOpenCart/releases)), descompacte o arquivo zip e envie todos os arquivos na pasta raiz da sua loja virtual. A transferência pode ser realizada através do acesso FTP da sua hospedagem.
 
-## Ativação do Módulo
+## Ativação
 
 - Acesse o menu Extensões > Módulos. Localize o módulo chamado **WebmaniaBR NF-e** e clique no botão Instalar.
 
@@ -30,6 +30,12 @@ Após realizar o download da última versão ([Clique aqui](https://github.com/w
 Explicação técnica: O vQmod é um inovador sistema de substituição de arquivos através de um método conhecido como “virtual”. Na prática, ao invés de modificar os arquivos originais em PHP do OpenCart as instruções são alteradas em arquivos XML.
 ```
 
+## Configuração
+
+Consulte o nosso guia passo a passo para começar a emitir as notas fiscais com apenas um clique na sua Loja Virtual:
+
+- [Guia de emissão de Nota Fiscal para Loja Virtual](https://webmaniabr.com/blog/guia-de-emissao-de-nota-fiscal-para-loja-virtual/)
+
 ## Adaptar página Finalizar Compra
 
 O módulo utiliza vQmod para inserir os campos obrigatórios na página de Finalizar Compra, Cadastro de novo cliente e Painel de controle para que as notas fiscais sejam emitidas corretamente. É importante que o tema da loja virtual siga o checkout padrão para que possa inserir os campos necessários, porém alterações podem ser feitas nos seguintes arquivos
@@ -38,14 +44,6 @@ O módulo utiliza vQmod para inserir os campos obrigatórios na página de Final
 - /vqmod/xml/nfe.ocmod.xml
 
 Havendo dúvidas de como manusear o arquivo e eventuais incompatibilidades com o seu tema, por favor, entre em contato no e-mail suporte@webmaniabr.com.
-
-## Instruções
-
-**OpenCart 2.0 ou superior**
-
-- [Configuração do Módulo NF-e](https://webmaniabr.com/atendimento/nfe/opencart/configuracao-modulo-nf-e-opencart-20/)
-- [Emissão de NF-e](https://webmaniabr.com/atendimento/nfe/opencart/emissao-de-nfe-opencart-20/)
-- [Cadastro de NCM](https://webmaniabr.com/atendimento/nfe/opencart/cadastro-de-ncm-opencart-20/)
 
 ## Controle das Notas Fiscais
 
