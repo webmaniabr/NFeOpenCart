@@ -1066,7 +1066,7 @@
           ]]></search>
           <add><![CDATA[
 
-            $this->load->controller('module/webmaniabrnfe/displayStatusSefaz');
+            
             $this->load->controller('module/webmaniabrnfe/displayMessageCertificado');
 
 

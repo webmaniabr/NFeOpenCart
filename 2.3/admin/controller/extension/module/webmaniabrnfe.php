@@ -1,6 +1,6 @@
 <?php
 
-class ControllerModuleWebmaniaBRNFe extends Controller {
+class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
   private $error = array();
   public  $NFe = null;
@@ -40,7 +40,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       $this->session->data['success'] = $this->language->get('text_success');
 
       // Redirect to the Module Listing
-      $this->response->redirect($this->url->link('module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'));
+      $this->response->redirect($this->url->link('extension/module/webmaniabrnfe', 'token=' . $this->session->data['token'] . '&type=module', true));
     }
 
     // Assign the language data for parsing it to view
@@ -94,23 +94,23 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
     $data['breadcrumbs'] = array();
     $data['breadcrumbs'][] = array(
       'text'      => $this->language->get('text_home'),
-      'href'      => $this->url->link('common/home', 'token=' . $this->session->data['token'], 'SSL'),
+      'href'      => $this->url->link('common/dashboard', 'token=' . $this->session->data['token'], 'SSL'),
       'separator' => false
     );
     $data['breadcrumbs'][] = array(
       'text'      => $this->language->get('text_module'),
-      'href'      => $this->url->link('extension/module', 'token=' . $this->session->data['token'], 'SSL'),
+      'href'      => $this->url->link('extension/extension', 'token=' . $this->session->data['token'], 'SSL'),
       'separator' => ' :: '
     );
     $data['breadcrumbs'][] = array(
       'text'      => $this->language->get('heading_title'),
-      'href'      => $this->url->link('module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'),
+      'href'      => $this->url->link('extension/module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'),
       'separator' => ' :: '
     );
 
-    $data['action'] = $this->url->link('module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'); // URL to be directed when the save button is pressed
+    $data['action'] = $this->url->link('extension/module/webmaniabrnfe', 'token=' . $this->session->data['token'], 'SSL'); // URL to be directed when the save button is pressed
 
-    $data['cancel'] = $this->url->link('extension/module', 'token=' . $this->session->data['token'], 'SSL'); // URL to be redirected when cancel button is pressed
+    $data['cancel'] = $this->url->link('extension/extension', 'token=' . $this->session->data['token'], 'SSL'); // URL to be redirected when cancel button is pressed
 
     $settings_fields = array(
       'consumer_key',
@@ -151,7 +151,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
     // Install vqMod file
     $filename = 'nfe.ocmod.xml';
-    $dest = __DIR__.'/../../../vqmod/xml/';
+    $dest = __DIR__.'/../../../../vqmod/xml/';
     $file_copy = __DIR__.'/../nfe/xml/nfe.ocmod.xml';
     $oc_mod_exist = file_exists($dest.$filename);
 
@@ -160,7 +160,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
     }
 
     //Try to insert Required custom Fields on Install
-    $this->NFeFunctions->getCustomFieldsIds( $this );
+    $this->getCustomFieldsIds( $this );
 
     //Disable Guest Checkout
     $store_id = $this->config->get('config_store_id');
@@ -192,7 +192,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
   public function uninstall(){
 
     // Delete vqMod file
-    $filepath = __DIR__.'/../../../vqmod/xml/nfe.ocmod.xml';
+    $filepath = __DIR__.'/../../../../vqmod/xml/nfe.ocmod.xml';
     $oc_mod_exist = file_exists($filepath);
     if($oc_mod_exist === true){
       unlink($filepath);
@@ -204,7 +204,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
   protected function validate() {
 
     // Block to check the user permission to manipulate the module
-    if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe')) {
+    if (!$this->user->hasPermission('modify', 'extension/module/webmaniabrnfe')) {
       $this->error['warning'] = $this->language->get('error_permission');
     }
 
@@ -380,6 +380,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
   }
 
+  //Get Sefaz status in case the last check was at least an hour ago
 
 
 

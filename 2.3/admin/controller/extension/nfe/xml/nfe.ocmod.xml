@@ -15,7 +15,7 @@
    <file name="admin/controller/sale/order.php">
      <operation info="Assign NF-E Status value to array key">
        <search position="before" ><![CDATA[
-       'order_status'  => $result['order_status'],
+       'customer'      => $result['customer'],
        ]]></search>
        <add><![CDATA[
        'status_nfe'  => $result['status_nfe'],
@@ -26,7 +26,7 @@
        $data['shipping'] = $this->url->link('sale/order/shipping', 'token=' . $this->session->data['token'], true);
        ]]></search>
        <add><![CDATA[
-       $data['emitir_nfe'] = $this->url->link('module/webmaniabrnfe/emitirNFe', 'token=' . $this->session->data['token'], true);
+       $data['emitir_nfe'] = $this->url->link('extension/module/webmaniabrnfe/emitirNFe', 'token=' . $this->session->data['token'], true);
        ]]></add>
      </operation>
      <operation info="Add custom BULK action">
@@ -35,12 +35,12 @@
        ]]></search>
        <add><![CDATA[
        if(isset($this->session->data['success'])){
-       $data['success'] = $this->session->data['success'];
+       $data['nfe_success'] = $this->session->data['success'];
        unset($this->session->data['success']);
        }
 
        if(isset($this->session->data['error_warning'])){
-       $data['error_warning'] = $this->session->data['error_warning'];
+       $data['nfe_error_warning'] = $this->session->data['error_warning'];
        unset($this->session->data['error_warning']);
        }
        ]]></add>
@@ -50,7 +50,7 @@
        // Payment Address
        ]]></search>
        <add><![CDATA[
-       $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+       $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
        if(isset($order_info['payment_custom_field'][$custom_fields_ids['numero']])){
         $address_number = $order_info['payment_custom_field'][$custom_fields_ids['numero']];
        }else{
@@ -79,7 +79,7 @@
        // Shipping Address
        ]]></search>
        <add><![CDATA[
-       $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+       $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
        if(isset($order_info['shipping_custom_field'][$custom_fields_ids['numero']])){
         $address_number = $order_info['shipping_custom_field'][$custom_fields_ids['numero']];
        }else{
@@ -109,7 +109,7 @@
        ]]></search>
        <add><![CDATA[
        $query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
-       $url = $this->url->link('module/webmaniabrnfe/updateNFe', 'token=' . $this->session->data['token'], true);
+       $url = $this->url->link('extension/module/webmaniabrnfe/updateNFe', 'token=' . $this->session->data['token'], true);
 
        if(isset($query->rows[0]['nfe_info'])){
         $nfe_info = unserialize($query->rows[0]['nfe_info']);
@@ -171,8 +171,8 @@
       ]]></add>
     </operation>
     <operation info="Add Bulk Action Button">
-      <search position="before"><![CDATA[
-      <button type="submit" id="button-shipping" form="form-order" formaction="<?php echo $shipping; ?>" data-toggle="tooltip" title="<?php echo $button_shipping_print; ?>" class="btn btn-info"><i class="fa fa-truck"></i></button>
+      <search position="after"><![CDATA[
+      <div class="pull-right">
       ]]></search>
       <add><![CDATA[
       <button type="submit" id="button-emitir-nfe" form="form-order" formaction="<?php echo $emitir_nfe; ?>" data-toggle="tooltip" title="Emitir Notas Fiscais" class="btn btn-info"><i class="fa fa-file-text-o"></i> Emitir NF-e</button>
@@ -193,12 +193,12 @@
       <ul class="breadcrumb">
       ]]></search>
       <add><![CDATA[
-        <?php if(isset($success)): ?>
-        <div class="alert-wmbr alert-success"><?php echo $success; ?></div>
+        <?php if(isset($nfe_success)): ?>
+        <div class="alert-wmbr alert-success"><?php echo $nfe_success; ?></div>
         <?php endif; ?>
 
-        <?php if(isset($error_warning)): ?>
-        <div class="alert-wmbr alert-danger"><?php echo $error_warning ?></div>
+        <?php if(isset($nfe_error_warning)): ?>
+        <div class="alert-wmbr alert-danger"><?php echo $nfe_error_warning ?></div>
         <?php endif; ?>
       ]]></add>
     </operation>
@@ -230,8 +230,8 @@
               }
             }
 
-            if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
-              $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+            if($this->load->controller('extension/module/webmaniabrnfe/isInstalled') === true){
+              $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
               $data['pessoa_fisica'] = $custom_fields_ids['pessoa_fisica'];
               $data['pessoa_juridica'] = $custom_fields_ids['pessoa_juridica'];
               $data['custom_field_id'] = $custom_fields_ids['tipo_pessoa'];
@@ -420,7 +420,7 @@
    $custom_fields = $this->model_customer_custom_field->getCustomFields(array('filter_customer_group_id' => $this->request->post['customer_group_id']));
    ]]></search>
    <add><![CDATA[
-   $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+   $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
    ]]></add>
    </operation>
    <operation info="Validate Custom Fields">
@@ -434,7 +434,7 @@
 
            if($custom_field['name'] == 'CPF'){
            $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-           $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+           $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
              if($valid === false){
                $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
                continue;
@@ -447,7 +447,7 @@
          }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
          if($custom_field['name'] == 'CNPJ'){
          $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-         $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+         $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
            if($valid === false){
              $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
              continue;
@@ -468,7 +468,7 @@
    $custom_fields = $this->model_account_custom_field->getCustomFields($customer_group_id);
    ]]></search>
    <add><![CDATA[
-   $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+   $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
    ]]></add>
    </operation>
    <operation info="Validate Custom Fields">
@@ -482,7 +482,7 @@
 
            if($custom_field['name'] == 'CPF'){
            $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-           $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+           $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
              if($valid === false){
                $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
                continue;
@@ -495,7 +495,7 @@
          }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
          if($custom_field['name'] == 'CNPJ'){
          $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-         $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+         $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
            if($valid === false){
              $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
              continue;
@@ -554,8 +554,8 @@
               }
             }
 
-            if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
-              $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+            if($this->load->controller('extension/module/webmaniabrnfe/isInstalled') === true){
+              $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
               $data['pessoa_fisica'] = $custom_fields_ids['pessoa_fisica'];
               $data['pessoa_juridica'] = $custom_fields_ids['pessoa_juridica'];
               $data['custom_field_id'] = $custom_fields_ids['tipo_pessoa'];
@@ -758,8 +758,8 @@
     if ($custom_field['required'] &&
     ]]></search>
     <add><![CDATA[
-        if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
-          $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+        if($this->load->controller('extension/module/webmaniabrnfe/isInstalled') === true){
+          $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
       }
     ]]></add>
     </operation>
@@ -775,7 +775,7 @@
 
             if($custom_field['name'] == 'CPF'){
             $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
-            $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+            $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
               if($valid === false){
                 $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
                 continue;
@@ -788,7 +788,7 @@
           }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
           if($custom_field['name'] == 'CNPJ'){
           $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
-          $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+          $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
             if($valid === false){
               $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
               continue;
@@ -808,17 +808,16 @@
       $data['header'] = $this->load->controller('common/header');
       ]]></search>
       <add><![CDATA[
-          if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
-        $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+          if($this->load->controller('extension/module/webmaniabrnfe/isInstalled') === true){
+        $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
         }
       ]]></add>
       </operation>
       <operation info="Custom error message">
           <search position="after"><![CDATA[
-          $this->error['custom_field'][$custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field_validate'), $custom_field['name']);
+          sprintf($this->language->get('error_custom_field'), $custom_field['name']);
           ]]></search>
           <add><![CDATA[
-            echo $custom_field['name'];
             if($custom_field['name'] == 'CPF'){
               $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
             }elseif($custom_field['name'] == 'CNPJ'){
@@ -866,8 +865,8 @@
     foreach ($custom_fields as $custom_field) {
     ]]></search>
     <add><![CDATA[
-        if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
-      $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+        if($this->load->controller('extension/module/webmaniabrnfe/isInstalled') === true){
+      $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
       }
     ]]></add>
     </operation>
@@ -883,7 +882,7 @@
 
             if($custom_field['name'] == 'CPF'){
             $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
-            $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+            $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
               if($valid === false){
               $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
                 continue;
@@ -896,7 +895,7 @@
           }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
           if($custom_field['name'] == 'CNPJ'){
           $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
-          $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+          $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
             if($valid === false){
               $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
               continue;
@@ -916,8 +915,8 @@
       $this->response->setOutput($this->load->view('checkout/register', $data));
       ]]></search>
       <add><![CDATA[
-          if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
-        $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+          if($this->load->controller('extension/module/webmaniabrnfe/isInstalled') === true){
+        $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
         }
 
       ]]></add>
@@ -953,8 +952,8 @@
          ]]></add>
     </operation>
       <operation info="Change postcode position">
-          <search position="replace" offset="3"><![CDATA[
-          if ((utf8_strlen(trim($this->request->post['firstname'])) < 1) || (utf8_strlen(trim($this->request->post['firstname'])) > 32)) {
+          <search position="after" offset="1"><![CDATA[
+          $json['error']['firstname'] = $this->language->get('error_firstname');
           ]]></search>
           <add><![CDATA[
             if ((utf8_strlen(trim($this->request->post['address_2'])) < 1) || (utf8_strlen(trim($this->request->post['address_2'])) > 32)) {
@@ -981,8 +980,8 @@
       foreach ($custom_fields as $custom_field) {
       ]]></search>
       <add><![CDATA[
-          if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
-        $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+          if($this->load->controller('extension/module/webmaniabrnfe/isInstalled') === true){
+        $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
         }
       ]]></add>
     </operation>
@@ -998,7 +997,7 @@
 
             if($custom_field['name'] == 'CPF'){
             $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-            $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+            $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
               if($valid === false){
                 $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
                 continue;
@@ -1011,7 +1010,7 @@
           }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
           if($custom_field['name'] == 'CNPJ'){
           $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-          $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+          $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
             if($valid === false){
               $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
               continue;
@@ -1088,8 +1087,8 @@
           ]]></search>
           <add><![CDATA[
 
-            
-            $this->load->controller('module/webmaniabrnfe/displayMessageCertificado');
+
+            $this->load->controller('extension/module/webmaniabrnfe/displayMessageCertificado');
 
 
             if(isset($this->session->data['status_sefaz'])){
