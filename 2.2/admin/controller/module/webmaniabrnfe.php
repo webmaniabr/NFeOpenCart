@@ -118,6 +118,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       'access_token',
       'access_token_secret',
       'operation_nature',
+      'envio_email',
       'sefaz_env',
       'tax_class',
       'ean_barcode',
@@ -128,6 +129,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       'mask_fields',
       'fisco_inf',
       'cons_inf',
+
     );
     foreach($settings_fields as $field){
       if (isset($this->request->post[$field])) {

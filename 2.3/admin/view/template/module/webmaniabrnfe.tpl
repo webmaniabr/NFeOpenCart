@@ -74,6 +74,19 @@
           <div class="form-group">
 
             <div class="form-group">
+              <label class="control-label col-sm-2">Envio automático de email:</label>
+              <div class="col-sm-10">
+                <?php if($webmaniabrnfe_envio_email == 'on'): ?>
+                <input type="radio" name="webmaniabrnfe_envio_email" value="on" checked/> Ativado<br/>
+                <input type="radio" name="webmaniabrnfe_envio_email" value="off"/> Desativado
+              <?php else: ?>
+                <input type="radio" name="webmaniabrnfe_envio_email" value="on"/> Ativado<br/>
+                <input type="radio" name="webmaniabrnfe_envio_email" value="off" checked/> Desativado
+              <?php endif; ?>
+              </div>
+            </div>
+            
+            <div class="form-group">
               <label class="control-label col-sm-2">Natureza da Operação:</label>
               <div class="col-sm-10">
                 <input type="text" class="form-control" name="webmaniabrnfe_operation_nature" value="<?php echo $webmaniabrnfe_operation_nature; ?>"/>
@@ -152,7 +165,7 @@
               </div>
             </div>
           </div>
-          
+
           <h4><strong>Opções adicionais</strong></h4>
           <div class="form-group">
             <div class="form-group">

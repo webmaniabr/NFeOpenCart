@@ -118,6 +118,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
       'access_token',
       'access_token_secret',
       'operation_nature',
+      'envio_email',
       'sefaz_env',
       'tax_class',
       'ean_barcode',

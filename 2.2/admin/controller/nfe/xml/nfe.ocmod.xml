@@ -139,6 +139,18 @@
       ]]></add>
     </operation>
   </file>
+
+  <file name="catalog/controller/common/header.php">
+   <operation info="Include module CSS">
+     <search position="after" ><![CDATA[
+     public function index() {
+     ]]></search>
+     <add><![CDATA[
+       $this->load->controller('module/webmaniabrnfe/listen_notification');
+     ]]></add>
+   </operation>
+ </file>
+ 
    <file name="admin/view/template/sale/order_list.tpl">
     <operation info="Insert new column to orders table">
       <search position="before" offset="1" ><![CDATA[
@@ -1088,7 +1100,7 @@
           ]]></search>
           <add><![CDATA[
 
-            
+
             $this->load->controller('module/webmaniabrnfe/displayMessageCertificado');
 
 

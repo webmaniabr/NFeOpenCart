@@ -20,6 +20,18 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		$order_totals = $this->model_sale_order->getOrderTotals($order_data['order_id']);
 		$module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
+		$uniq_key = @$module_settings['webmaniabrnfe_uniq_get_key'];
+		$envio_email = @$module_settings['webmaniabrnfe_envio_email'];
+
+		if(!$uniq_key){
+
+			$uniq_key = md5(uniqid(rand(), true));
+			$module_settings['webmaniabrnfe_uniq_get_key'] = $uniq_key;
+			$this->model_setting_setting->editSetting('webmaniabrnfe', $module_settings);
+
+		}
+
+		$notification_url = HTTP_CATALOG.'?retorno_nfe='.$uniq_key.'&order_id='.$order_data['order_id'];
 
 		$customer_info = $this->model_sale_customer->getCustomer($order_data['customer_id']);
 
@@ -75,6 +87,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		$data = array(
 			'ID' => (int)$order_data['order_id'], // Número do pedido
+			'url_notificacao' => $notification_url,
 			'operacao' => 1, // Tipo de Operação da Nota Fiscal
 			'natureza_operacao' => $module_settings['webmaniabrnfe_operation_nature'], // Natureza da Operação
 			'modelo' => 1, // Modelo da Nota Fiscal (NF-e ou NFC-e)
@@ -188,7 +201,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 				'uf' => $order_data['shipping_zone_code'], // Estado do endereço de entrega
 				'cep' => $controller->cep($order_data['shipping_postcode']),//$order_data['shipping_postcode'], // CEP do endereço de entrega
 				'telefone' => $order_data['telephone'],//$order_data['telephone'], // Telefone do cliente
-				'email' => $order_data['email'] // E-mail do cliente para envio da NF-e
+				'email' => ($envio_email == 'on' ? $order_data['email'] : '') // E-mail do cliente para envio da NF-e
 			);
 		}else if($tipo_pessoa == 'cnpj'){
 			$data['cliente'] = array(
@@ -203,7 +216,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 				'uf' => $order_data['shipping_zone_code'], // Estado do endereço de entrega
 				'cep' => $controller->cep($order_data['shipping_postcode']), // CEP do endereço de entrega
 				'telefone' => $order_data['telephone'], // Telefone do cliente
-				'email' => $order_data['email'] // E-mail do cliente para envio da NF-e
+				'email' => ($envio_email == 'on' ? $order_data['email'] : '') // E-mail do cliente para envio da NF-e
 			);
 		}
 
