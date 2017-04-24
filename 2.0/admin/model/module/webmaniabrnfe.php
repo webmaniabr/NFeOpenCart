@@ -100,9 +100,9 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			'pagamento' => 0, // Indicador da forma de pagamento
 			'presenca' => 2, // Indicador de presença do comprador no estabelecimento comercial no momento da operação
 			'modalidade_frete' => 0, // Modalidade do frete
-			'frete' => number_format($shipping_total, 2), // Total do frete
-			'desconto' => number_format($total_discounts, 2), // Total do desconto
-			'total' => number_format($order_data['total'], 2), // Total do pedido
+			'frete' => number_format($shipping_total, 2, '.', ''), // Total do frete
+			'desconto' => number_format($total_discounts, 2, '.', ''), // Total do desconto
+			'total' => number_format($order_data['total'], 2, '.', ''), // Total do pedido
 		);
 
 		//Informações COmplementares ao Fisco
@@ -182,8 +182,8 @@ class ModelModuleWebmaniaBRNFe extends Model {
 				'unidade' => 'UN', // Unidade de medida da quantidade de itens
 				'peso' => $peso, // Peso em KG. Ex: 800 gramas = 0.800 KG
 				'origem' => (int)$origem,//Origem do produto
-				'subtotal' => number_format($product['price'], 2), // Preço unitário do produto - sem descontos
-				'total' => number_format($product['total'], 2), // Preço total (quantidade x preço unitário) - sem descontos
+				'subtotal' => number_format($product['price'], 2, '.', ''), // Preço unitário do produto - sem descontos
+				'total' => number_format($product['total'], 2, '.', ''), // Preço total (quantidade x preço unitário) - sem descontos
 				'classe_imposto' => $imposto // Referência do imposto cadastrado
 			);
 		}

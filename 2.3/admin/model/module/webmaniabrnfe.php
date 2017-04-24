@@ -4,10 +4,10 @@ class ModelModuleWebmaniaBRNFe extends Model {
 	public function getNfeInfo($order_data, $products_data){
 
 		global $registry;
-		require_once (__DIR__.'/../../controller/nfe/functions.php');
+		require_once (__DIR__.'/../../controller/extension/nfe/functions.php');
 		require_once (__DIR__.'/../../controller/extension/module/webmaniabrnfe.php');
 		$NFeFunctions = new NFeFunctions;
-		$controller = new ControllerModuleWebmaniaBRNFe($registry);
+		$controller = new ControllerExtensionModuleWebmaniaBRNFe($this->registry);
 
 		$this->load->model('setting/setting');
 		$this->load->model('catalog/product');
@@ -35,9 +35,10 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
 		$custom_fields_customer = unserialize($customer_info['custom_field']);
+		if(!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
 
 
-		$custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+		$custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
 		$documento = $NFeFunctions->get_value_from_fields( 'tipo_pessoa', $custom_fields_ids, $custom_fields_customer );
 
 		if($documento == $NFeFunctions->get_value_from_fields( 'pessoa_fisica', $custom_fields_ids, $custom_fields_customer )){
@@ -99,9 +100,9 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			'pagamento' => 0, // Indicador da forma de pagamento
 			'presenca' => 2, // Indicador de presença do comprador no estabelecimento comercial no momento da operação
 			'modalidade_frete' => 0, // Modalidade do frete
-			'frete' => number_format($shipping_total, 2), // Total do frete
-			'desconto' => number_format($total_discounts, 2), // Total do desconto
-			'total' => number_format($order_data['total'], 2), // Total do pedido
+			'frete' => number_format($shipping_total, 2, '.', ''), // Total do frete
+			'desconto' => number_format($total_discounts, 2, '.', ''), // Total do desconto
+			'total' => number_format($order_data['total'], 2, '.', ''), // Total do pedido
 		);
 
 		//Informações COmplementares ao Fisco
@@ -181,8 +182,8 @@ class ModelModuleWebmaniaBRNFe extends Model {
 				'unidade' => 'UN', // Unidade de medida da quantidade de itens
 				'peso' => $peso, // Peso em KG. Ex: 800 gramas = 0.800 KG
 				'origem' => (int)$origem,//Origem do produto
-				'subtotal' => number_format($product['price'], 2), // Preço unitário do produto - sem descontos
-				'total' => number_format($product['total'], 2), // Preço total (quantidade x preço unitário) - sem descontos
+				'subtotal' => number_format($product['price'], 2, '.', ''), // Preço unitário do produto - sem descontos
+				'total' => number_format($product['total'], 2, '.', ''), // Preço total (quantidade x preço unitário) - sem descontos
 				'classe_imposto' => $imposto // Referência do imposto cadastrado
 			);
 		}
