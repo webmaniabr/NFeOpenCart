@@ -30,11 +30,10 @@ Após realizar o download da última versão ([Clique aqui](https://github.com/w
 Explicação técnica: O vQmod é um inovador sistema de substituição de arquivos através de um método conhecido como “virtual”. Na prática, ao invés de modificar os arquivos originais em PHP do OpenCart as instruções são alteradas em arquivos XML.
 ```
 
-## Configuração
-
-Consulte o nosso guia passo a passo para começar a emitir as notas fiscais com apenas um clique na sua Loja Virtual:
+## Instruções
 
 - [Guia de emissão de Nota Fiscal para Loja Virtual](https://webmaniabr.com/blog/guia-de-emissao-de-nota-fiscal-para-loja-virtual/)
+- [Como ativar o vqMod](https://ajuda.webmaniabr.com/nota-fiscal-eletronica-configuracoes-e-gerenciamento/modulo-opencart/instalacao-opencart-vqmod)
 
 ## Adaptar página Finalizar Compra
 
@@ -43,16 +42,6 @@ O módulo utiliza vQmod para inserir os campos obrigatórios na página de Final
 - /admin/controller/nfe/xml/nfe.ocmod.xml
 - /vqmod/xml/nfe.ocmod.xml
 
-Havendo dúvidas de como manusear o arquivo e eventuais incompatibilidades com o seu tema, por favor, entre em contato no e-mail suporte@webmaniabr.com.
-
-## Controle das Notas Fiscais
-
-Você pode gerenciar todas as Notas Fiscais e realizar a impressão do Danfe no painel da WebmaniaBR®. Simples e fácil.
-
-<p align="center">
-<img src="https://webmaniabr.com/wp-content/themes/wmbr/img/nf07.jpg">
-</p>
-
 ## Suporte
 
-Qualquer dúvida entre em contato na nossa <a href="https://webmaniabr.com/atendimento/" target="_blank">Central de Atendimento</a> ou no e-mail suporte@webmaniabr.com.
+Qualquer dúvida entre em contato na nossa [Central de Ajuda](https://ajuda.webmaniabr.com) ou acesse o [Painel de Controle](https://webmaniabr.com/painel/) para conversar em tempo real no Chat ou Abrir um chamado.
