@@ -23,6 +23,8 @@ class ModelModuleWebmaniaBRNFe extends Model {
 		$envio_email = @$module_settings['webmaniabrnfe_envio_email'];
 		$uniq_key = @$module_settings['webmaniabrnfe_uniq_get_key'];
 
+		if(!$envio_email) $email_envio = 'on';
+
 		if(!$uniq_key){
 
 			$uniq_key = md5(uniqid(rand(), true));
@@ -34,7 +36,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 		$notification_url = HTTP_CATALOG.'?retorno_nfe='.$uniq_key.'&order_id='.$order_data['order_id'];
 
 		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
-		$custom_fields_customer = unserialize($customer_info['custom_field']);
+		$custom_fields_customer = @unserialize($customer_info['custom_field']);
 		if(!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
 
 
@@ -220,7 +222,48 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			);
 		}
 
+		if($module_settings['webmaniabrnfe_transp_include'] == 'on'){
+
+			$method = $module_settings['webmaniabrnfe_transp_method'];
+
+			if($method.'.'.$method == $order_data['shipping_code']){
+
+				$data['transporte'] = array(
+					'cnpj'         => $module_settings['webmaniabrnfe_transp_cnpj'],
+					'razao_social' => $module_settings['webmaniabrnfe_transp_rs'],
+					'ie'           => $module_settings['webmaniabrnfe_transp_ie'],
+					'endereco'     => $module_settings['webmaniabrnfe_transp_address'],
+					'uf'           => $module_settings['webmaniabrnfe_transp_uf'],
+					'cidade'       => $module_settings['webmaniabrnfe_transp_city'],
+					'cep'          => $module_settings['webmaniabrnfe_transp_cep'],
+				);
+
+				$transporte_info = $this->load->controller('extension/module/webmaniabrnfe/get_order_transporte_info', $order_data['order_id']);
+
+				$transporte_keys = array(
+					'nfe_volume'       => 'volume',
+					'nfe_especie'      => 'especie',
+					'nfe_peso_bruto'   => 'peso_bruto',
+					'nfe_peso_liquido' => 'peso_liquido'
+				);
+
+				foreach($transporte_keys as $array_key => $api_key){
+					$value = $transporte_info[$array_key];
+					if($value){
+						$data['transporte'][$api_key] = $value;
+					}
+				}
+
+				if($transporte_info['modalidade_frete']){
+					$data['pedido']['modalidade_frete'] = $transporte_info['modalidade_frete'];
+				}
+
+			}
+
+		}
+
 		return $data;
+
 	}
 }
 ?>

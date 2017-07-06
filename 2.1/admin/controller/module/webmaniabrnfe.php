@@ -1,6 +1,6 @@
 <?php
 
-class ControllerModuleWebmaniaBRNFe extends Controller {
+class ControllerModuleWebmaniabrNfe extends Controller {
 
   private $error = array();
   public  $NFe = null;
@@ -138,7 +138,6 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       'transp_cep',
       'transp_city',
       'transp_uf'
-
     );
     foreach($settings_fields as $field){
       if (isset($this->request->post[$field])) {
@@ -171,10 +170,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
     $this->response->setOutput($this->load->view('module/webmaniabrnfe.tpl', $data));
 
-
   }
-
-
 
   public function install(){
 
@@ -259,6 +255,8 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
   }
 
+
+
   /* Function that validates the data when Save Button is pressed */
   protected function validate() {
 
@@ -273,15 +271,12 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
     } else {
       return false;
     }
-
   }
 
   //Languages for custom_field_description
   public function getLanguages(){
-
     $languages = $this->db->query("SELECT language_id FROM " . DB_PREFIX . "language");
     return $languages;
-
   }
 
   function getModuleSettings(){
@@ -380,11 +375,16 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       $this->load->model('module/webmaniabrnfe');
       $success = '';
       $error = '';
+
+
+
       foreach ($this->request->post['selected'] as $order_id) {
         $order_info = $this->model_sale_order->getOrder($order_id);
         $products_info = $this->model_sale_order->getOrderProducts($order_id);
         $data = $this->model_module_webmaniabrnfe->getNfeInfo($order_info, $products_info);
+
         $response = $this->getNFe()->emissaoNotaFiscal( $data );
+
         if (isset($response->error) || $response->status == 'reprovado'){
           if(isset($response->error)){
             $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida ( '.$response->error.' )';
@@ -422,7 +422,6 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
           $success .= '<p><i class="fa fa-check-circle"></i> NF-e do pedido #'.$order_id.' emitida com sucesso';
 
-
         }
       }
 
@@ -433,14 +432,33 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
         $this->session->data['success'] = $success;
       }
 
-      $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
-      $this->response->redirect($url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL'));
+      $this->response->redirect($this->url->link('sale/order', 'token=' . $this->session->data['token'] . $url, 'SSL'));
     }
 
   }
 
+  //Get Sefaz status in case the last check was at least an hour ago
+  function displayStatusSefaz(){
 
+    if(!isset($this->session->data['sefaz_last_check'])){
+      $status = $this->getNFe()->statusSefaz();
+      $this->session->data['sefaz_last_check'] = time();
+      if($status === false){
+        $this->session->data['status_sefaz'] = 'Sefaz Offline';
+      }else{
+        if(isset($this->session->data['status_sefaz'])){
+          unset($this->session->data['status_sefaz']);
+        }
+      }
+    }else{
+      $current = time();
+      $last_check = $this->session->data['sefaz_last_check'];
+      if(($current - $last_check) > 3600){
+        unset($this->session->data['sefaz_last_check']);
+      }
+    }
 
+  }
 
   //Get certificate expiration once a day
   function displayMessageCertificado(){
@@ -527,7 +545,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 			$peso_liquido     = $request['webmaniabrnfe_peso_liquido'];
 
 			try{
-				$this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_transporte_modalidade_frete = '$modalidade_frete', nfe_transporte_volume = '$volume', nfe_transporte_especie = '$especie', nfe_transporte_peso_bruto = '$peso_bruto', nfe_transporte_peso_liquido = '$peso_liquido' WHERE order_id = '$order_id'");
+				@$this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_transporte_modalidade_frete = '$modalidade_frete', nfe_transporte_volume = '$volume', nfe_transporte_especie = '$especie', nfe_transporte_peso_bruto = '$peso_bruto', nfe_transporte_peso_liquido = '$peso_liquido' WHERE order_id = '$order_id'");
 			}catch(Exception $e){}
 
 		}
@@ -540,31 +558,29 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
     $data = array();
 
-    try{
 
-			$query_transporte_info = $this->db->query("SELECT nfe_transporte_modalidade_frete, nfe_transporte_volume, nfe_transporte_especie, nfe_transporte_peso_bruto, nfe_transporte_peso_liquido FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+		@$query_transporte_info = $this->db->query("SELECT nfe_transporte_modalidade_frete, nfe_transporte_volume, nfe_transporte_especie, nfe_transporte_peso_bruto, nfe_transporte_peso_liquido FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
 
-			$transporte_info = $query_transporte_info->row;
+    if($query_transporte_info){
 
-			$data['nfe_volume']       = $transporte_info['nfe_transporte_volume'];
-			$data['nfe_especie']      = $transporte_info['nfe_transporte_especie'];
-			$data['nfe_peso_bruto']   = $transporte_info['nfe_transporte_peso_bruto'];
-			$data['nfe_peso_liquido'] = $transporte_info['nfe_transporte_peso_liquido'];
+      $transporte_info = $query_transporte_info->row;
+      $data['nfe_volume']       = $transporte_info['nfe_transporte_volume'];
+  		$data['nfe_especie']      = $transporte_info['nfe_transporte_especie'];
+  		$data['nfe_peso_bruto']   = $transporte_info['nfe_transporte_peso_bruto'];
+  		$data['nfe_peso_liquido'] = $transporte_info['nfe_transporte_peso_liquido'];
       $data['modalidade_frete'] = $transporte_info['nfe_transporte_modalidade_frete'];
-
-      return $data;
-
-		}catch(Exception $e){
-
-			$data['nfe_volume']           = '';
-			$data['nfe_especie']          = '';
-			$data['nfe_peso_bruto']       = '';
-			$data['nfe_peso_liquido']     = '';
+    }else{
+      $data['nfe_volume']           = '';
+  		$data['nfe_especie']          = '';
+  		$data['nfe_peso_bruto']       = '';
+  		$data['nfe_peso_liquido']     = '';
       $data['nfe_modalidade_frete'] = '';
+    }
 
-      return $data;
 
-		}
+    return $data;
+
+
 
   }
 

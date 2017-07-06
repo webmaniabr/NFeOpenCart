@@ -5,10 +5,10 @@
    <file name="admin/model/sale/order.php">
      <operation info="Get NF-e Status from DB">
        <search position="replace" ><![CDATA[
-       $sql = "SELECT o.order_id, CONCAT(o.firstname, ' ', o.lastname) AS customer, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS order_status, o.shipping_code, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified FROM `" . DB_PREFIX . "order` o";
+       $sql = "SELECT o.order_id, CONCAT(o.firstname, ' ', o.lastname) AS customer, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS status, o.shipping_code, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified FROM `" . DB_PREFIX . "order` o";
        ]]></search>
        <add><![CDATA[
-       $sql = "SELECT o.order_id, CONCAT(o.firstname, ' ', o.lastname) AS customer, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS order_status, o.shipping_code, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified, o.status_nfe FROM `" . DB_PREFIX . "order` o";
+       $sql = "SELECT o.order_id, CONCAT(o.firstname, ' ', o.lastname) AS customer, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS status, o.shipping_code, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified, o.status_nfe FROM `" . DB_PREFIX . "order` o";
        ]]></add>
      </operation>
    </file>
@@ -30,11 +30,13 @@
         $transporte_info = $this->load->controller('module/webmaniabrnfe/get_order_transporte_info', $order_id);
 
 
+
         $template = new Template('basic');
 
         foreach($transporte_info as $key => $value){
         $template->set($key, $value);
         }
+
 
   			$data['webmaniabrnfe_transporte'] = $template->render('module/webmaniabrnfe/transporte_info.tpl');
 
@@ -44,7 +46,7 @@
 
      <operation info="Assign NF-E Status value to array key">
        <search position="before" ><![CDATA[
-       'order_status'  => $result['order_status'],
+       'status'        => $result['status'],
        ]]></search>
        <add><![CDATA[
        'status_nfe'  => $result['status_nfe'],
@@ -52,7 +54,7 @@
      </operation>
      <operation info="Add custom BULK action">
        <search position="after" ><![CDATA[
-       $data['shipping'] = $this->url->link('sale/order/shipping', 'token=' . $this->session->data['token'], true);
+       $data['shipping'] = $this->url->link('sale/order/shipping', 'token=' . $this->session->data['token'], 'SSL');
        ]]></search>
        <add><![CDATA[
        $data['emitir_nfe'] = $this->url->link('module/webmaniabrnfe/emitirNFe', 'token=' . $this->session->data['token'], true);
@@ -60,7 +62,7 @@
      </operation>
      <operation info="Add custom BULK action">
        <search position="before" ><![CDATA[
-       $this->response->setOutput($this->load->view('sale/order_list', $data));
+       $this->response->setOutput($this->load->view('sale/order_list.tpl', $data));
        ]]></search>
        <add><![CDATA[
        if(isset($this->session->data['success'])){
@@ -75,21 +77,53 @@
        ]]></add>
      </operation>
      <operation info="Add Backend Info">
-       <search position="before" ><![CDATA[
-       // Payment Address
+       <search position="after" ><![CDATA[
+       $data['addresses'] = $this->model_customer_customer->getAddresses($order_info['customer_id']);
        ]]></search>
        <add><![CDATA[
        $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
        if(isset($order_info['payment_custom_field'][$custom_fields_ids['numero']])){
-        $address_number = $order_info['payment_custom_field'][$custom_fields_ids['numero']];
+        $payment_address_number = $order_info['payment_custom_field'][$custom_fields_ids['numero']];
        }else{
-       $address_number = '';
+       $payment_address_number = '';
        }
 
        if(isset($order_info['payment_custom_field'][$custom_fields_ids['complemento']])){
-        $complemento = $order_info['payment_custom_field'][$custom_fields_ids['complemento']];
+        $payment_complemento = $order_info['payment_custom_field'][$custom_fields_ids['complemento']];
        }else{
-       $complemento = '';
+       $payment_complemento = '';
+       }
+
+       ]]></add>
+     </operation>
+     <operation info="Add Backend Info">
+       <search position="after" ><![CDATA[
+       public function info() {
+       ]]></search>
+       <add><![CDATA[
+       $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+       if(isset($order_info['payment_custom_field'][$custom_fields_ids['numero']])){
+        $payment_address_number = $order_info['payment_custom_field'][$custom_fields_ids['numero']];
+       }else{
+       $payment_address_number = '';
+       }
+
+       if(isset($order_info['payment_custom_field'][$custom_fields_ids['complemento']])){
+        $payment_complemento = $order_info['payment_custom_field'][$custom_fields_ids['complemento']];
+       }else{
+       $payment_complemento = '';
+       }
+
+       if(isset($order_info['shipping_custom_field'][$custom_fields_ids['numero']])){
+        $shipping_address_number = $order_info['shipping_custom_field'][$custom_fields_ids['numero']];
+       }else{
+       $shipping_address_number = '';
+       }
+
+       if(isset($order_info['shipping_custom_field'][$custom_fields_ids['complemento']])){
+        $shipping_complemento = $order_info['shipping_custom_field'][$custom_fields_ids['complemento']];
+       }else{
+       $shipping_complemento = '';
        }
 
        ]]></add>
@@ -99,26 +133,28 @@
        'address_1' => $order_info['payment_address_1'],
        ]]></search>
        <add><![CDATA[
-       'address_number' => $address_number,
-       'complemento' => $complemento,
+       'address_number' => $payment_address_number,
+       'complemento' => $payment_complemento,
        ]]></add>
      </operation>
      <operation info="Add Backend Info">
-       <search position="before" ><![CDATA[
-       // Shipping Address
+       <search position="after" ><![CDATA[
+       $data['addresses'] = $this->model_customer_customer->getAddresses($order_info['customer_id']);
        ]]></search>
        <add><![CDATA[
-       $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+       if(empty($custom_fields_ids)){
+        $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+       }
        if(isset($order_info['shipping_custom_field'][$custom_fields_ids['numero']])){
-        $address_number = $order_info['shipping_custom_field'][$custom_fields_ids['numero']];
+        $shipping_address_number = $order_info['shipping_custom_field'][$custom_fields_ids['numero']];
        }else{
-       $address_number = '';
+       $shipping_address_number = '';
        }
 
        if(isset($order_info['shipping_custom_field'][$custom_fields_ids['complemento']])){
-        $complemento = $order_info['shipping_custom_field'][$custom_fields_ids['complemento']];
+        $shipping_complemento = $order_info['shipping_custom_field'][$custom_fields_ids['complemento']];
        }else{
-       $complemento = '';
+       $shipping_complemento = '';
        }
 
        ]]></add>
@@ -128,13 +164,13 @@
        'address_1' => $order_info['shipping_address_1'],
        ]]></search>
        <add><![CDATA[
-       'address_number' => $address_number,
-       'complemento' => $complemento,
+       'address_number' => $shipping_address_number,
+       'complemento' => $shipping_complemento,
        ]]></add>
      </operation>
      <operation info="Get Nfe Info">
        <search position="before" ><![CDATA[
-       $this->response->setOutput($this->load->view('sale/order_info', $data));
+       $this->response->setOutput($this->load->view('sale/order_info.tpl', $data));
        ]]></search>
        <add><![CDATA[
        $query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
@@ -180,7 +216,6 @@
    </operation>
  </file>
 
-
    <file name="admin/view/template/sale/order_list.tpl">
     <operation info="Insert new column to orders table">
       <search position="before" offset="1" ><![CDATA[
@@ -194,7 +229,7 @@
     </operation>
     <operation info="Insert new column to orders table">
       <search position="before" ><![CDATA[
-      <td class="text-left"><?php echo $order['order_status']; ?></td>
+      <td class="text-left"><?php echo $order['status']; ?></td>
       ]]></search>
       <add><![CDATA[
         <?php if($order['status_nfe'] == 0){ ?>
@@ -222,7 +257,7 @@
     </operation>
     <operation info="Remove target _blank">
       <search position="before"><![CDATA[
-      $('#button-shipping, #button-invoice').on('click', function(e) {
+      $('input[name=\'filter_customer\']').autocomplete({
       ]]></search>
       <add><![CDATA[
       $('#button-emitir-nfe').on('click', function(e) {
@@ -235,13 +270,6 @@
       <ul class="breadcrumb">
       ]]></search>
       <add><![CDATA[
-        <?php if(isset($success)): ?>
-        <div class="alert-wmbr alert-success"><?php echo $success; ?></div>
-        <?php endif; ?>
-
-        <?php if(isset($error_warning)): ?>
-        <div class="alert-wmbr alert-danger"><?php echo $error_warning ?></div>
-        <?php endif; ?>
       ]]></add>
     </operation>
   </file>
@@ -249,12 +277,12 @@
   <file name="admin/controller/common/footer.php">
       <operation info="Insert vars">
           <search position="before"><![CDATA[
-          return $this->load->view('common/footer', $data);
+          return $this->load->view('common/footer.tpl', $data);
           ]]></search>
           <add><![CDATA[
             if(isset($this->request->get['route'])){
               $route = $this->request->get['route'];
-              if($route == 'customer/customer/add' || $route == 'customer/customer/edit' || $route == 'sale/order/add'){
+              if($route == 'customer/customer/add' || $route == 'customer/customer/edit' || $route == 'sale/customer/add' || $route == 'sale/customer/edit' || $route == 'sale/order/edit' || $route == 'sale/order/add'){
                 $data['run_script'] = true;
                 $this->load->model('setting/setting');
             		$module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
@@ -289,6 +317,7 @@
           ]]></add>
       </operation>
   </file>
+
   <file name="admin/view/template/common/footer.tpl">
    <operation info="Include module CSS and JS">
      <search position="before" ><![CDATA[
@@ -451,105 +480,7 @@
          });
        </script>
        <?php endif; ?>
-
      ]]></add>
-   </operation>
- </file>
-
- <file name="admin/controller/customer/customer.php">
-   <operation info="Validate Custom Fields">
-   <search position="after"><![CDATA[
-   $custom_fields = $this->model_customer_custom_field->getCustomFields(array('filter_customer_group_id' => $this->request->post['customer_group_id']));
-   ]]></search>
-   <add><![CDATA[
-   $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
-   ]]></add>
-   </operation>
-   <operation info="Validate Custom Fields">
-       <search position="after" index="2"><![CDATA[
-       foreach ($custom_fields as $custom_field) {
-       ]]></search>
-       <add><![CDATA[
-         if($custom_field['location'] == 'account'){
-         $tipo_pessoa = $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']];
-         if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
-
-           if($custom_field['name'] == 'CPF'){
-           $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-           $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
-             if($valid === false){
-               $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
-               continue;
-             }
-           }
-
-           if($custom_field['name'] == 'CNPJ' || $custom_field['name'] == 'Razão Social' || $custom_field['name'] == 'Inscrição Estadual'){
-             continue;
-           }
-         }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
-         if($custom_field['name'] == 'CNPJ'){
-         $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-         $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
-           if($valid === false){
-             $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
-             continue;
-           }
-         }
-           if($custom_field['name'] == 'CPF'){
-             continue;
-           }
-         }
-         }
-
-       ]]></add>
-   </operation>
- </file>
- <file name="catalog/controller/api/customer.php">
-   <operation info="Validate Custom Fields">
-   <search position="after"><![CDATA[
-   $custom_fields = $this->model_account_custom_field->getCustomFields($customer_group_id);
-   ]]></search>
-   <add><![CDATA[
-   $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
-   ]]></add>
-   </operation>
-   <operation info="Validate Custom Fields">
-       <search position="after"><![CDATA[
-       foreach ($custom_fields as $custom_field) {
-       ]]></search>
-       <add><![CDATA[
-         if($custom_field['location'] == 'account'){
-         $tipo_pessoa = $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']];
-         if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
-
-           if($custom_field['name'] == 'CPF'){
-           $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-           $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
-             if($valid === false){
-               $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
-               continue;
-             }
-           }
-
-           if($custom_field['name'] == 'CNPJ' || $custom_field['name'] == 'Razão Social' || $custom_field['name'] == 'Inscrição Estadual'){
-             continue;
-           }
-         }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
-         if($custom_field['name'] == 'CNPJ'){
-         $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
-         $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
-           if($valid === false){
-             $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
-             continue;
-           }
-         }
-           if($custom_field['name'] == 'CPF'){
-             continue;
-           }
-         }
-         }
-
-       ]]></add>
    </operation>
  </file>
 
@@ -557,7 +488,7 @@
   <file name="catalog/controller/common/footer.php">
       <operation info="Insert vars">
           <search position="before"><![CDATA[
-          return $this->load->view('common/footer', $data);
+          if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/common/footer.tpl')) {
           ]]></search>
           <add><![CDATA[
             if(isset($this->request->get['route'])){
@@ -623,7 +554,6 @@
        <script type="text/javascript" src="catalog/view/javascript/wmbr_script.js"></script>
        <script type="text/javascript" src="catalog/view/javascript/jquery.mask.min.js"></script>
        <script type="text/javascript" src="catalog/view/javascript/correios.min.js"></script>
-
 
        <?php if(isset($fill_address)): ?>
        <script>
@@ -713,25 +643,24 @@
 
 
          if(pessoa_active == pessoa_juridica_value){
-           setTimeout(function(){
-           cnpj_element.addClass('cnpj-group');
-           ie_element.addClass('cnpj-group');
-           rs_element.addClass('cnpj-group');
+         setTimeout(function(){
+         cnpj_element.addClass('cnpj-group');
+         ie_element.addClass('cnpj-group');
+         rs_element.addClass('cnpj-group');
 
-           cpf_element.css('display', 'none');
-           $('.cnpj-group').addClass('active');
-           }, 100);
+         cpf_element.css('display', 'none');
+         $('.cnpj-group').addClass('active');
+         }, 100);
          }else{
-           setTimeout(function(){
+         setTimeout(function(){
 
-           cnpj_element.addClass('cnpj-group');
-           ie_element.addClass('cnpj-group');
-           rs_element.addClass('cnpj-group');
-           $('.cnpj-group').css('display', 'none');
-           cpf_element.addClass('active');
-           }, 500);
-           $('.custom-field').find(radio_class).first().attr('checked', 'checked');
-
+         cnpj_element.addClass('cnpj-group');
+         ie_element.addClass('cnpj-group');
+         rs_element.addClass('cnpj-group');
+         $('.cnpj-group').css('display', 'none');
+         cpf_element.addClass('active');
+         }, 500);
+         $('.custom-field').find(radio_class).first().attr('checked', 'checked');
          }
 
          if (rs_element.length > 0 && cnpj_element.length > 0 && ie_element.length > 0 && cpf_element.length > 0 ){
@@ -794,23 +723,117 @@
         ]]></add>
     </operation>
   </file>
-  <file name="catalog/controller/account/register.php">
+
+  <file name="admin/controller/customer/customer.php">
     <operation info="Validate Custom Fields">
-    <search position="before" offset="1"><![CDATA[
-    if ($custom_field['required'] &&
+    <search position="after"><![CDATA[
+    $custom_fields = $this->model_customer_custom_field->getCustomFields(array('filter_customer_group_id' => $this->request->post['customer_group_id']));
     ]]></search>
     <add><![CDATA[
-        if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
-          $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
-      }
+      $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
     ]]></add>
     </operation>
     <operation info="Validate Custom Fields">
-        <search position="before"><![CDATA[
-        if ($custom_field['required'] &&
+        <search position="after" index="2"><![CDATA[
+        foreach ($custom_fields as $custom_field) {
         ]]></search>
         <add><![CDATA[
-          if(isset($custom_fields_ids)){
+          if($custom_field['location'] == 'account'){
+          $tipo_pessoa = $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']];
+          if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
+
+            if($custom_field['name'] == 'CPF'){
+            $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+            $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+              if($valid === false){
+                $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
+                continue;
+              }
+            }
+
+            if($custom_field['name'] == 'CNPJ' || $custom_field['name'] == 'Razão Social' || $custom_field['name'] == 'Inscrição Estadual'){
+              continue;
+            }
+          }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
+          if($custom_field['name'] == 'CNPJ'){
+          $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+          $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+            if($valid === false){
+              $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
+              continue;
+            }
+          }
+            if($custom_field['name'] == 'CPF'){
+              continue;
+            }
+          }
+          }
+
+        ]]></add>
+    </operation>
+  </file>
+  <file name="catalog/controller/api/customer.php">
+    <operation info="Validate Custom Fields">
+    <search position="after"><![CDATA[
+    $custom_fields = $this->model_account_custom_field->getCustomFields($customer_group_id);
+    ]]></search>
+    <add><![CDATA[
+      $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+    ]]></add>
+    </operation>
+    <operation info="Validate Custom Fields">
+        <search position="after"><![CDATA[
+        foreach ($custom_fields as $custom_field) {
+        ]]></search>
+        <add><![CDATA[
+          if($custom_field['location'] == 'account'){
+          $tipo_pessoa = $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']];
+          if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
+
+            if($custom_field['name'] == 'CPF'){
+            $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+            $valid = $this->load->controller('module/webmaniabrnfe/is_cpf', array($value));
+              if($valid === false){
+                $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
+                continue;
+              }
+            }
+
+            if($custom_field['name'] == 'CNPJ' || $custom_field['name'] == 'Razão Social' || $custom_field['name'] == 'Inscrição Estadual'){
+              continue;
+            }
+          }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
+          if($custom_field['name'] == 'CNPJ'){
+          $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+          $valid = $this->load->controller('module/webmaniabrnfe/is_cnpj', array($value));
+            if($valid === false){
+            $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
+              continue;
+            }
+          }
+            if($custom_field['name'] == 'CPF'){
+              continue;
+            }
+          }
+          }
+
+        ]]></add>
+    </operation>
+  </file>
+  <file name="catalog/controller/account/register.php">
+    <operation info="Validate Custom Fields">
+    <search position="after" index="1"><![CDATA[
+    $custom_fields = $this->model_account_custom_field->getCustomFields($customer_group_id);
+    ]]></search>
+    <add><![CDATA[
+    $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+    ]]></add>
+    </operation>
+    <operation info="Validate Custom Fields">
+        <search position="after" index="1"><![CDATA[
+        foreach ($custom_fields as $custom_field) {
+        ]]></search>
+        <add><![CDATA[
           if($custom_field['location'] == 'account'){
           $tipo_pessoa = $this->request->post['custom_field'][$custom_field['location']][$custom_fields_ids['tipo_pessoa']];
           if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
@@ -841,7 +864,6 @@
             }
           }
           }
-          }
 
         ]]></add>
     </operation>
@@ -850,17 +872,15 @@
       $data['header'] = $this->load->controller('common/header');
       ]]></search>
       <add><![CDATA[
-          if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
         $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
-        }
       ]]></add>
       </operation>
       <operation info="Custom error message">
           <search position="after"><![CDATA[
-          $this->error['custom_field'][$custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field_validate'), $custom_field['name']);
+          $this->error['custom_field'][$custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field'), $custom_field['name']);
           ]]></search>
           <add><![CDATA[
-            echo $custom_field['name'];
+
             if($custom_field['name'] == 'CPF'){
               $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
             }elseif($custom_field['name'] == 'CNPJ'){
@@ -908,9 +928,7 @@
     foreach ($custom_fields as $custom_field) {
     ]]></search>
     <add><![CDATA[
-        if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
       $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
-      }
     ]]></add>
     </operation>
     <operation info="Validate Custom Fields">
@@ -918,7 +936,6 @@
         foreach ($custom_fields as $custom_field) {
         ]]></search>
         <add><![CDATA[
-          if(isset($custom_fields_ids)){
           if($custom_field['location'] == 'account'){
           $tipo_pessoa = $this->request->post['custom_field'][$custom_field['location']][$custom_fields_ids['tipo_pessoa']];
           if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
@@ -949,18 +966,15 @@
             }
           }
           }
-          }
 
         ]]></add>
     </operation>
       <operation info="Validate Custom Fields">
       <search position="before"><![CDATA[
-      $this->response->setOutput($this->load->view('checkout/register', $data));
+      if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/checkout/register.tpl')) {
       ]]></search>
       <add><![CDATA[
-          if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
         $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
-        }
 
       ]]></add>
       </operation>
@@ -1023,9 +1037,7 @@
       foreach ($custom_fields as $custom_field) {
       ]]></search>
       <add><![CDATA[
-          if($this->load->controller('module/webmaniabrnfe/isInstalled') === true){
         $custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
-        }
       ]]></add>
     </operation>
     <operation info="Validate Custom Fields">
@@ -1126,9 +1138,10 @@
   <file name="admin/controller/common/header.php">
       <operation info="Insert header warning message">
           <search position="before"><![CDATA[
-          return $this->load->view('common/header', $data);
+          return $this->load->view('common/header.tpl', $data);
           ]]></search>
           <add><![CDATA[
+
 
             $this->load->controller('module/webmaniabrnfe/displayMessageCertificado');
 
@@ -1139,6 +1152,14 @@
            if(isset($this->session->data['validade_certificado'])){
            $data['validade_certificado'] = $this->session->data['validade_certificado'];
           }
+
+          if(isset($this->session->data['error_warning'])){
+          $data['error_warning'] = $this->session->data['error_warning'];
+         }
+
+         if(isset($this->session->data['success'])){
+         $data['success'] = $this->session->data['success'];
+        }
           ]]></add>
       </operation>
   </file>
@@ -1154,6 +1175,12 @@
             <?php if(isset($status_sefaz) ): ?>
            <div class="alert-wmbr alert-danger header-alert"><?php echo $status_sefaz; ?></div>
            <?php endif; ?>
+           <?php if(isset($error_warning) ): ?>
+          <div class="alert-wmbr alert-danger header-alert"><?php echo $error_warning; ?></div>
+          <?php endif; ?>
+          <?php if(isset($success) ): ?>
+         <div class="alert-wmbr alert-success header-alert"><?php echo $success; ?></div>
+         <?php endif; ?>
            <?php if(isset($validade_certificado)): ?>
           <div class="alert-wmbr alert-danger header-alert"><?php echo $validade_certificado; ?></div>
           <?php endif; ?>
@@ -1187,7 +1214,6 @@
             ]]></add>
       </operation>
   </file>
-
   <file name="admin/model/catalog/category.php">
       <operation info="Save category NCM">
           <search position="after"><![CDATA[
@@ -1195,7 +1221,7 @@
           ]]></search>
           <add><![CDATA[
             try{
-              $this->db->query("UPDATE " . DB_PREFIX . "category SET category_ncm = '" .$data['category_ncm']. "' WHERE category_id = '" . (int)$category_id . "'");
+              @$this->db->query("UPDATE " . DB_PREFIX . "category SET category_ncm = '" .$data['category_ncm']. "' WHERE category_id = '" . (int)$category_id . "'");
             }catch(Exception $e){
 
             }
@@ -1213,22 +1239,20 @@
             if (isset($this->request->post['category_ncm'])) {
         			$data['category_ncm'] = $this->request->post['category_ncm'];
         		} elseif (!empty($category_info)) {
-              try{
-                $category_ncm = $this->db->query("SELECT category_ncm FROM " . DB_PREFIX . "category WHERE category_id = '" .(int)$category_info['category_id']. "' ");
-                $data['category_ncm'] = $category_info['category_ncm'];
-              }catch(Exception $e){
-                $data['category_ncm'] = '';
-              }
+
+                @$category_ncm = $this->db->query("SELECT category_ncm FROM " . DB_PREFIX . "category WHERE category_id = '" .(int)$category_info['category_id']. "' ");
+
+                $data['category_ncm'] = @$category_ncm->row['category_ncm'];
 
         		} else {
         			$data['category_ncm'] = '';
         		}
 
+
+
           ]]></add>
       </operation>
   </file>
-
-
   <file name="admin/view/template/catalog/product_form.tpl">
       <operation info="Add custom tab to product config">
           <search position="after"><![CDATA[
@@ -1309,7 +1333,6 @@
           ]]></add>
       </operation>
   </file>
-
   <file name="admin/model/catalog/product.php">
       <operation info="Update product with custom info">
           <search position="after"><![CDATA[
@@ -1369,7 +1392,7 @@
         		}
 
             if (isset($this->request->post['cest_code'])) {
-        			$data['classe_imposto'] = $this->request->post['cest_code'];
+        			$data['cest_code'] = $this->request->post['cest_code'];
         		} elseif (!empty($product_info)) {
         			$data['cest_code'] = $product_info['cest_code'];
         		} else {
@@ -1395,13 +1418,12 @@
       </operation>
   </file>
   <file name="admin/view/template/sale/order_info.tpl">
-
       <operation info="Insert NFe emitidas">
-          <search position="before"><![CDATA[
-          <div class="row">
+          <search position="before" index="1" offset="1"><![CDATA[
+          <div class="panel panel-default">
           ]]></search>
           <add><![CDATA[
-
+            <div class="col-md-12">
             <div class="panel panel-default">
               <div class="panel-heading">
                 <h3 class="panel-title">Notas Emitidas para este pedido</h3>
@@ -1441,47 +1463,44 @@
                   <?php endforeach; ?>
                   </tbody>
                 </table>
+                <style>
+
+
+        					.nfe-status {
+        						text-transform: capitalize;
+        						color: #FFF;
+            				padding: 2px 5px;
+        					}
+
+        					.nfe-status.aprovado {
+        						background-color: #46894b;
+        					}
+
+        					.nfe-status.reprovado,
+        					.nfe-status.cancelado {
+        						background-color: #ce3737;
+        					}
+
+        					.nfe-status.processando,
+        					.nfe-status.contingencia{
+        						background-color: #eccb28;
+        						color: #000;
+        						font-weight: 600;
+        					}
+        				</style>
                 <?php endif; ?>
               </div>
             </div>
-
-              <style>
-
-
-                .nfe-status {
-                  text-transform: capitalize;
-                  color: #FFF;
-                  padding: 2px 5px;
-                }
-
-                .nfe-status.aprovado {
-                  background-color: #46894b;
-                }
-
-                .nfe-status.reprovado,
-                .nfe-status.cancelado {
-                  background-color: #ce3737;
-                }
-
-                .nfe-status.processando,
-                .nfe-status.contingencia{
-                  background-color: #eccb28;
-                  color: #000;
-                  font-weight: 600;
-                }
-              </style>
+          </div>
           ]]></add>
       </operation>
-
       <operation info="Display transporte form">
-          <search position="before"><![CDATA[
-          <div class="row">
+          <search position="before" index="1" offset="1"><![CDATA[
+          <div class="panel panel-default">
           ]]></search>
           <add><![CDATA[
             <?php echo $webmaniabrnfe_transporte; ?>
           ]]></add>
       </operation>
-
   </file>
-</modification>                                                                                                                                                      
-                                                                                                                                                                                                                                                                                                                                                                                                   
+</modification>

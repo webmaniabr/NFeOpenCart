@@ -510,13 +510,6 @@ class NFeFunctions {
     // Get fields from default or Log
     function get_value_from_fields( $key, $custom_fields_ids, $custom_fields_customer ){
 
-      $custom_fields_customer_fix = array();
-
-        foreach($custom_fields_customer as $key_value => $field){
-          $custom_fields_customer_fix[$key_value.'_id'] = $field;
-        }
-
-
         if ($key == 'pessoa_fisica' || $key == 'pessoa_juridica' || $key == 'numero' || $key == 'complemento') {
 
             $a = $custom_fields_ids[$key];
@@ -526,7 +519,7 @@ class NFeFunctions {
         }
 
 
-        if (isset($custom_fields_customer_fix[$custom_fields_ids[$key].'_id'])) return $custom_fields_customer_fix[$custom_fields_ids[$key].'_id'];
+        if (isset($custom_fields_customer[$custom_fields_ids[$key]])) return $custom_fields_customer[$custom_fields_ids[$key]];
 
         if ($custom_fields_ids['log']){
 

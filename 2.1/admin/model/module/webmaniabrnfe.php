@@ -11,7 +11,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		$this->load->model('setting/setting');
 		$this->load->model('catalog/product');
-		$this->load->model('sale/customer');
+		$this->load->model('customer/customer');
 		$this->load->model('sale/order');
 		$this->load->model('marketing/coupon');
 		$total_discounts = 0;
@@ -35,10 +35,10 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		$notification_url = HTTP_CATALOG.'?retorno_nfe='.$uniq_key.'&order_id='.$order_data['order_id'];
 
-		$customer_info = $this->model_sale_customer->getCustomer($order_data['customer_id']);
+		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
 
-		$custom_fields_customer = unserialize($customer_info['custom_field']);
 
+		$custom_fields_customer = json_decode($customer_info['custom_field'], true);
 
 		$custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
 		$documento = $NFeFunctions->get_value_from_fields( 'tipo_pessoa', $custom_fields_ids, $custom_fields_customer );
@@ -91,11 +91,11 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			'ID' => (int)$order_data['order_id'], // Número do pedido
 			'url_notificacao' => $notification_url,
 			'operacao' => 1, // Tipo de Operação da Nota Fiscal
-			'natureza_operacao' => $module_settings['webmaniabrnfe_operation_nature'], // Natureza da Operação
+			'natureza_operacao' => @$module_settings['webmaniabrnfe_operation_nature'], // Natureza da Operação
 			'modelo' => 1, // Modelo da Nota Fiscal (NF-e ou NFC-e)
 			'emissao' => 1, // Tipo de Emissão da NF-e
 			'finalidade' => 1, // Finalidade de emissão da Nota Fiscal
-			'ambiente' => (int)$module_settings['webmaniabrnfe_sefaz_env'], // Identificação do Ambiente do Sefaz //1 for production, 2 for development
+			'ambiente' => @(int)$module_settings['webmaniabrnfe_sefaz_env'], // Identificação do Ambiente do Sefaz //1 for production, 2 for development
 		);
 
 		$data['pedido'] = array(
@@ -108,7 +108,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 		);
 
 		//Informações COmplementares ao Fisco
-		$fiscoinf = $module_settings['webmaniabrnfe_fisco_inf'];
+		$fiscoinf = @$module_settings['webmaniabrnfe_fisco_inf'];
 
 		if(!empty($fiscoinf) && strlen($fiscoinf) <= 2000){
 			$data['pedido']['informacoes_fisco'] = $fiscoinf;
@@ -170,6 +170,27 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			if (!$peso) $peso = '0.100';
 			$peso = number_format($peso, 3, '.', '');
 			if (!$codigo_ean) $codigo_ean = $module_settings['webmaniabrnfe_ean_barcode'];
+
+			//If product doesnt have NCM defined, try to get from categories
+
+			if (!$codigo_ncm){
+
+				$categories = $this->model_catalog_product->getProductCategories($product_id);
+
+				foreach($categories as $cat_id){
+
+					try{
+						$ncm_row = $this->db->query("SELECT category_ncm FROM " . DB_PREFIX . "category WHERE category_id = '" . (int)$cat_id . "'");
+						$codigo_ncm = $ncm_row->row['category_ncm'];
+					}catch(Exception $e){}
+
+						if($codigo_ncm) break;
+
+				}
+
+
+			}
+
 			if (!$codigo_ncm) $codigo_ncm = $module_settings['webmaniabrnfe_ncm_code'];
 			if (!$codigo_cest) $codigo_cest = $module_settings['webmaniabrnfe_cest_code'];
 			if (!is_numeric($origem) || (int)$origem == -1) $origem = $module_settings['webmaniabrnfe_product_source'];
@@ -238,10 +259,29 @@ class ModelModuleWebmaniaBRNFe extends Model {
 					'cep'          => $module_settings['webmaniabrnfe_transp_cep'],
 				);
 
+				$transporte_info = $this->load->controller('module/webmaniabrnfe/get_order_transporte_info', $order_data['order_id']);
+
+				$transporte_keys = array(
+					'nfe_volume'       => 'volume',
+					'nfe_especie'      => 'especie',
+					'nfe_peso_bruto'   => 'peso_bruto',
+					'nfe_peso_liquido' => 'peso_liquido'
+				);
+
+				foreach($transporte_keys as $array_key => $api_key){
+					$value = $transporte_info[$array_key];
+					if($value){
+						$data['transporte'][$api_key] = $value;
+					}
+				}
+
+				if($transporte_info['modalidade_frete']){
+					$data['pedido']['modalidade_frete'] = $transporte_info['modalidade_frete'];
+				}
+
 			}
 
 		}
-
 
 		return $data;
 	}

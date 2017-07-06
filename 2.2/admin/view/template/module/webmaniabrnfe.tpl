@@ -76,7 +76,7 @@
             <div class="form-group">
               <label class="control-label col-sm-2">Envio automático de email:</label>
               <div class="col-sm-10">
-                <?php if($webmaniabrnfe_envio_email == 'on'): ?>
+                <?php if($webmaniabrnfe_envio_email == 'on' || !$webmaniabrnfe_envio_email): ?>
                 <input type="radio" name="webmaniabrnfe_envio_email" value="on" checked/> Ativado<br/>
                 <input type="radio" name="webmaniabrnfe_envio_email" value="off"/> Desativado
               <?php else: ?>
@@ -85,7 +85,7 @@
               <?php endif; ?>
               </div>
             </div>
-            
+
             <div class="form-group">
               <label class="control-label col-sm-2">Natureza da Operação:</label>
               <div class="col-sm-10">
@@ -193,10 +193,93 @@
               <?php endif; ?>
               </div>
             </div>
-
-
-
           </div>
+
+          <h4><strong>Informações da Transportadora</strong></h4>
+
+
+          <div class="form-group">
+              <label class="control-label col-sm-2">Incluir dados na NF-e<span data-toggle="tooltip" title data-original-title="Incluir dados da transportadora em pedidos enviados com o método configurado"></span></label>
+              <div class="col-sm-10">
+                  <?php if($webmaniabrnfe_transp_include == 'on'): ?>
+                  <input type="radio" name="webmaniabrnfe_transp_include" value="on" checked/> Ativado<br/>
+                  <input type="radio" name="webmaniabrnfe_transp_include" value="off" /> Desativado
+                  <?php else: ?>
+                  <input type="radio" name="webmaniabrnfe_transp_include" value="on" /> Ativado<br/>
+                  <input type="radio" name="webmaniabrnfe_transp_include" value="off" checked/> Desativado
+                  <?php endif; ?>
+              </div>
+          </div>
+
+          <div class="form-group">
+              <label class="control-label col-sm-2">Método de entrega</label>
+              <div class="col-sm-10">
+                  <select style="margin-top:10px" name="webmaniabrnfe_transp_method">
+          <option>Selecionar</option>
+          <?php
+
+          foreach($methods as $id => $title){
+            $selected = '';
+            if($id == $webmaniabrnfe_transp_method){
+              $selected = 'selected';
+            }
+            echo '<option value="'.$id.'" '.$selected.'>'.$title.'</option>';
+          }
+
+          ?>
+        </select>
+              </div>
+          </div>
+
+          <div class="form-group">
+              <label class="control-label col-sm-2">Razão Social</label>
+              <div class="col-sm-10">
+                  <input type="text" class="form-control" name="webmaniabrnfe_transp_rs" value="<?php echo $webmaniabrnfe_transp_rs; ?>">
+              </div>
+          </div>
+
+          <div class="form-group">
+              <label class="control-label col-sm-2">CNPJ</label>
+              <div class="col-sm-10">
+                  <input type="text" class="form-control" name="webmaniabrnfe_transp_cnpj" value="<?php echo $webmaniabrnfe_transp_cnpj; ?>">
+              </div>
+          </div>
+
+          <div class="form-group">
+              <label class="control-label col-sm-2">Inscrição Estadual</label>
+              <div class="col-sm-10">
+                  <input type="text" class="form-control" name="webmaniabrnfe_transp_ie" value="<?php echo $webmaniabrnfe_transp_ie; ?>">
+              </div>
+          </div>
+
+          <div class="form-group">
+              <label class="control-label col-sm-2">Endereço</label>
+              <div class="col-sm-10">
+                  <input type="text" class="form-control" name="webmaniabrnfe_transp_address" value="<?php echo $webmaniabrnfe_transp_address; ?>">
+              </div>
+          </div>
+
+          <div class="form-group">
+              <label class="control-label col-sm-2">CEP</label>
+              <div class="col-sm-10">
+                  <input type="text" class="form-control" name="webmaniabrnfe_transp_cep" value="<?php echo $webmaniabrnfe_transp_cep; ?>">
+              </div>
+          </div>
+
+          <div class="form-group">
+              <label class="control-label col-sm-2">Cidade</label>
+              <div class="col-sm-10">
+                  <input type="text" class="form-control" name="webmaniabrnfe_transp_city" value="<?php echo $webmaniabrnfe_transp_city; ?>">
+              </div>
+          </div>
+
+          <div class="form-group">
+              <label class="control-label col-sm-2">UF</label>
+              <div class="col-sm-10">
+                  <input type="text" class="form-control" name="webmaniabrnfe_transp_uf" value="<?php echo $webmaniabrnfe_transp_uf; ?>">
+              </div>
+          </div>
+
         </form>
       </div>
 	</div>

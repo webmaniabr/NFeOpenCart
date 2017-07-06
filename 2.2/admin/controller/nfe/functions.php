@@ -178,13 +178,13 @@ class NFeFunctions {
                   $custom_fields['cnpj'] = $field_id;
                   if ($position != 3) $class->db->query("UPDATE ".DB_PREFIX."custom_field SET sort_order = 3 WHERE custom_field_id = '$field_id'");
 
-              } elseif (strpos($name, 'Número') !== false || strpos($name, 'Nº') !== false) {
+              } elseif (strpos($name, 'Número') !== false || strpos($name, 'Nº') !== false || strpos($name, 'N.') !== false || (strpos($name, 'Número') !== false && strlen($name) == 1)) {
 
                   $numero = true;
                   $custom_fields['numero'] = $field_id;
                   if ($position != 3) $class->db->query("UPDATE ".DB_PREFIX."custom_field SET sort_order = 3 WHERE custom_field_id = '$field_id'");
 
-              } elseif (strpos($name, 'Inscrição Estadual') !== false) {
+              } elseif (strpos($name, 'Inscrição Estadual') !== false || strpos($name, 'I.E') !== false) {
 
                   $ie = true;
                   $custom_fields['insc_est'] = $field_id;
@@ -517,6 +517,7 @@ class NFeFunctions {
             return $custom_fields_ids[$k];
 
         }
+
 
         if (isset($custom_fields_customer[$custom_fields_ids[$key]])) return $custom_fields_customer[$custom_fields_ids[$key]];
 

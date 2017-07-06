@@ -129,6 +129,15 @@ class ControllerModuleWebmaniabrNfe extends Controller {
       'mask_fields',
       'fisco_inf',
       'cons_inf',
+      'transp_include',
+      'transp_method',
+      'transp_rs',
+      'transp_cnpj',
+      'transp_ie',
+      'transp_address',
+      'transp_cep',
+      'transp_city',
+      'transp_uf'
     );
     foreach($settings_fields as $field){
       if (isset($this->request->post[$field])) {
@@ -141,6 +150,23 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     $data['header'] = $this->load->controller('common/header');
     $data['column_left'] = $this->load->controller('common/column_left');
     $data['footer'] = $this->load->controller('common/footer');
+
+    //Load shipping methods
+
+    $this->load->model('extension/extension');
+    $results = $this->model_extension_extension->getInstalled('shipping');
+    $methods = array();
+
+    foreach($results as $shipping_method){
+      $this->load->language('shipping/'.$shipping_method);
+      $methods[$shipping_method] = $this->language->get('heading_title');
+    }
+
+
+    $data['methods'] = $methods;
+
+    //Reload module language
+    $this->load->language('module/webmaniabrnfe');
 
     $this->response->setOutput($this->load->view('module/webmaniabrnfe.tpl', $data));
 

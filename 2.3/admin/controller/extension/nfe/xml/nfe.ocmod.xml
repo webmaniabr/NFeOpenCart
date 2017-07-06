@@ -13,6 +13,35 @@
      </operation>
    </file>
    <file name="admin/controller/sale/order.php">
+
+     <operation info="Save and load order transporte info">
+       <search position="after" index="1"><![CDATA[
+       $order_info = $this->model_sale_order->getOrder($order_id);
+       ]]></search>
+       <add><![CDATA[
+
+        $request = $this->request->post;
+
+        if(isset($this->request->get['order_id'])){
+          $request['order_id'] = $this->request->get['order_id'];
+        }
+
+        $this->load->controller('extension/module/webmaniabrnfe/save_order_transporte_info', $request);
+        $transporte_info = $this->load->controller('extension/module/webmaniabrnfe/get_order_transporte_info', $order_id);
+
+
+        $template = new Template('php');
+
+        foreach($transporte_info as $key => $value){
+        $template->set($key, $value);
+        }
+
+  			$data['webmaniabrnfe_transporte'] = $template->render('module/webmaniabrnfe/transporte_info.tpl');
+
+
+       ]]></add>
+     </operation>
+
      <operation info="Assign NF-E Status value to array key">
        <search position="before" ><![CDATA[
        'customer'      => $result['customer'],
@@ -150,7 +179,7 @@
      ]]></add>
    </operation>
  </file>
- 
+
    <file name="admin/view/template/sale/order_list.tpl">
     <operation info="Insert new column to orders table">
       <search position="before" offset="1" ><![CDATA[
@@ -1131,6 +1160,73 @@
           ]]></add>
       </operation>
   </file>
+
+  <file name="admin/view/template/catalog/category_form.tpl">
+      <operation info="Add ncm to category">
+          <search position="after"><![CDATA[
+          <li><a href="#tab-design" data-toggle="tab"><?php echo $tab_design; ?></a></li>
+          ]]></search>
+          <add><![CDATA[
+          <li><a href="#tab-nfe" data-toggle="tab">NF-e</a></li>
+          ]]></add>
+      </operation>
+      <operation info="add ncm to category">
+        <search position="before"><![CDATA[
+          <div class="tab-pane" id="tab-design">
+          ]]></search>
+          <add><![CDATA[
+            <div class="tab-pane" id="tab-nfe">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-ncm">NCM</label>
+                <div class="col-sm-10">
+                  <input type="text" name="category_ncm" id="input-ncm" class="form-control" value="<?php echo $category_ncm; ?>" />
+                </div>
+              </div>
+            </div>
+            ]]></add>
+      </operation>
+  </file>
+
+  <file name="admin/model/catalog/category.php">
+      <operation info="Save category NCM">
+          <search position="after"><![CDATA[
+          public function editCategory($category_id, $data) {
+          ]]></search>
+          <add><![CDATA[
+            try{
+              $this->db->query("UPDATE " . DB_PREFIX . "category SET category_ncm = '" .$data['category_ncm']. "' WHERE category_id = '" . (int)$category_id . "'");
+            }catch(Exception $e){
+
+            }
+          ]]></add>
+      </operation>
+    </file>
+
+    <file name="admin/controller/catalog/category.php">
+      <operation info="Assign custom fields variables">
+          <search position="after"><![CDATA[
+          $data['languages'] = $this->model_localisation_language->getLanguages();
+          ]]></search>
+          <add><![CDATA[
+
+            if (isset($this->request->post['category_ncm'])) {
+        			$data['category_ncm'] = $this->request->post['category_ncm'];
+        		} elseif (!empty($category_info)) {
+              try{
+                $category_ncm = $this->db->query("SELECT category_ncm FROM " . DB_PREFIX . "category WHERE category_id = '" .(int)$category_info['category_id']. "' ");
+                $data['category_ncm'] = $category_info['category_ncm'];
+              }catch(Exception $e){
+                $data['category_ncm'] = '';
+              }
+
+        		} else {
+        			$data['category_ncm'] = '';
+        		}
+
+          ]]></add>
+      </operation>
+  </file>
+
   <file name="admin/view/template/catalog/product_form.tpl">
       <operation info="Add custom tab to product config">
           <search position="after"><![CDATA[
@@ -1368,6 +1464,14 @@
                 <?php endif; ?>
               </div>
             </div>
+          ]]></add>
+      </operation>
+      <operation info="Insert NFe emitidas">
+          <search position="before"><![CDATA[
+          <div class="row">
+          ]]></search>
+          <add><![CDATA[
+            <?php echo $webmaniabrnfe_transporte; ?>
           ]]></add>
       </operation>
   </file>
