@@ -13,6 +13,31 @@
      </operation>
    </file>
    <file name="admin/controller/sale/order.php">
+     
+     <operation info="Save and load order transporte info">
+       <search position="before" index="1"><![CDATA[
+       $this->response->setOutput($this->load->view('sale/order_info.tpl', $data));
+       ]]></search>
+       <add><![CDATA[
+
+        $request = $this->request->post;
+
+        if(isset($this->request->get['order_id'])){
+          $request['order_id'] = $this->request->get['order_id'];
+        }
+
+        $this->load->controller('module/webmaniabrnfe/save_order_transporte_info', $request);
+        $transporte_info = $this->load->controller('module/webmaniabrnfe/get_order_transporte_info', $order_id);
+
+
+        
+
+  			$data['webmaniabrnfe_transporte'] = $this->load->view('module/webmaniabrnfe/transporte_info.tpl', $transporte_info);
+
+
+       ]]></add>
+     </operation>
+     
      <operation info="Assign NF-E Status value to array key">
        <search position="before" ><![CDATA[
        'status'        => $result['status'],
@@ -141,7 +166,7 @@
       ]]></add>
     </operation>
   </file>
-
+  
   <file name="catalog/controller/common/header.php">
    <operation info="Include module CSS">
      <search position="after" ><![CDATA[
@@ -152,7 +177,7 @@
      ]]></add>
    </operation>
  </file>
-
+ 
    <file name="admin/view/template/sale/order_list.tpl">
     <operation info="Insert new column to orders table">
       <search position="before" offset="1" ><![CDATA[
@@ -260,6 +285,11 @@
      <footer id="footer"><?php echo $text_footer; ?><br /><?php echo $text_version; ?></footer></div>
      ]]></search>
      <add><![CDATA[
+     
+     <?php if(isset($_GET['route']) && $_GET['route'] == 'module/webmaniabrnfe'): ?>
+          <script type="text/javascript" src="./view/javascript/wmbr_scripts.js"></script>
+        <?php endif; ?>
+        
        <script type="text/javascript" src="../catalog/view/javascript/jquery.mask.min.js"></script>
        <script type="text/javascript" src="../catalog/view/javascript/correios.min.js"></script>
 
@@ -1078,7 +1108,7 @@
           ]]></search>
           <add><![CDATA[
 
-
+            $this->load->controller('module/webmaniabrnfe/displayStatusSefaz');
             $this->load->controller('module/webmaniabrnfe/displayMessageCertificado');
 
 
@@ -1137,12 +1167,21 @@
                   <input type="text" name="classe_imposto" value="<?php echo $classe_imposto; ?>" placeholder="Classe de Imposto" id="input-classe-imposto" class="form-control" />
                 </div>
               </div>
+              
               <div class="form-group">
-                <label class="col-sm-2 control-label" for="input-ean-barcode">Código de Barras EAN</label>
+                <label class="col-sm-2 control-label" for="input-ean-barcode">GTIN (Antigo código EAN)</label>
                 <div class="col-sm-10">
-                  <input type="text" name="ean_barcode" value="<?php echo $ean_barcode; ?>" placeholder="Código de Barras EAN" id="input-ean-barcode" class="form-control" />
+                  <input type="text" name="ean_barcode" value="<?php echo $ean_barcode; ?>" placeholder="GTIN" id="input-ean-barcode" class="form-control" />
                 </div>
               </div>
+              
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-gtin-tributavel">GTIN tributável</label>
+                <div class="col-sm-10">
+                  <input type="text" name="gtin_tributavel" value="<?php echo $gtin_tributavel; ?>" placeholder="GTIN tributavel" id="gtin_tributavel" class="form-control" />
+                </div>
+              </div>
+              
               <div class="form-group">
                 <label class="col-sm-2 control-label" for="input-ncm-code">Código NCM</label>
                 <div class="col-sm-10">
@@ -1155,6 +1194,38 @@
                   <input type="text" name="cest_code" value="<?php echo $cest_code; ?>" placeholder="Código CEST" id="input-cest-code" class="form-control" />
                 </div>
               </div>
+              
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-cnpj-fabricante">CNPJ do fabricante da mercadoria</label>
+                <div class="col-sm-10">
+                  <input type="text" name="cnpj_fabricante" value="<?php echo $cnpj_fabricante; ?>" placeholder="" id="input-cnpj-fabricante" class="form-control" />
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Indicador de escala relevante</label>
+                <div class="col-sm-10">
+                  <select name="ind_escala" class="form-control" />
+                  <option value="">Selecionar</option>
+                  <?php
+                  $options = array(
+                  'S' => 'S - Produzido em Escala Relevante',
+                  'N' => 'N - Produzido em Escala NÃO Relevante',
+                  );
+
+                  foreach($options as $value => $option){
+                  $selected = '';
+                  if($value == $ind_escala){
+                    $selected = 'selected';
+                  }
+                    echo '<option value="'.$value.'" '.$selected.'>'.$option.'</option>';
+                  }
+
+                  ?>
+                </select>
+                </div>
+              </div>
+              
               <div class="form-group">
                 <label class="col-sm-2 control-label">Origem</label>
                 <div class="col-sm-10">
@@ -1196,7 +1267,7 @@
           public function editProduct($product_id, $data) {
           ]]></search>
           <add><![CDATA[
-            $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape($data['classe_imposto']) . "', ean_barcode = '" . $this->db->escape($data['ean_barcode']) . "', ncm_code = '" . $this->db->escape($data['ncm_code']) . "', cest_code = '" . $this->db->escape($data['cest_code']) . "', product_source = '" . $this->db->escape($data['product_source']) . "', ignorar_nfe = '" . $this->db->escape($data['ignorar_nfe']) . "' WHERE product_id = '" . (int)$product_id . "'");
+            $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape($data['classe_imposto']) . "', ean_barcode = '" . $this->db->escape($data['ean_barcode']) . "', gtin_tributavel = '" . $this->db->escape($data['gtin_tributavel']) . "', ncm_code = '" . $this->db->escape($data['ncm_code']) . "', cest_code = '" . $this->db->escape($data['cest_code']) . "', cnpj_fabricante = '" . $this->db->escape($data['cnpj_fabricante']) . "', ind_escala = '" . $this->db->escape($data['ind_escala']) . "', product_source = '" . $this->db->escape($data['product_source']) . "', ignorar_nfe = '" . $this->db->escape($data['ignorar_nfe']) . "' WHERE product_id = '" . (int)$product_id . "'");
           ]]></add>
       </operation>
     </file>
@@ -1239,6 +1310,14 @@
         		} else {
         			$data['ean_barcode'] = '';
         		}
+        		
+        		if (isset($this->request->post['gtin_tributavel'])) {
+        			$data['gtin_tributavel'] = $this->request->post['gtin_tributavel'];
+        		} elseif (!empty($product_info)) {
+        			$data['gtin_tributavel'] = $product_info['gtin_tributavel'];
+        		} else {
+        			$data['gtin_tributavel'] = '';
+        		}
 
             if (isset($this->request->post['ncm_code'])) {
         			$data['ncm_code'] = $this->request->post['ncm_code'];
@@ -1254,6 +1333,22 @@
         			$data['cest_code'] = $product_info['cest_code'];
         		} else {
         			$data['cest_code'] = '';
+        		}
+        		
+        		if (isset($this->request->post['cnpj_fabricante'])) {
+        			$data['cnpj_fabricante'] = $this->request->post['cnpj_fabricante'];
+        		} elseif (!empty($product_info)) {
+        			$data['cnpj_fabricante'] = $product_info['cnpj_fabricante'];
+        		} else {
+        			$data['cnpj_fabricante'] = '';
+        		}
+        		
+        		if (isset($this->request->post['ind_escala'])) {
+        			$data['ind_escala'] = $this->request->post['ind_escala'];
+        		} elseif (!empty($product_info)) {
+        			$data['ind_escala'] = $product_info['ind_escala'];
+        		} else {
+        			$data['ind_escala'] = '';
         		}
 
             if (isset($this->request->post['product_source'])) {
@@ -1349,5 +1444,15 @@
             </div>
           ]]></add>
       </operation>
+      
+      <operation info="Display transporte form">
+          <search position="before"><![CDATA[
+          <div class="panel panel-default">
+          ]]></search>
+          <add><![CDATA[
+            <?php echo $webmaniabrnfe_transporte; ?>
+          ]]></add>
+      </operation>
+      
   </file>
 </modification>

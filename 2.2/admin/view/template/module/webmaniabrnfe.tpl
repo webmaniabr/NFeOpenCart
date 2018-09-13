@@ -74,7 +74,7 @@
           <div class="form-group">
 
             <div class="form-group">
-              <label class="control-label col-sm-2">Envio automático de email:</label>
+              <label class="control-label col-sm-2">Envio automático de email:<br/><em style="font-weight: 400;color: red">Atenção: O email será enviado mesmo para notas emitidas em ambiente de homologação!</em></label>
               <div class="col-sm-10">
                 <?php if($webmaniabrnfe_envio_email == 'on' || !$webmaniabrnfe_envio_email): ?>
                 <input type="radio" name="webmaniabrnfe_envio_email" value="on" checked/> Ativado<br/>
@@ -99,9 +99,15 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="control-label col-sm-2">Código de Barras EAN:</label>
+              <label class="control-label col-sm-2">GTIN (Antigo código EAN):</label>
               <div class="col-sm-10">
                 <input type="text" class="form-control" name="webmaniabrnfe_ean_barcode" value="<?php echo $webmaniabrnfe_ean_barcode; ?>"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2">GTIN Tributável</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_gtin_tributavel" value="<?php echo $webmaniabrnfe_gtin_tributavel; ?>"/>
               </div>
             </div>
             <div class="form-group">
@@ -116,6 +122,38 @@
                 <input type="text" class="form-control" name="webmaniabrnfe_cest_code" value="<?php echo $webmaniabrnfe_cest_code; ?>"/>
               </div>
             </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2">CNPJ do fabricante da mercadoria</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_cnpj_fabricante" value="<?php echo $webmaniabrnfe_cnpj_fabricante; ?>"/>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="control-label col-sm-2">Indicador de escala relevante</label>
+              <div class="col-sm-10">
+                <select style="margin-top:10px" name="webmaniabrnfe_ind_escala">
+                  <option value="">Selecionar</option>
+                  <?php
+                  
+                  $options = array(
+                  'S' => 'S - Produzido em Escala Relevante',
+                  'N' => 'N - Produzido em Escala NÃO Relevante',
+                  );
+
+                  foreach($options as $value => $option){
+                    $selected = '';
+                    if($value == $webmaniabrnfe_ind_escala){
+                      $selected = 'selected';
+                    }
+                    echo '<option value="'.$value.'" '.$selected.'>'.$option.'</option>';
+                  }
+
+                  ?>
+                </select>
+              </div>
+            </div>
+            
             <div class="form-group">
               <label class="control-label col-sm-2">Origem dos Produtos:</label>
               <div class="col-sm-10">
@@ -139,7 +177,7 @@
                     if($value == $webmaniabrnfe_product_source){
                       $selected = 'selected';
                     }
-                    echo '<option value="'.$option.'" '.$selected.'>'.$option.'</option>';
+                    echo '<option value="'.$value.'" '.$selected.'>'.$option.'</option>';
                   }
 
                   ?>
@@ -195,8 +233,56 @@
             </div>
           </div>
 
+          <h4><strong>Informações de pagamento</strong></h4>
+          
+          <div class="form-group">
+              <label class="control-label col-sm-2">Métodos de pagamento<span data-toggle="tooltip" title data-original-title="Relacione os métodos de pagamento à forma de pagamento"></span></label>
+              <div class="col-sm-10">
+                 <table class="table">
+                   <thead>
+                     <th>Método</th>
+                     <th>Forma de pagamento</th>
+                   </thead>
+                   <tbody>
+                     <?php foreach($payment_methods as $key => $payment_method): ?>
+                       <tr>
+                         <td><?php echo $payment_method; ?></td>
+                         <td>
+                           <select name="webmaniabrnfe_payment_<?php echo $key; ?>">
+                             <option value="">Selecionar</option>
+                            
+                           <?php 
+                              $options = array(
+                        				'01' => 'Dinheiro',
+                        				'02' => 'Cheque',
+                        				'03' => 'Cartão de Crédito',
+                        				'04' => 'Cartão de Débito',
+                        				'15' => 'Boleto Bancário',
+                        				'90' => 'Sem pagamento',
+                        				'pagseguro' => 'PagSeguro',
+                        				'99' => 'Outros',
+                        			);
+                        			
+                        			foreach($options as $value => $label){
+                        			  
+                        			  $var = 'webmaniabrnfe_payment_'.$key;
+                        			  $selected = $value == $$var ? 'selected' : '';
+                        			  
+                        			  echo '<option value="'.$value.'" '.$selected.'>'.$label.'</option>';
+                        			}
+                        			
+                        	  ?>
+                        	  </select>
+                         </td>
+                       </tr>
+                     <?php endforeach; ?>
+                   </tbody>
+                 </table>
+              </div>
+          </div>
+          
+          
           <h4><strong>Informações da Transportadora</strong></h4>
-
 
           <div class="form-group">
               <label class="control-label col-sm-2">Incluir dados na NF-e<span data-toggle="tooltip" title data-original-title="Incluir dados da transportadora em pedidos enviados com o método configurado"></span></label>
@@ -212,10 +298,50 @@
           </div>
 
           <div class="form-group">
-              <label class="control-label col-sm-2">Método de entrega</label>
-              <div class="col-sm-10">
+            <label class="control-label col-sm-2">Transportadoras</label>
+            <div class="col-sm-10">
+              <div class="carriers-list">
+                
+                <?php 
+                
+                  
+                  $arr = json_decode(stripslashes(html_entity_decode($webmaniabrnfe_carriers)), true);
+                  if(!is_array($arr)) $arr = array();
+                  
+                  foreach($arr as $carrier){
+                    echo '<div class="carrier-item" data-id="'.$carrier['id'].'">
+                            <p>'.$carrier['razao_social'].' <br/>(<span>Editar</span>)</p>
+                            <span class="delete">x</span>
+                          </div>';
+                  }
+                   ?>
+                
+              </div>
+              <button type="button" class="btn btn-primary btn--add-carrier" data-toggle="modal" data-target="#add-carrier-modal">Adicionar transportadora</button>
+              <input type="hidden"  name="webmaniabrnfe_carriers" value="<?php echo $webmaniabrnfe_carriers; ?>" />
+            </div>
+          </div>
+        </form>
+      </div>
+	</div>
+  </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="add-carrier-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Nova Transportadora</h4>
+      </div>
+      <div class="modal-body form-horizontal">
+        <div class="form-group" style="padding-top:0">
+              <label class="control-label col-sm-3">Método de entrega</label>
+              <div class="col-sm-9">
                   <select style="margin-top:10px" name="webmaniabrnfe_transp_method">
-          <option>Selecionar</option>
+          <option value="">Selecionar</option>
           <?php
 
           foreach($methods as $id => $title){
@@ -232,58 +358,62 @@
           </div>
 
           <div class="form-group">
-              <label class="control-label col-sm-2">Razão Social</label>
-              <div class="col-sm-10">
+              <label class="control-label col-sm-3">Razão Social</label>
+              <div class="col-sm-9">
                   <input type="text" class="form-control" name="webmaniabrnfe_transp_rs" value="<?php echo $webmaniabrnfe_transp_rs; ?>">
               </div>
           </div>
 
           <div class="form-group">
-              <label class="control-label col-sm-2">CNPJ</label>
-              <div class="col-sm-10">
+              <label class="control-label col-sm-3">CNPJ</label>
+              <div class="col-sm-9">
                   <input type="text" class="form-control" name="webmaniabrnfe_transp_cnpj" value="<?php echo $webmaniabrnfe_transp_cnpj; ?>">
               </div>
           </div>
 
           <div class="form-group">
-              <label class="control-label col-sm-2">Inscrição Estadual</label>
-              <div class="col-sm-10">
+              <label class="control-label col-sm-3">Inscrição Estadual</label>
+              <div class="col-sm-9">
                   <input type="text" class="form-control" name="webmaniabrnfe_transp_ie" value="<?php echo $webmaniabrnfe_transp_ie; ?>">
               </div>
           </div>
 
           <div class="form-group">
-              <label class="control-label col-sm-2">Endereço</label>
-              <div class="col-sm-10">
+              <label class="control-label col-sm-3">Endereço</label>
+              <div class="col-sm-9">
                   <input type="text" class="form-control" name="webmaniabrnfe_transp_address" value="<?php echo $webmaniabrnfe_transp_address; ?>">
               </div>
           </div>
 
           <div class="form-group">
-              <label class="control-label col-sm-2">CEP</label>
-              <div class="col-sm-10">
+              <label class="control-label col-sm-3">CEP</label>
+              <div class="col-sm-9">
                   <input type="text" class="form-control" name="webmaniabrnfe_transp_cep" value="<?php echo $webmaniabrnfe_transp_cep; ?>">
               </div>
           </div>
 
           <div class="form-group">
-              <label class="control-label col-sm-2">Cidade</label>
-              <div class="col-sm-10">
+              <label class="control-label col-sm-3">Cidade</label>
+              <div class="col-sm-9">
                   <input type="text" class="form-control" name="webmaniabrnfe_transp_city" value="<?php echo $webmaniabrnfe_transp_city; ?>">
               </div>
           </div>
 
           <div class="form-group">
-              <label class="control-label col-sm-2">UF</label>
-              <div class="col-sm-10">
+              <label class="control-label col-sm-3">UF</label>
+              <div class="col-sm-9">
                   <input type="text" class="form-control" name="webmaniabrnfe_transp_uf" value="<?php echo $webmaniabrnfe_transp_uf; ?>">
               </div>
           </div>
-
-        </form>
       </div>
-	</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary btn--confirm-carrier">Adicionar</button>
+        <input type="hidden" name = "current-edit" value="" />
+      </div>
+    </div>
   </div>
 </div>
+
 
 <?php echo $footer; ?>

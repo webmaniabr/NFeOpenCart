@@ -50,11 +50,12 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
 
         foreach($nfe_info as $key => $nfe){
 
-          $numero_nfe = $nfe['n_nfe'];
+          $uuid = $nfe['uuid'];
+          
           $current_status = $nfe['status'];
           $received_status = $_POST['status'];
 
-          if($numero_nfe == $_POST['nfe'] && $current_status != $received_status){
+          if($uuid == $_POST['uuid'] && $current_status != $received_status){
             $nfe_info[$key]['status'] = $received_status;
             $nfe_info_str = serialize($nfe_info);
             $this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");
@@ -62,7 +63,6 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
           }
 
         }
-
 
       }
 

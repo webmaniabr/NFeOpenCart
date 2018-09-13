@@ -95,12 +95,12 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			'modelo' => 1, // Modelo da Nota Fiscal (NF-e ou NFC-e)
 			'emissao' => 1, // Tipo de Emissão da NF-e
 			'finalidade' => 1, // Finalidade de emissão da Nota Fiscal
-			'ambiente' => (int)$module_settings['webmaniabrnfe_sefaz_env'], // Identificação do Ambiente do Sefaz //1 for production, 2 for development
+			'ambiente' => @(int)$module_settings['webmaniabrnfe_sefaz_env'], // Identificação do Ambiente do Sefaz //1 for production, 2 for development
 		);
 
 		$data['pedido'] = array(
-			'pagamento' => 0, // Indicador da forma de pagamento
 			'presenca' => 2, // Indicador de presença do comprador no estabelecimento comercial no momento da operação
+			'pagamento' => 0,
 			'modalidade_frete' => 0, // Modalidade do frete
 			'frete' => number_format($shipping_total, 2, '.', ''), // Total do frete
 			'desconto' => number_format($total_discounts, 2, '.', ''), // Total do desconto
@@ -144,14 +144,23 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			/*
 			* Specific product values
 			*/
-			$codigo_ean_row = $this->db->query('SELECT ean_barcode FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
-			$codigo_ean = $codigo_ean_row->row['ean_barcode'];
+			$codigo_gtin_row = $this->db->query('SELECT ean_barcode FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
+			$codigo_gtin = $codigo_gtin_row->row['ean_barcode'];
+			
+			$gtin_tributavel_row = $this->db->query('SELECT gtin_tributavel FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
+			$gtin_tributavel = $gtin_tributavel_row->row['gtin_tributavel'];
 
 			$codigo_ncm_row = $this->db->query('SELECT ncm_code FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$codigo_ncm = $codigo_ncm_row->row['ncm_code'];
 
 			$codigo_cest_row = $this->db->query('SELECT cest_code FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$codigo_cest = $codigo_cest_row->row['cest_code'];
+			
+			$cnpj_fabricante_row = $this->db->query('SELECT cnpj_fabricante FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
+			$cnpj_fabricante = $cnpj_fabricante_row->row['cnpj_fabricante'];
+			
+			$ind_escala_row = $this->db->query('SELECT ind_escala FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
+			$ind_escala = $ind_escala_row->row['ind_escala'];
 
 			$origem_row = $this->db->query('SELECT product_source FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$origem = $origem_row->row['product_source'];
@@ -169,17 +178,26 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 			if (!$peso) $peso = '0.100';
 			$peso = number_format($peso, 3, '.', '');
-			if (!$codigo_ean) $codigo_ean = $module_settings['webmaniabrnfe_ean_barcode'];
+			if (!$codigo_gtin) $codigo_gtin = $module_settings['webmaniabrnfe_ean_barcode'];
+			if (!$gtin_tributavel) $gtin_tributavel = $module_settings['webmaniabrnfe_gtin_tributavel'];
 			if (!$codigo_ncm) $codigo_ncm = $module_settings['webmaniabrnfe_ncm_code'];
 			if (!$codigo_cest) $codigo_cest = $module_settings['webmaniabrnfe_cest_code'];
+			
+			if(!$cnpj_fabricante) $cnpj_fabricante = $module_settings['webmaniabrnfe_cnpj_fabricante'];
+			if(!$ind_escala) $ind_escala = $module_settings['webmaniabrnfe_ind_escala'];
+			
+			
 			if (!is_numeric($origem) || (int)$origem == -1) $origem = $module_settings['webmaniabrnfe_product_source'];
 			if (!$imposto) $imposto = $module_settings['webmaniabrnfe_tax_class'];
 			$data['produtos'][] = array(
 				'nome' => $product['name'], // Nome do produto
 				'sku' => $product_info['sku'], // Código identificador - SKU
-				'ean' => $codigo_ean, // Código EAN
+				'gtin' => $codigo_gtin, // Código EAN
+				'gtin_tributavel' => $gtin_tributavel,
 				'ncm' => $codigo_ncm, // Código NCM
-				'cest' => $codigo_cest, // Código CEST
+				'cest' => $codigo_cest, // Código CEST,
+				'cnpj_fabricante' => $cnpj_fabricante,
+				'ind_escala' => $ind_escala,
 				'quantidade' => $product['quantity'], // Quantidade de itens
 				'unidade' => 'UN', // Unidade de medida da quantidade de itens
 				'peso' => $peso, // Peso em KG. Ex: 800 gramas = 0.800 KG
@@ -262,6 +280,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		}
 
+		
 		return $data;
 
 	}

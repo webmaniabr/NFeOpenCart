@@ -125,10 +125,10 @@ class NFeFunctions {
 
       $i = 0;
       $custom_fields = array();
-      $saved_fields = $class->db->query("SELECT value FROM ".DB_PREFIX."setting WHERE code = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
+      $saved_fields = $class->db->query("SELECT value FROM ".DB_PREFIX."setting WHERE `code` = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
       if ($saved_fields->num_rows == 0) $saved_fields = array();
       else { $saved_fields = $saved_fields->row['value']; $saved_fields = unserialize($saved_fields); }
-      $query = $class->db->query("SELECT a.custom_field_id, a.name, b.sort_order, b.location FROM ".DB_PREFIX."custom_field_description AS a INNER JOIN ".DB_PREFIX."custom_field AS b ON a.custom_field_id = b.custom_field_id ORDER by b.sort_order ASC");
+      $query = $class->db->query("SELECT a.custom_field_id, a.name, b.sort_order, b.location FROM ".DB_PREFIX."custom_field_description AS a INNER JOIN ".DB_PREFIX."custom_field AS b ON a.custom_field_id = b.custom_field_id WHERE a.language_id = '1' ORDER by b.sort_order ASC");
       $new_position_account = 6;
       $new_position_address = 4;
 
@@ -178,13 +178,13 @@ class NFeFunctions {
                   $custom_fields['cnpj'] = $field_id;
                   if ($position != 3) $class->db->query("UPDATE ".DB_PREFIX."custom_field SET sort_order = 3 WHERE custom_field_id = '$field_id'");
 
-              } elseif (strpos($name, 'Número') !== false || strpos($name, 'Nº') !== false || strpos($name, 'N.') !== false || (strpos($name, 'Número') !== false && strlen($name) == 1)) {
+              } elseif (strpos($name, 'Número') !== false || strpos($name, 'Nº') !== false) {
 
                   $numero = true;
                   $custom_fields['numero'] = $field_id;
                   if ($position != 3) $class->db->query("UPDATE ".DB_PREFIX."custom_field SET sort_order = 3 WHERE custom_field_id = '$field_id'");
 
-              } elseif (strpos($name, 'Inscrição Estadual') !== false || strpos($name, 'I.E') !== false) {
+              } elseif (strpos($name, 'Inscrição Estadual') !== false) {
 
                   $ie = true;
                   $custom_fields['insc_est'] = $field_id;
@@ -233,7 +233,6 @@ class NFeFunctions {
       if ($amb == 'backend'){
 
           $get_fields = $class->getCustomFields();
-
 
           if (!isset($tipo_pessoa)){
 
@@ -352,12 +351,10 @@ class NFeFunctions {
 
         $saved_fields[] = $custom_fields;
         $saved_fields = serialize($saved_fields);
-
-        if ($insert) $class->db->query("INSERT INTO ".DB_PREFIX."setting (`store_id`, `code`, `key`, `value`) VALUES ('0', 'webmaniabrnfe', 'webmaniabrnfe_saved_fields', '$saved_fields')");
-
+        if ($insert) $class->db->query("INSERT INTO ".DB_PREFIX."setting (`store_id`, `code`, `key`, `value`) VALUES (0, 'webmaniabrnfe', 'webmaniabrnfe_saved_fields', '$saved_fields')");
         else {
 
-            $query = $class->db->query("SELECT setting_id FROM ".DB_PREFIX."setting WHERE code = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
+            $query = $class->db->query("SELECT setting_id FROM ".DB_PREFIX."setting WHERE `code` = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
             $setting_id = $query->row['setting_id'];
             $class->db->query("UPDATE ".DB_PREFIX."setting SET value = '$saved_fields' WHERE setting_id = '$setting_id'");
 
@@ -510,9 +507,6 @@ class NFeFunctions {
     // Get fields from default or Log
     function get_value_from_fields( $key, $custom_fields_ids, $custom_fields_customer ){
 
-
-
-
         if ($key == 'pessoa_fisica' || $key == 'pessoa_juridica' || $key == 'numero' || $key == 'complemento') {
 
             $a = $custom_fields_ids[$key];
@@ -520,7 +514,6 @@ class NFeFunctions {
             return $custom_fields_ids[$k];
 
         }
-
 
         if (isset($custom_fields_customer[$custom_fields_ids[$key]])) return $custom_fields_customer[$custom_fields_ids[$key]];
 

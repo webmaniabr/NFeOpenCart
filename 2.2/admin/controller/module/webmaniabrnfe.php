@@ -122,8 +122,11 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       'sefaz_env',
       'tax_class',
       'ean_barcode',
+      'gtin_tributavel',
       'ncm_code',
       'cest_code',
+      'cnpj_fabricante',
+      'ind_escala',
       'product_source',
       'fill_address',
       'mask_fields',
@@ -137,9 +140,10 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       'transp_address',
       'transp_cep',
       'transp_city',
-      'transp_uf'
-
+      'transp_uf',
+      'carriers',
     );
+    
     foreach($settings_fields as $field){
       if (isset($this->request->post[$field])) {
         $data['webmaniabrnfe_'.$field] = $this->request->post['webmaniabrnfe_'.$field];
@@ -152,9 +156,25 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
     $data['column_left'] = $this->load->controller('common/column_left');
     $data['footer'] = $this->load->controller('common/footer');
 
-    //Load shipping methods
-
     $this->load->model('extension/extension');
+    
+    //Get all installed payment methods
+    $results = $this->model_extension_extension->getInstalled('payment');
+    $payment_methods = array();
+    
+    foreach($results as $payment){
+      $this->load->language('payment/'.$payment);
+      $payment_methods[$payment] = $this->language->get('heading_title');
+      
+      if (isset($this->request->post['payment_'.$payment])) {
+        $data['webmaniabrnfe_payment_'.$payment] = $this->request->post['webmaniabrnfe_payment_'.$payment];
+      } else {
+        $data['webmaniabrnfe_payment_'.$payment] = $this->config->get('webmaniabrnfe_payment_'.$payment);
+      }
+      
+    }
+    
+    //Get all installed shipping methods
     $results = $this->model_extension_extension->getInstalled('shipping');
     $methods = array();
 
@@ -164,7 +184,10 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
     }
 
 
-    $data['methods'] = $methods;
+    $data['methods']         = $methods;
+    $data['payment_methods'] = $payment_methods;
+    
+    
 
     //Reload module language
     $this->load->language('module/webmaniabrnfe');
@@ -205,10 +228,25 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
     if($query_existing_column->num_rows == 0){
       $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN classe_imposto VARCHAR (15), ADD COLUMN ean_barcode VARCHAR (15), ADD COLUMN ncm_code VARCHAR (15), ADD COLUMN cest_code VARCHAR (15), ADD COLUMN product_source VARCHAR (15) DEFAULT -1");
     }
+    
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'gtin_tributavel'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN gtin_tributavel VARCHAR (15)");
+    }
 
     $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'ignorar_nfe'");
     if($query_existing_column->num_rows == 0){
       $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN ignorar_nfe VARCHAR (5) DEFAULT 0");
+    }
+    
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'cnpj_fabricante'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN cnpj_fabricante VARCHAR (20)");
+    }
+    
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'ind_escala'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN ind_escala VARCHAR (5)");
     }
 
     $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'status_nfe'");
@@ -384,6 +422,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
         $order_info = $this->model_sale_order->getOrder($order_id);
         $products_info = $this->model_sale_order->getOrderProducts($order_id);
         $data = $this->model_module_webmaniabrnfe->getNfeInfo($order_info, $products_info);
+        
         $response = $this->getNFe()->emissaoNotaFiscal( $data );
         if (isset($response->error) || $response->status == 'reprovado'){
           if(isset($response->error)){
@@ -401,8 +440,8 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
             $previous_info = array();
           }
 
-
           $order_nfe_info = array(
+            'uuid'         => (string) $response->uuid,
             'status'       => (string) $response->status,
             'chave_acesso' => $response->chave,
             'n_recibo'     => (int) $response->recibo,

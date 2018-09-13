@@ -122,8 +122,11 @@ class ControllerModuleWebmaniabrNfe extends Controller {
       'sefaz_env',
       'tax_class',
       'ean_barcode',
+      'gtin_tributavel',
       'ncm_code',
       'cest_code',
+      'cnpj_fabricante',
+      'ind_escala',
       'product_source',
       'fill_address',
       'mask_fields',
@@ -137,8 +140,10 @@ class ControllerModuleWebmaniabrNfe extends Controller {
       'transp_address',
       'transp_cep',
       'transp_city',
-      'transp_uf'
+      'transp_uf',
+      'carriers',
     );
+    
     foreach($settings_fields as $field){
       if (isset($this->request->post[$field])) {
         $data['webmaniabrnfe_'.$field] = $this->request->post['webmaniabrnfe_'.$field];
@@ -146,14 +151,26 @@ class ControllerModuleWebmaniabrNfe extends Controller {
         $data['webmaniabrnfe_'.$field] = $this->config->get('webmaniabrnfe_'.$field);
       }
     }
-
-    $data['header'] = $this->load->controller('common/header');
-    $data['column_left'] = $this->load->controller('common/column_left');
-    $data['footer'] = $this->load->controller('common/footer');
-
-    //Load shipping methods
-
+    
     $this->load->model('extension/extension');
+    
+    //Get all installed payment methods
+    $results = $this->model_extension_extension->getInstalled('payment');
+    $payment_methods = array();
+    
+    foreach($results as $payment){
+      $this->load->language('payment/'.$payment);
+      $payment_methods[$payment] = $this->language->get('heading_title');
+      
+      if (isset($this->request->post['payment_'.$payment])) {
+        $data['webmaniabrnfe_payment_'.$payment] = $this->request->post['webmaniabrnfe_payment_'.$payment];
+      } else {
+        $data['webmaniabrnfe_payment_'.$payment] = $this->config->get('webmaniabrnfe_payment_'.$payment);
+      }
+      
+    }
+    
+    //Get all installed shipping methods
     $results = $this->model_extension_extension->getInstalled('shipping');
     $methods = array();
 
@@ -163,10 +180,12 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     }
 
 
-    $data['methods'] = $methods;
+    $data['methods']         = $methods;
+    $data['payment_methods'] = $payment_methods;
 
-    //Reload module language
-    $this->load->language('module/webmaniabrnfe');
+    $data['header'] = $this->load->controller('common/header');
+    $data['column_left'] = $this->load->controller('common/column_left');
+    $data['footer'] = $this->load->controller('common/footer');
 
     $this->response->setOutput($this->load->view('module/webmaniabrnfe.tpl', $data));
 
@@ -196,10 +215,25 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     if($query_existing_column->num_rows == 0){
       $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN classe_imposto VARCHAR (15), ADD COLUMN ean_barcode VARCHAR (15), ADD COLUMN ncm_code VARCHAR (15), ADD COLUMN cest_code VARCHAR (15), ADD COLUMN product_source VARCHAR (15) DEFAULT -1");
     }
+    
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'gtin_tributavel'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN gtin_tributavel VARCHAR (15)");
+    }
 
     $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'ignorar_nfe'");
     if($query_existing_column->num_rows == 0){
       $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN ignorar_nfe VARCHAR (5) DEFAULT 0");
+    }
+    
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'cnpj_fabricante'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN cnpj_fabricante VARCHAR (20)");
+    }
+    
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "product LIKE 'ind_escala'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN ind_escala VARCHAR (5)");
     }
 
     $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'status_nfe'");
@@ -210,6 +244,31 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_info'");
     if($query_existing_column->num_rows == 0){
       $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_info TEXT");
+    }
+    
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_modalidade_frete'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_modalidade_frete VARCHAR (15)");
+    }
+
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_volume'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_volume VARCHAR (15)");
+    }
+
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_especie'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_especie VARCHAR (15)");
+    }
+
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_peso_bruto'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_peso_bruto VARCHAR (15)");
+    }
+
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_peso_liquido'");
+    if($query_existing_column->num_rows == 0){
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_peso_liquido VARCHAR (15)");
     }
 
   }
@@ -368,6 +427,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
 
 
           $order_nfe_info = array(
+            'uuid'         => (string) $response->uuid,
             'status'       => (string) $response->status,
             'chave_acesso' => $response->chave,
             'n_recibo'     => (int) $response->recibo,
@@ -494,6 +554,60 @@ class ControllerModuleWebmaniabrNfe extends Controller {
   function isInstalled(){
 
     return $this->NFeFunctions->isInstalled( $this, true );
+
+  }
+  
+  public function save_order_transporte_info($request){
+
+    if(isset($request['nfe-save-transporte-info']) && isset($request['order_id'])){
+
+      $order_id = $request['order_id'];
+
+			$modalidade_frete = $request['webmaniabrnfe_modalidade_frete'];
+			$volume           = $request['webmaniabrnfe_volume'];
+			$especie          = $request['webmaniabrnfe_especie'];
+			$peso_bruto       = $request['webmaniabrnfe_peso_bruto'];
+			$peso_liquido     = $request['webmaniabrnfe_peso_liquido'];
+
+			try{
+				$this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_transporte_modalidade_frete = '$modalidade_frete', nfe_transporte_volume = '$volume', nfe_transporte_especie = '$especie', nfe_transporte_peso_bruto = '$peso_bruto', nfe_transporte_peso_liquido = '$peso_liquido' WHERE order_id = '$order_id'");
+			}catch(Exception $e){}
+
+		}
+
+  }
+
+  public function get_order_transporte_info( $order_id ){
+
+    if(!$order_id) return array();
+
+    $data = array();
+
+    try{
+
+			$query_transporte_info = $this->db->query("SELECT nfe_transporte_modalidade_frete, nfe_transporte_volume, nfe_transporte_especie, nfe_transporte_peso_bruto, nfe_transporte_peso_liquido FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+
+			$transporte_info = $query_transporte_info->row;
+
+			$data['nfe_volume']       = $transporte_info['nfe_transporte_volume'];
+			$data['nfe_especie']      = $transporte_info['nfe_transporte_especie'];
+			$data['nfe_peso_bruto']   = $transporte_info['nfe_transporte_peso_bruto'];
+			$data['nfe_peso_liquido'] = $transporte_info['nfe_transporte_peso_liquido'];
+      $data['modalidade_frete'] = $transporte_info['nfe_transporte_modalidade_frete'];
+
+      return $data;
+
+		}catch(Exception $e){
+
+			$data['nfe_volume']           = '';
+			$data['nfe_especie']          = '';
+			$data['nfe_peso_bruto']       = '';
+			$data['nfe_peso_liquido']     = '';
+      $data['nfe_modalidade_frete'] = '';
+
+      return $data;
+
+		}
 
   }
 
