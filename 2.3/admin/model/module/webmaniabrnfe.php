@@ -90,6 +90,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 		$data = array(
 			'ID' => (int)$order_data['order_id'], // Número do pedido
 			'url_notificacao' => $notification_url,
+			'origem' => 'opencart_2.3',
 			'operacao' => 1, // Tipo de Operação da Nota Fiscal
 			'natureza_operacao' => $module_settings['webmaniabrnfe_operation_nature'], // Natureza da Operação
 			'modelo' => 1, // Modelo da Nota Fiscal (NF-e ou NFC-e)
@@ -106,7 +107,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			'desconto' => number_format($total_discounts, 2, '.', ''), // Total do desconto
 			'total' => number_format($order_data['total'], 2, '.', ''), // Total do pedido
 		);
-		
+
 		$payment_code = $order_data['payment_code'];
 		if(isset($module_settings['webmaniabrnfe_payment_'.$payment_code]) && $module_settings['webmaniabrnfe_payment_'.$payment_code]){
 			$data['pedido']['forma_pagamento'] = $module_settings['webmaniabrnfe_payment_'.$payment_code];
@@ -151,7 +152,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			*/
 			$codigo_gtin_row = $this->db->query('SELECT ean_barcode FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$codigo_gtin = $codigo_gtin_row->row['ean_barcode'];
-			
+
 			$gtin_tributavel_row = $this->db->query('SELECT gtin_tributavel FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$gtin_tributavel = $gtin_tributavel_row->row['gtin_tributavel'];
 
@@ -160,10 +161,10 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 			$codigo_cest_row = $this->db->query('SELECT cest_code FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$codigo_cest = $codigo_cest_row->row['cest_code'];
-			
+
 			$cnpj_fabricante_row = $this->db->query('SELECT cnpj_fabricante FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$cnpj_fabricante = $cnpj_fabricante_row->row['cnpj_fabricante'];
-			
+
 			$ind_escala_row = $this->db->query('SELECT ind_escala FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$ind_escala = $ind_escala_row->row['ind_escala'];
 
@@ -206,11 +207,11 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 			if (!$codigo_ncm) $codigo_ncm = $module_settings['webmaniabrnfe_ncm_code'];
 			if (!$codigo_cest) $codigo_cest = $module_settings['webmaniabrnfe_cest_code'];
-			
+
 			if(!$cnpj_fabricante) $cnpj_fabricante = $module_settings['webmaniabrnfe_cnpj_fabricante'];
 			if(!$ind_escala) $ind_escala = $module_settings['webmaniabrnfe_ind_escala'];
-			
-			
+
+
 			if (!is_numeric($origem) || (int)$origem == -1) $origem = $module_settings['webmaniabrnfe_product_source'];
 			if (!$imposto) $imposto = $module_settings['webmaniabrnfe_tax_class'];
 			$data['produtos'][] = array(
@@ -268,10 +269,10 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 			$methods = $module_settings['webmaniabrnfe_carriers'];
 			$methods = json_decode(stripslashes(html_entity_decode($methods)), true);
-			
-			
+
+
 			foreach($methods as $method){
-				
+
 				if($method['method'].'.'.$method['method'] == $order_data['shipping_code']){
 					$data['transporte'] = array(
 						'cnpj'         => $method['cnpj'],
@@ -282,34 +283,34 @@ class ModelModuleWebmaniaBRNFe extends Model {
 						'cidade'       => $method['city'],
 						'cep'          => $method['cep'],
 					);
-					
+
 					$transporte_info = $this->load->controller('extension/module/webmaniabrnfe/get_order_transporte_info', $order_data['order_id']);
-	
+
 					$transporte_keys = array(
 						'nfe_volume'       => 'volume',
 						'nfe_especie'      => 'especie',
 						'nfe_peso_bruto'   => 'peso_bruto',
 						'nfe_peso_liquido' => 'peso_liquido'
 					);
-	
+
 					foreach($transporte_keys as $array_key => $api_key){
 						$value = $transporte_info[$array_key];
 						if($value){
 							$data['transporte'][$api_key] = $value;
 						}
 					}
-	
+
 					if($transporte_info['modalidade_frete']){
 						$data['pedido']['modalidade_frete'] = $transporte_info['modalidade_frete'];
 					}
-				
+
 				}
-				
+
 			}
-			
+
 		}
-		
-		
+
+
 		return $data;
 
 	}

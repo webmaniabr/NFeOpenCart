@@ -90,6 +90,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 		$data = array(
 			'ID' => (int)$order_data['order_id'], // Número do pedido
 			'url_notificacao' => $notification_url,
+			'origem' => 'opencart_2.3',
 			'operacao' => 1, // Tipo de Operação da Nota Fiscal
 			'natureza_operacao' => $module_settings['webmaniabrnfe_operation_nature'], // Natureza da Operação
 			'modelo' => 1, // Modelo da Nota Fiscal (NF-e ou NFC-e)
@@ -146,7 +147,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			*/
 			$codigo_gtin_row = $this->db->query('SELECT ean_barcode FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$codigo_gtin = $codigo_gtin_row->row['ean_barcode'];
-			
+
 			$gtin_tributavel_row = $this->db->query('SELECT gtin_tributavel FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$gtin_tributavel = $gtin_tributavel_row->row['gtin_tributavel'];
 
@@ -155,10 +156,10 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 			$codigo_cest_row = $this->db->query('SELECT cest_code FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$codigo_cest = $codigo_cest_row->row['cest_code'];
-			
+
 			$cnpj_fabricante_row = $this->db->query('SELECT cnpj_fabricante FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$cnpj_fabricante = $cnpj_fabricante_row->row['cnpj_fabricante'];
-			
+
 			$ind_escala_row = $this->db->query('SELECT ind_escala FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
 			$ind_escala = $ind_escala_row->row['ind_escala'];
 
@@ -182,11 +183,11 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			if (!$gtin_tributavel) $gtin_tributavel = $module_settings['webmaniabrnfe_gtin_tributavel'];
 			if (!$codigo_ncm) $codigo_ncm = $module_settings['webmaniabrnfe_ncm_code'];
 			if (!$codigo_cest) $codigo_cest = $module_settings['webmaniabrnfe_cest_code'];
-			
+
 			if(!$cnpj_fabricante) $cnpj_fabricante = $module_settings['webmaniabrnfe_cnpj_fabricante'];
 			if(!$ind_escala) $ind_escala = $module_settings['webmaniabrnfe_ind_escala'];
-			
-			
+
+
 			if (!is_numeric($origem) || (int)$origem == -1) $origem = $module_settings['webmaniabrnfe_product_source'];
 			if (!$imposto) $imposto = $module_settings['webmaniabrnfe_tax_class'];
 			$data['produtos'][] = array(
@@ -280,7 +281,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		}
 
-		
+
 		return $data;
 
 	}
