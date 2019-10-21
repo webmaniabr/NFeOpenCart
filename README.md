@@ -1,15 +1,19 @@
+<p align="center">
+  <img src="https://wmbr.s3.amazonaws.com/img/logo_webmaniabr_github.png">
+</p>
+
 # Nota Fiscal Eletrônica para OpenCart
 
 Através do emissor de Nota Fiscal da WebmaniaBR®, você conta com a emissão e arquivamento das suas notas fiscais, cálculo automático de impostos, geração do Danfe para impressão e envio automático de e-mails para os clientes.
 
-- **Módulo compatível com as versões 2.0, 2.1, 2.2 e 2.3**
+- **Módulo compatível com as versões 2.0, 2.2 e 2.3**
 - **Faça download da última versão do módulo: [Clique aqui](https://github.com/webmaniabr/NFeOpenCart/releases)**
-- Sobre o Emissor de NF-e da WebmaniaBR®: [Saiba mais](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
+- Emissor de Nota Fiscal WebmaniaBR®: [Saiba mais](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
 - Documentação da REST API: [Visualizar](https://webmaniabr.com/docs/rest-api-nfe/)
 
 ## Requisitos
 
-- Contrate um dos planos de Nota Fiscal Eletrônica da WebmaniaBR® a partir de R$29,90/mês: <br>[Avaliação por 30 dias grátis!](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
+- Contrate um dos planos de Nota Fiscal Eletrônica da WebmaniaBR® a partir de R$29,90/mês: [Assine Agora](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
 - Instale o módulo grátis do OpenCart da WebmaniaBR® e configure conforme instruções.
 
 ## Instalação
@@ -30,10 +34,13 @@ Após realizar o download da última versão ([Clique aqui](https://github.com/w
 Explicação técnica: O vQmod é um inovador sistema de substituição de arquivos através de um método conhecido como “virtual”. Na prática, ao invés de modificar os arquivos originais em PHP do OpenCart as instruções são alteradas em arquivos XML.
 ```
 
-## Instruções
+## Configuração
 
-- [Guia de emissão de Nota Fiscal para Loja Virtual](https://webmaniabr.com/blog/guia-de-emissao-de-nota-fiscal-para-loja-virtual/)
-- [Como ativar o vqMod](https://ajuda.webmaniabr.com/nota-fiscal-eletronica-configuracoes-e-gerenciamento/modulo-opencart/instalacao-opencart-vqmod)
+Consulte o nosso guia passo a passo para começar a emitir as notas fiscais com apenas um clique na sua Loja Virtual:
+
+- [Configurar credenciais](https://ajuda.webmaniabr.com/hc/pt-br/articles/360013113812-Configurar-credenciais-no-OpenCart)
+- [Configurar impostos](https://ajuda.webmaniabr.com/hc/pt-br/articles/360013122032-Configurar-impostos-no-OpenCart)
+- [Emitir Nota Fiscal](https://ajuda.webmaniabr.com/hc/pt-br/articles/360013352631-Emiss%C3%A3o-de-NF-e-no-OpenCart)
 
 ## Adaptar página Finalizar Compra
 
@@ -42,6 +49,16 @@ O módulo utiliza vQmod para inserir os campos obrigatórios na página de Final
 - /admin/controller/nfe/xml/nfe.ocmod.xml
 - /vqmod/xml/nfe.ocmod.xml
 
+Havendo dúvidas de como manusear o arquivo e eventuais incompatibilidades com o seu tema, por favor, entre em contato no e-mail suporte@webmaniabr.com.
+
+## Controle das Notas Fiscais
+
+Você pode gerenciar todas as Notas Fiscais e realizar a impressão do Danfe no painel da WebmaniaBR®. Simples e fácil.
+
+<p align="center">
+<img src="https://wmbr.s3.amazonaws.com/img/dashboard_webmaniabr_01.jpg">
+</p>
+
 ## Suporte
 
-Qualquer dúvida entre em contato na nossa [Central de Ajuda](https://ajuda.webmaniabr.com) ou acesse o [Painel de Controle](https://webmaniabr.com/painel/) para conversar em tempo real no Chat ou Abrir um chamado.
+Qualquer dúvida entre em contato na nossa [Central de Ajuda](https://ajuda.webmaniabr.com) ou no e-mail suporte@webmaniabr.com.
