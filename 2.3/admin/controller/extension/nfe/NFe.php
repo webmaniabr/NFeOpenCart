@@ -103,7 +103,7 @@ class NFe {
         $rest = curl_init();
         curl_setopt($rest, CURLOPT_CONNECTTIMEOUT , $timeout);
         curl_setopt($rest, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($rest, CURLOPT_URL, $endpoint.'?time='.time());
+        curl_setopt($rest, CURLOPT_URL, $endpoint);
         curl_setopt($rest, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($rest, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($rest, CURLOPT_SSL_VERIFYHOST, false);

@@ -168,7 +168,6 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 			}
 
-			if (!$peso) $peso = '0.100';
 			$peso = number_format($peso, 3, '.', '');
 			if (!$codigo_ean) $codigo_ean = $module_settings['webmaniabrnfe_ean_barcode'];
 

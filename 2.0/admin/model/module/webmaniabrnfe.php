@@ -175,7 +175,6 @@ class ModelModuleWebmaniaBRNfe extends Model {
 			$imposto = $imposto_row->row['classe_imposto'];
 			$peso = $product_info['weight'];
 
-			if (!$peso) $peso = '0.100';
 			if (!$codigo_gtin)     $codigo_gtin     = $module_settings['webmaniabrnfe_ean_barcode'];
 			if (!$gtin_tributavel) $gtin_tributavel = $module_settings['webmaniabrnfe_gtin_tributavel'];
 			if (!$codigo_ncm) $codigo_ncm = $module_settings['webmaniabrnfe_ncm_code'];

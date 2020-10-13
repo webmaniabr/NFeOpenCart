@@ -182,7 +182,6 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 			}
 
-			if (!$peso) $peso = '0.100';
 			$peso = number_format($peso, 3, '.', '');
 			if (!$codigo_gtin) $codigo_gtin = $module_settings['webmaniabrnfe_ean_barcode'];
 			if (!$gtin_tributavel) $gtin_tributavel = $module_settings['webmaniabrnfe_gtin_tributavel'];
