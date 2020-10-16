@@ -35,10 +35,12 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		$notification_url = HTTP_CATALOG.'?retorno_nfe='.$uniq_key.'&order_id='.$order_data['order_id'];
 
+		// Custom fields
 		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
 		$custom_fields_customer = @unserialize($customer_info['custom_field']);
-		if(!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
-
+		if (!$custom_fields_customer){
+			$custom_fields_customer = json_decode($customer_info['custom_field'], true);
+		}
 
 		$custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
 		$documento = $NFeFunctions->get_value_from_fields( 'tipo_pessoa', $custom_fields_ids, $custom_fields_customer );

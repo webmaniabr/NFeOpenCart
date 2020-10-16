@@ -36,24 +36,31 @@ class ModelModuleWebmaniaBRNfe extends Model {
 
 		$notification_url = HTTP_CATALOG.'?retorno_nfe='.$uniq_key.'&order_id='.$order_data['order_id'];
 
+		// Custom fields
 		$customer_info = $this->model_sale_customer->getCustomer($order_data['customer_id']);
-
-		$custom_fields_customer = unserialize($customer_info['custom_field']);
-
+		$custom_fields_customer = @unserialize($customer_info['custom_field']);
+		if (!$custom_fields_customer){
+			$custom_fields_customer = json_decode($customer_info['custom_field'], true);
+		}
 
 		$custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
 		$documento = $NFeFunctions->get_value_from_fields( 'tipo_pessoa', $custom_fields_ids, $custom_fields_customer );
+		
+		if ($documento == $NFeFunctions->get_value_from_fields( 'pessoa_fisica', $custom_fields_ids, $custom_fields_customer )){
 
-		if($documento == $NFeFunctions->get_value_from_fields( 'pessoa_fisica', $custom_fields_ids, $custom_fields_customer )){
 			$tipo_pessoa = 'cpf';
 			$document_number = $NFeFunctions->get_value_from_fields( 'cpf', $custom_fields_ids, $custom_fields_customer );
-		}elseif($documento == $NFeFunctions->get_value_from_fields( 'pessoa_juridica', $custom_fields_ids, $custom_fields_customer )){
+
+		} elseif ($documento == $NFeFunctions->get_value_from_fields( 'pessoa_juridica', $custom_fields_ids, $custom_fields_customer )){
+
 			$tipo_pessoa = 'cnpj';
 			$document_number = $NFeFunctions->get_value_from_fields( 'cnpj', $custom_fields_ids, $custom_fields_customer );
 			$insc_est = $NFeFunctions->get_value_from_fields( 'insc_est', $custom_fields_ids, $custom_fields_customer );
 			$razao_social = $NFeFunctions->get_value_from_fields( 'razao_social', $custom_fields_ids, $custom_fields_customer );
+
 		}
 
+		// Address
 		$address_number = $order_data['shipping_custom_field'][$NFeFunctions->get_value_from_fields( 'numero', $custom_fields_ids, $custom_fields_customer )];
 		$complemento = $order_data['shipping_custom_field'][$NFeFunctions->get_value_from_fields( 'complemento', $custom_fields_ids, $custom_fields_customer )];
 
@@ -203,7 +210,6 @@ class ModelModuleWebmaniaBRNfe extends Model {
 				'classe_imposto' => $imposto // Referência do imposto cadastrado
 			);
 		}
-
 
 		if ($tipo_pessoa == 'cpf'){
 			$data['cliente'] = array(

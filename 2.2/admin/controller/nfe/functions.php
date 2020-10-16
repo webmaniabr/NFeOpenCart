@@ -2,28 +2,28 @@
 
 class NFeFunctions {
 
-    public function isInstalled( $class, $is_admin = null ){
+  public function isInstalled( $class, $is_admin = null ){
 
-      unset($class->session->data['status_sefaz']);
+    unset($class->session->data['status_sefaz']);
 
-      if ($is_admin){
+    if ($is_admin){
 
-          // Verify if curl command exist
-          if (!function_exists('curl_version')){
+        // Verify if curl command exist
+        if (!function_exists('curl_version')){
 
-                $class->session->data['status_sefaz'] = '<strong>NF-e:</strong> Necessário instalar o comando cURL no servidor, entre em contato com a sua hospedagem ou administrador do servidor.';
-                return false;
+              $class->session->data['status_sefaz'] = '<strong>NF-e:</strong> Necessário instalar o comando cURL no servidor, entre em contato com a sua hospedagem ou administrador do servidor.';
+              return false;
 
-          }
-
-      }
-
-      $is_installed = $class->db->query("SELECT code FROM " . DB_PREFIX . "extension WHERE code = 'webmaniabrnfe'");
-      if($is_installed->num_rows) return true; else return false;
+        }
 
     }
 
-    function cpf( $string ){
+    $is_installed = $class->db->query("SELECT code FROM " . DB_PREFIX . "extension WHERE code = 'webmaniabrnfe'");
+    if($is_installed->num_rows) return true; else return false;
+
+  }
+
+  function cpf( $string ){
 
 		if (!$string) return;
 		$string = self::clear( $string );

@@ -8,8 +8,6 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
   function __construct( $registry ){
 
-
-
     $this->registry = $registry;
 
     require_once (__DIR__.'/../nfe/NFe.php');
@@ -17,6 +15,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
     $this->NFeFunctions = new NFeFunctions;
 
+    $this->cleanCache();
     if(!$this->NFeFunctions->isInstalled( $this, true )) return false;
     if(!$this->checkAuthentication()) return false;
 
@@ -194,8 +193,54 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
   }
 
+  /**
+   * Clean cache vqMod
+   */
+  public function cleanCache(){
 
+    if (
+      $_GET &&
+      $_GET['route'] &&
+      in_array($_GET['route'], [ 
+        'catalog/product/edit',
+        'sale/order/info',
+        'sale/order/edit',
+        'module/webmaniabrnfe'
+      ])
+    ){
 
+      $store_id = $this->config->get('config_store_id');
+      $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE store_id = '$store_id' AND code = 'webmaniabr_cache'");
+
+      if ($query->num_rows > 0){
+
+        $cached = $query->row['value'];
+
+        if ($cached == $cached){
+
+          // Clean files
+          $files = glob(__DIR__.'/../../../vqmod/vqcache/*');
+          foreach($files as $file){
+            if (is_file($file))
+              unlink($file);
+          }
+
+          // Update cache
+          $cached++;
+          $id = $query->row['setting_id'];
+          $this->db->query("UPDATE " . DB_PREFIX . "setting SET value = '$cached' WHERE setting_id = '$id'");
+
+        }
+
+      }
+
+    }
+
+  }
+
+  /**
+   * Install
+   */
   public function install(){
 
     // Install vqMod file
@@ -204,18 +249,20 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
     $file_copy = __DIR__.'/../nfe/xml/nfe.ocmod.xml';
     $oc_mod_exist = file_exists($dest.$filename);
 
-    if($oc_mod_exist === false){
+    // Copy vqMod
+    if ($oc_mod_exist === false){
       copy($file_copy, $dest.$filename);
     }
 
-    //Try to insert Required custom Fields on Install
+    // Try to insert Required custom Fields on Install
     $this->getCustomFieldsIds( $this );
 
-    //Disable Guest Checkout
+    // Disable Guest Checkout
     $store_id = $this->config->get('config_store_id');
     $this->load->model('setting/setting');
     $this->model_setting_setting->editSettingValue('config', 'config_checkout_guest', 0, $store_id);
 
+    // Install custom fields
     $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "category LIKE 'category_ncm'");
     if($query_existing_column->num_rows == 0){
       $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "category ADD COLUMN category_ncm VARCHAR (15)");
@@ -279,6 +326,14 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
     $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_peso_liquido'");
     if($query_existing_column->num_rows == 0){
       $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_peso_liquido VARCHAR (15)");
+    }
+
+    // Cache
+    $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE store_id = '$store_id' AND code = 'webmaniabr_cache'");
+    if ($query->num_rows > 0){
+      $this->db->query("UPDATE " . DB_PREFIX . "setting SET value = '0' WHERE setting_id = '$id'");
+    } else {
+      $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '$store_id', code = 'webmaniabr_cache', value = '0', serialized = '0'");
     }
 
   }
