@@ -44,7 +44,8 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
       if($_GET['retorno_nfe'] == $module_settings['webmaniabrnfe_uniq_get_key']){
 
         $order_id = (int)$_GET['order_id'];
-        $raw_nfe_info = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+        $order_table = (DB_PREFIX) ? "order" : "`order`";
+        $raw_nfe_info = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
         $nfe_info = unserialize($raw_nfe_info->row['nfe_info']);
         if(!$nfe_info) $nfe_info = array();
 
@@ -57,7 +58,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
           if($nfe['uuid'] == $_POST['uuid'] && $current_status != $received_status){
             $nfe_info[$key]['status'] = $received_status;
             $nfe_info_str = serialize($nfe_info);
-            $this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");
+            $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");
             break;
           }
 

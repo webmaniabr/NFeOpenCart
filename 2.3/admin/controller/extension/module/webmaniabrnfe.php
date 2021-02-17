@@ -293,39 +293,40 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
       $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "product ADD COLUMN ind_escala VARCHAR (5)");
     }
 
-    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'status_nfe'");
+    $order_table = (DB_PREFIX) ? "order" : "`order`";
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "$order_table LIKE 'status_nfe'");
     if($query_existing_column->num_rows == 0){
-      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN status_nfe BOOLEAN DEFAULT 0");
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "$order_table ADD COLUMN status_nfe BOOLEAN DEFAULT 0");
     }
 
-    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_info'");
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "$order_table LIKE 'nfe_info'");
     if($query_existing_column->num_rows == 0){
-      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_info TEXT");
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "$order_table ADD COLUMN nfe_info TEXT");
     }
 
-    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_modalidade_frete'");
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "$order_table LIKE 'nfe_transporte_modalidade_frete'");
     if($query_existing_column->num_rows == 0){
-      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_modalidade_frete VARCHAR (15)");
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "$order_table ADD COLUMN nfe_transporte_modalidade_frete VARCHAR (15)");
     }
 
-    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_volume'");
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "$order_table LIKE 'nfe_transporte_volume'");
     if($query_existing_column->num_rows == 0){
-      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_volume VARCHAR (15)");
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "$order_table ADD COLUMN nfe_transporte_volume VARCHAR (15)");
     }
 
-    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_especie'");
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "$order_table LIKE 'nfe_transporte_especie'");
     if($query_existing_column->num_rows == 0){
-      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_especie VARCHAR (15)");
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "$order_table ADD COLUMN nfe_transporte_especie VARCHAR (15)");
     }
 
-    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_peso_bruto'");
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "$order_table LIKE 'nfe_transporte_peso_bruto'");
     if($query_existing_column->num_rows == 0){
-      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_peso_bruto VARCHAR (15)");
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "$order_table ADD COLUMN nfe_transporte_peso_bruto VARCHAR (15)");
     }
 
-    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "order LIKE 'nfe_transporte_peso_liquido'");
+    $query_existing_column = $this->db->query("SHOW COLUMNS FROM " . DB_PREFIX . "$order_table LIKE 'nfe_transporte_peso_liquido'");
     if($query_existing_column->num_rows == 0){
-      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "order ADD COLUMN nfe_transporte_peso_liquido VARCHAR (15)");
+      $query = $this->db->query("ALTER TABLE  " . DB_PREFIX . "$order_table ADD COLUMN nfe_transporte_peso_liquido VARCHAR (15)");
     }
 
     // Cache
@@ -453,7 +454,8 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
       }else{
 
         $new_status = $response->status;
-        $query_nfe_data = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+        $order_table = (DB_PREFIX) ? "order" : "`order`";
+        $query_nfe_data = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
         $nfe_data = unserialize($query_nfe_data->rows[0]['nfe_info']);
 
         foreach($nfe_data as &$order_nfe){
@@ -464,7 +466,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
         $nfe_data_str = serialize($nfe_data);
 
-        $query = $this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_info = '$nfe_data_str' WHERE order_id = $order_id");
+        $query = $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_info = '$nfe_data_str' WHERE order_id = $order_id");
         $this->session->data['success'] = '<p><i class="fa fa-check-circle"></i> NF-e atualizada com sucesso';
 
         $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
@@ -499,7 +501,8 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
           }
         }else{
 
-          $previous_info_query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+          $order_table = (DB_PREFIX) ? "order" : "`order`";
+          $previous_info_query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
           $previous_info = unserialize($previous_info_query->rows[0]['nfe_info']);
           if(!$previous_info){
             $previous_info = array();
@@ -522,8 +525,8 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
           $nfe_info_str = serialize($previous_info);
 
-          $query = $this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");
-          $query = $this->db->query("UPDATE " . DB_PREFIX . "order SET status_nfe = '1' WHERE order_id = $order_id");
+          $query = $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");
+          $query = $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET status_nfe = '1' WHERE order_id = $order_id");
 
           $success .= '<p><i class="fa fa-check-circle"></i> NF-e do pedido #'.$order_id.' emitida com sucesso';
 
@@ -633,7 +636,8 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 			$peso_liquido     = $request['webmaniabrnfe_peso_liquido'];
 
 			try{
-				$this->db->query("UPDATE " . DB_PREFIX . "order SET nfe_transporte_modalidade_frete = '$modalidade_frete', nfe_transporte_volume = '$volume', nfe_transporte_especie = '$especie', nfe_transporte_peso_bruto = '$peso_bruto', nfe_transporte_peso_liquido = '$peso_liquido' WHERE order_id = '$order_id'");
+                $order_table = (DB_PREFIX) ? "order" : "`order`";
+				$this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_transporte_modalidade_frete = '$modalidade_frete', nfe_transporte_volume = '$volume', nfe_transporte_especie = '$especie', nfe_transporte_peso_bruto = '$peso_bruto', nfe_transporte_peso_liquido = '$peso_liquido' WHERE order_id = '$order_id'");
 			}catch(Exception $e){}
 
 		}
@@ -647,8 +651,8 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
     $data = array();
 
     try{
-
-			$query_transporte_info = $this->db->query("SELECT nfe_transporte_modalidade_frete, nfe_transporte_volume, nfe_transporte_especie, nfe_transporte_peso_bruto, nfe_transporte_peso_liquido FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+            $order_table = (DB_PREFIX) ? "order" : "`order`";
+			$query_transporte_info = $this->db->query("SELECT nfe_transporte_modalidade_frete, nfe_transporte_volume, nfe_transporte_especie, nfe_transporte_peso_bruto, nfe_transporte_peso_liquido FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
 
 			$transporte_info = $query_transporte_info->row;
 

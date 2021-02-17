@@ -135,7 +135,8 @@
        $this->response->setOutput($this->load->view('sale/order_info.tpl', $data));
        ]]></search>
        <add><![CDATA[
-       $query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "order WHERE order_id = $order_id");
+       $order_table = (DB_PREFIX) ? "order" : "`order`";
+       $query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
        $url = $this->url->link('module/webmaniabrnfe/updateNFe', 'token=' . $this->session->data['token'], true);
 
        if(isset($query->rows[0]['nfe_info'])){
