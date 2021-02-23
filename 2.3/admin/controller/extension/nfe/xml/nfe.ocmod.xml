@@ -176,7 +176,7 @@
      public function index() {
      ]]></search>
      <add><![CDATA[
-       $this->load->controller('module/webmaniabrnfe/listen_notification');
+       $this->load->controller('extension/module/webmaniabrnfe/listen_notification');
      ]]></add>
    </operation>
  </file>
