@@ -6,7 +6,7 @@
 
 Através do emissor de Nota Fiscal da WebmaniaBR®, você conta com a emissão e arquivamento das suas notas fiscais, cálculo automático de impostos, geração do Danfe para impressão e envio automático de e-mails para os clientes.
 
-- **Módulo compatível com as versões 2.0, 2.2 e 2.3**
+- **Módulo compatível com as versões 2.0, 2.2, 2.3 e 3.0.**
 - **Faça download da última versão do módulo: [Clique aqui](https://github.com/webmaniabr/NFeOpenCart/releases)**
 - Emissor de Nota Fiscal WebmaniaBR®: [Saiba mais](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
 - Documentação da REST API: [Visualizar](https://webmaniabr.com/docs/rest-api-nfe/)

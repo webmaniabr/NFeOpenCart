@@ -1,0 +1,64 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Informações de Transporte (NF-e)</h3>
+  </div>
+  <div class="panel-body">
+    <p>Informações complementares na emissão de Nota Fiscal para pedidos enviados via Transportadora</p>
+    <form class="form-horizontal" id="transp_form" method="POST">
+      <div class="form-group">
+        <label class="control-label col-sm-1">Modalidade do frete</label>
+        <div class="col-sm-10">
+          <select class="form-control" name="webmaniabrnfe_modalidade_frete">
+            {% set options = {
+              '0': 'Por conta do emitente',
+              '1': 'Por conta do destinatário/remetente',
+              '2': 'Por conta de terceiros',
+              '9': 'Sem frete'
+            }
+            %}
+            {% for value, option in options %}
+              {% if value == modalidade_frete %}
+                {{ '<option value="'~value~'" selected>'~option~'</option>' }}
+              {% else %}
+                {{ '<option value="'~value~'">'~option~'</option>' }}
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <h4 style="padding-left:15px">Volumes transportados</h4>
+      </div>
+      <div class="form-group">
+        <label class="control-label col-sm-1">Volumes</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" name="webmaniabrnfe_volume" value="{{ nfe_volume }}"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="control-label col-sm-1">Espécie</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" name="webmaniabrnfe_especie" value="{{ nfe_especie }}"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="control-label col-sm-1">Peso Bruto</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" name="webmaniabrnfe_peso_bruto" value="{{ nfe_peso_bruto }}" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="control-label col-sm-1">Peso Líquido</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" name="webmaniabrnfe_peso_liquido" value="{{ nfe_peso_liquido }}" />
+        </div>
+      </div>
+      <input type="submit" value="Salvar" class="btn btn-primary" />
+      <input type="hidden" name="nfe-save-transporte-info" value="save-info" />
+    </form>
+  </div>
+</div>
+
+<script>
+  $('#transp_form').attr('action', window.location.href);
+</script>
