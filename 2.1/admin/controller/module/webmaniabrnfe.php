@@ -406,7 +406,10 @@ class ControllerModuleWebmaniabrNfe extends Controller {
         $new_status = $response->status;
         $order_table = (DB_PREFIX) ? "order" : "`order`";
         $query_nfe_data = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
-        $nfe_data = unserialize($query_nfe_data->rows[0]['nfe_info']);
+        $nfe_data = @unserialize($query_nfe_data->rows[0]['nfe_info']);
+        if (!$nfe_data) {
+          $nfe_data = @unserialize(utf8_decode(base64_decode($query_nfe_data->rows[0]['nfe_info'])));
+        }
 
         foreach($nfe_data as &$order_nfe){
           if($order_nfe['chave_acesso'] == $chave_acesso){
@@ -414,7 +417,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
           }
         }
 
-        $nfe_data_str = serialize($nfe_data);
+        $nfe_data_str = base64_encode(utf8_encode(serialize($nfe_data)));
 
         $query = $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_info = '$nfe_data_str' WHERE order_id = $order_id");
         $this->session->data['success'] = '<p><i class="fa fa-check-circle"></i> NF-e atualizada com sucesso';
@@ -458,7 +461,10 @@ class ControllerModuleWebmaniabrNfe extends Controller {
 
           $order_table = (DB_PREFIX) ? "order" : "`order`";
           $previous_info_query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
-          $previous_info = unserialize($previous_info_query->rows[0]['nfe_info']);
+          $previous_info = @unserialize($previous_info_query->rows[0]['nfe_info']);
+          if (!$previous_info) {
+            $previous_info = @unserialize(utf8_decode(base64_decode($previous_info_query->rows[0]['nfe_info'])));
+          }
           if(!$previous_info){
             $previous_info = array();
           }
@@ -477,7 +483,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
 
           $previous_info[] = $order_nfe_info;
 
-          $nfe_info_str = serialize($previous_info);
+          $nfe_info_str = base64_encode(utf8_encode(serialize($previous_info)));
 
           $query = $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");
           $query = $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET status_nfe = '1' WHERE order_id = $order_id");

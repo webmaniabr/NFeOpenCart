@@ -140,7 +140,10 @@
        $url = $this->url->link('module/webmaniabrnfe/updateNFe', 'token=' . $this->session->data['token'], true);
 
        if(isset($query->rows[0]['nfe_info'])){
-        $nfe_info = unserialize($query->rows[0]['nfe_info']);
+        $nfe_info = @unserialize($query->rows[0]['nfe_info']);
+        if (!$nfe_info) {
+          $nfe_info = @unserialize(utf8_decode(base64_decode($query->rows[0]['nfe_info'])));
+        }
         $data['nfe_info'] = $nfe_info;
         $data['url'] = $url;
        }else{
