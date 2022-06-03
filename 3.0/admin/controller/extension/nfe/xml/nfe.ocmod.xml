@@ -56,6 +56,9 @@
        ]]></search>
        <add><![CDATA[
        $data['emitir_nfe'] = $this->url->link('extension/module/webmaniabrnfe/emitirNFe', 'user_token=' . $this->session->data['user_token'], true);
+       $data['imprimir_danfe'] = $this->url->link('extension/module/webmaniabrnfe/imprimirDanfe', 'user_token=' . $this->session->data['user_token'], true);
+       $data['imprimir_danfe_simples'] = $this->url->link('extension/module/webmaniabrnfe/imprimirDanfeSimples', 'user_token=' . $this->session->data['user_token'], true);
+       $data['imprimir_danfe_etiqueta'] = $this->url->link('extension/module/webmaniabrnfe/imprimirDanfeEtiqueta', 'user_token=' . $this->session->data['user_token'], true);
        ]]></add>
      </operation>
      <operation info="Add custom BULK action">
@@ -149,6 +152,15 @@
         if (!$nfe_info) {
             $nfe_info = array();
         }
+        foreach ($nfe_info as $key => $nfe) {
+          if (!$nfe['url_danfe_simples']) {
+            $nfe_info[$key]['url_danfe_simples'] = str_replace('/danfe/', '/danfe/simples/', $nfe['url_danfe']); 
+          }
+          if (!$nfe['url_danfe_etiqueta']) {
+            $nfe_info[$key]['url_danfe_etiqueta'] = str_replace('/danfe/', '/danfe/etiqueta/', $nfe['url_danfe']); 
+          }
+        }
+
         $data['nfe_info'] = $nfe_info;
         $data['url'] = $url;
        }else{
@@ -224,6 +236,9 @@
       ]]></search>
       <add><![CDATA[
       <button type="submit" id="button-emitir-nfe" form="form-order" formaction="{{ emitir_nfe }}" data-toggle="tooltip" title="Emitir Notas Fiscais" class="btn btn-info"><i class="fa fa-file-text-o"></i> Emitir NF-e</button>
+      <button type="submit" id="button-imprimir-danfe" form="form-order" formaction="{{ imprimir_danfe }}" data-toggle="tooltip" title="Imprimir Danfe" class="btn btn-info"><i class="fa fa-file-text-o"></i> Imprimir Danfe</button>
+      <button type="submit" id="button-imprimir-danfe-simples" form="form-order" formaction="{{ imprimir_danfe_simples }}" data-toggle="tooltip" title="Imprimir Danfe Simples" class="btn btn-info"><i class="fa fa-file-text-o"></i> Imprimir Danfe Simples</button>
+      <button type="submit" id="button-imprimir-danfe-etiqueta" form="form-order" formaction="{{ imprimir_danfe_etiqueta }}" data-toggle="tooltip" title="Imprimir Danfe Etiqueta" class="btn btn-info"><i class="fa fa-file-text-o"></i> Imprimir Danfe Etiqueta</button>
       ]]></add>
     </operation>
     <operation info="Remove target _blank">
@@ -232,6 +247,18 @@
       ]]></search>
       <add><![CDATA[
       $('#button-emitir-nfe').on('click', function(e) {
+        $('#form-order').attr('action', this.getAttribute('formAction'));
+        $('#form-order').removeAttr('target');
+      });
+      $('#button-imprimir-danfe').on('click', function(e) {
+        $('#form-order').attr('action', this.getAttribute('formAction'));
+        $('#form-order').removeAttr('target');
+      });
+      $('#button-imprimir-danfe-simples').on('click', function(e) {
+        $('#form-order').attr('action', this.getAttribute('formAction'));
+        $('#form-order').removeAttr('target');
+      });
+      $('#button-imprimir-danfe-etiqueta').on('click', function(e) {
         $('#form-order').attr('action', this.getAttribute('formAction'));
         $('#form-order').removeAttr('target');
       });
@@ -1399,13 +1426,13 @@
                       <thead>
                         <tr>
                           <tr>
-                            <th id="columnname" class="manage-column column-columnname" scope="col" width="15%">Data</th>
+                            <th id="columnname" class="manage-column column-columnname" scope="col" width="10%">Data</th>
                             <th id="columnname" class="manage-column column-columnname" scope="col" width="5%">Série</th>
                             <th id="columnname" class="manage-column column-columnname" scope="col" width="5%">Nº</th>
-                            <th id="columnname" class="manage-column column-columnname" scope="col" width="15%">RPS</th>
-                            <th id="columnname" class="manage-column column-columnname" scope="col">Código Verificação</th>
+                            <th id="columnname" class="manage-column column-columnname" scope="col" width="10%">RPS</th>
+                            <th id="columnname" class="manage-column column-columnname" scope="col" width="25%">Código Verificação</th>
                             <th id="columnname" class="manage-column column-columnname" scope="col" width="10%">Arquivo XML</th>
-                            <th id="columnname" class="manage-column column-columnname" scope="col" width="10%">Danfe</th>
+                            <th id="columnname" class="manage-column column-columnname" scope="col" width="25%">PDF</th>
                             <th id="columnname" class="manage-column column-columnname" scope="col" width="10%">Status</th>
                           </tr>
                         </tr>
@@ -1418,7 +1445,11 @@
                           <td class="column-columnname">{{ order_nfe.n_recibo }}</td>
                           <td class="column-columnname">{{ order_nfe.chave_acesso }}</td>
                           <td class="column-columnname"><a target="_blank" href="{{ order_nfe.url_xml }}">Download XML</a></td>
-                          <td class="column-columnname"><a target="_blank" href="{{ order_nfe.url_danfe }}">Visualizar Nota</a></td>
+                          <td class="column-columnname">
+                            <a target="_blank" href="{{ order_nfe.url_danfe }}">Danfe </a>|
+                            <a target="_blank" href="{{ order_nfe.url_danfe_simples }}"> Danfe Simples </a>|
+                            <a target="_blank" href="{{ order_nfe.url_danfe_etiqueta }}"> Danfe Etiqueta</a>
+                          </td>
                           <td class="column-columnname" style="padding: 10px 10px;">
                             <span class="nfe-status {{ order_nfe.status }}">{{ order_nfe.status }}</span>
                             <a href="{{ url~'&order_id='~order_id~'&atualizar=1&chave_acesso='~order_nfe.chave_acesso }}">Atualizar Status</a>

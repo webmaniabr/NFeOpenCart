@@ -36,7 +36,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
     
     function listen_notification(){
     
-    if($_SERVER['REQUEST_METHOD'] === 'POST' && $_GET['retorno_nfe'] && $_GET['order_id']){
+    if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['retorno_nfe']) && isset($_GET['order_id'])){
 
       $this->load->model('setting/setting');
       $module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
@@ -55,7 +55,6 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
         foreach($nfe_info as $key => $nfe){
 
           $uuid = $nfe['uuid'];
-          
           $current_status = $nfe['status'];
           $received_status = $_POST['status'];
           

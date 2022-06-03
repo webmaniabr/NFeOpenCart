@@ -36,7 +36,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
   function listen_notification(){
 
-    if($_SERVER['REQUEST_METHOD'] === 'POST' && $_GET['retorno_nfe'] && $_GET['order_id']){
+    if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['retorno_nfe']) && isset($_GET['order_id'])){
 
       $this->load->model('setting/setting');
       $module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
@@ -54,11 +54,11 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
         foreach($nfe_info as $key => $nfe){
 
-          $numero_nfe = $nfe['n_nfe'];
+          $uuid = $nfe['uuid'];
           $current_status = $nfe['status'];
           $received_status = $_POST['status'];
 
-          if($nfe['uuid'] == $_POST['uuid'] && $current_status != $received_status){
+          if($uuid == $_POST['uuid'] && $current_status != $received_status){
             $nfe_info[$key]['status'] = $received_status;
             $nfe_info_str = base64_encode(utf8_encode(serialize($nfe_info)));
             $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");

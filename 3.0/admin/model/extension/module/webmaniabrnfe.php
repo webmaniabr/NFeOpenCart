@@ -108,6 +108,18 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 			'total' => number_format($order_data['total'], 2, '.', ''), // Total do pedido
 		);
 
+		//Pagamento
+		$payment = $order_data['payment_code'];
+		$payment_method = @$module_settings['webmaniabrnfe_payment_'.$payment];
+		$payment_desc = @$module_settings['webmaniabrnfe_payment_'.$payment.'_desc'];
+		$data['pedido']['forma_pagamento'] = ($payment_method) ? array($payment_method) : ['99'];
+		$data['pedido']['desc_pagamento'] = ($payment_method == 99 && !$payment_desc) ? array('Pagamento Digital') : array($payment_desc);
+
+		//Intermediador da operação
+		$data['pedido']['intermediador'] = $module_settings['webmaniabrnfe_intermediador'];
+		$data['pedido']['cnpj_intermediador'] = $module_settings['webmaniabrnfe_intermediador_cnpj'];
+		$data['pedido']['id_intermediador'] = $module_settings['webmaniabrnfe_intermediador_id'];
+
 		//Informações COmplementares ao Fisco
 		$fiscoinf = $module_settings['webmaniabrnfe_fisco_inf'];
 
@@ -279,7 +291,6 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 			}
 
 		}
-
 
 		return $data;
 

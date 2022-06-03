@@ -12,6 +12,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
 
     require_once (__DIR__.'/../nfe/NFe.php');
     require_once (__DIR__.'/../nfe/functions.php');
+    require_once (__DIR__.'/../pdf/PDFMerger.php');
 
     $this->NFeFunctions = new NFeFunctions;
 
@@ -469,8 +470,8 @@ class ControllerModuleWebmaniabrNfe extends Controller {
             $previous_info = array();
           }
 
-
-          $order_nfe_info = array(
+	  $order_nfe_info = array(
+            'uuid'         => (string) $response->uuid,
             'status'       => (string) $response->status,
             'chave_acesso' => $response->chave,
             'n_recibo'     => (int) $response->recibo,
@@ -478,6 +479,8 @@ class ControllerModuleWebmaniabrNfe extends Controller {
             'n_serie'      => (int) $response->serie,
             'url_xml'      => (string) $response->xml,
             'url_danfe'    => (string) $response->danfe,
+            'url_danfe_simples'    => (string) $response->danfe_simples,
+            'url_danfe_etiqueta'    => (string) $response->danfe_etiqueta,
             'data'         => date('d/m/Y'),
           );
 
@@ -650,6 +653,149 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     return $data;
 
 
+
+  }
+
+  public function imprimirDanfe() {
+
+    $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
+    $url_redirect = $url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL');
+
+    if (isset($this->request->post['selected'])) {
+
+      $this->load->model('sale/order');
+      $this->load->model('module/webmaniabrnfe');
+
+      $links = $this->getLinksToPrint($this->request->post['selected'], 'normal');
+
+      if (!empty($links)) {
+        $result = $this->createPdf($links);
+      }
+
+      if ($result['result']) {
+        $url_redirect = HTTP_SERVER . "controller/pdf/pdf_files/{$result['file']}";
+      }
+
+    }
+
+    $this->response->redirect($url_redirect);
+  }
+
+  public function imprimirDanfeEtiqueta() {
+
+    $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
+    $url_redirect = $url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL');
+
+    if (isset($this->request->post['selected'])) {
+
+      $this->load->model('sale/order');
+      $this->load->model('module/webmaniabrnfe');
+
+      $links = $this->getLinksToPrint($this->request->post['selected'], 'etiqueta');
+
+      if (!empty($links)) {
+        $result = $this->createPdf($links);
+      }
+
+      if ($result['result']) {
+        $url_redirect = HTTP_SERVER . "controller/pdf/pdf_files/{$result['file']}";
+      }
+
+    }
+
+    $this->response->redirect($url_redirect);
+  }
+
+  public function imprimirDanfeSimples() {
+
+    $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
+    $url_redirect = $url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL');
+
+    if (isset($this->request->post['selected'])) {
+
+      $this->load->model('sale/order');
+      $this->load->model('module/webmaniabrnfe');
+
+      $links = $this->getLinksToPrint($this->request->post['selected'], 'simples');
+
+      if (!empty($links)) {
+        $result = $this->createPdf($links);
+      }
+
+      if ($result['result']) {
+        $url_redirect = HTTP_SERVER . "controller/pdf/pdf_files/{$result['file']}";
+      }
+
+    }
+
+    $this->response->redirect($url_redirect);
+  }
+
+  public function getLinksToPrint($ids, $type = 'normal') {
+
+    $order_table = (DB_PREFIX) ? "order" : "`order`";
+    $links = array();
+
+    foreach ($ids as $order_id) {
+
+      $query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
+      if(isset($query->rows[0]['nfe_info'])){
+        $nfe_info = @unserialize($query->rows[0]['nfe_info']);
+        if (!$nfe_info) {
+          $nfe_info = @unserialize(utf8_decode(base64_decode($query->rows[0]['nfe_info'])));
+        }
+        if (!$nfe_info) {
+          $nfe_info = array();
+        }
+
+        $data = end($nfe_info);
+
+        if (!$data || $data['status'] != 'aprovado') {
+          continue;
+        }
+
+        $url = '';
+        if ($type == 'normal') {
+          $url = $data['url_danfe'];
+        }
+        else if ($type == 'simples') {
+          $url = ($data['url_danfe_simples']) ? $data['url_danfe_simples'] : str_replace('/danfe/', '/danfe/simples/', $data['url_danfe']);
+        }
+        else if ($type == 'etiqueta') {
+          $url = ($danfe['url_danfe_etiqueta']) ? $data['url_danfe_etiqueta'] : str_replace('/danfe/', '/danfe/etiqueta/', $data['url_danfe']);
+        }
+
+        $links[] = array('chave' => $data['chave_acesso'], 'url' => $url);
+
+      }
+
+    }
+
+    return $links;
+
+  }
+
+  public function createPdf($links) {
+
+    $directory = __DIR__ . '/../pdf/pdf_files/';
+    if (!file_exists($directory)) {
+      mkdir($directory);
+    }
+
+    $pdf = new PDFMerger();
+
+    foreach($links as $link) {
+
+      file_put_contents("{$directory}/{$link['chave']}.pdf", file_get_contents($link['url']));
+			$pdf->addPDF("{$directory}/{$link['chave']}.pdf", 'all');
+
+    }
+
+    $filename = time()."-".random_int(1, 10000000000);
+		$result = $pdf->merge('file', "{$directory}/{$filename}.pdf");
+
+
+		return array("result" => $result, "file" => "{$filename}.pdf");
 
   }
 
