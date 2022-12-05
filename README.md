@@ -1,20 +1,20 @@
 <p align="center">
-  <img src="https://wmbr.s3.amazonaws.com/img/logo_webmaniabr_github.png">
+  <img src="https://wmbr.s3.amazonaws.com/img/logo_webmaniabr_github2.png">
 </p>
 
 # Nota Fiscal Eletrônica para OpenCart
 
-Através do emissor de Nota Fiscal da WebmaniaBR®, você conta com a emissão e arquivamento das suas notas fiscais, cálculo automático de impostos, geração do Danfe para impressão e envio automático de e-mails para os clientes.
+Através do emissor de Nota Fiscal da Webmania®, você conta com a emissão e arquivamento das suas notas fiscais, cálculo automático de impostos, geração do Danfe para impressão e envio automático de e-mails para os clientes.
 
 - **Módulo compatível com as versões 2.0, 2.2, 2.3 e 3.0.**
 - **Faça download da última versão do módulo: [Clique aqui](https://github.com/webmaniabr/NFeOpenCart/releases)**
-- Emissor de Nota Fiscal WebmaniaBR®: [Saiba mais](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
+- Emissor de Nota Fiscal Webmania®: [Saiba mais](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
 - Documentação da REST API: [Visualizar](https://webmaniabr.com/docs/rest-api-nfe/)
 
 ## Requisitos
 
-- Contrate um dos planos de Nota Fiscal Eletrônica da WebmaniaBR® a partir de R$29,90/mês: [Assine Agora](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
-- Instale o módulo grátis do OpenCart da WebmaniaBR® e configure conforme instruções.
+- Contrate um dos planos de Nota Fiscal Eletrônica da Webmania® (Teste 30 dias grátis): [Assine Agora](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
+- Instale o módulo grátis do OpenCart da Webmania® e configure conforme instruções.
 
 ## Instalação
 
@@ -53,7 +53,7 @@ Havendo dúvidas de como manusear o arquivo e eventuais incompatibilidades com o
 
 ## Controle das Notas Fiscais
 
-Você pode gerenciar todas as Notas Fiscais e realizar a impressão do Danfe no painel da WebmaniaBR®. Simples e fácil.
+Você pode gerenciar todas as Notas Fiscais e realizar a impressão do Danfe no painel da Webmania®. Simples e fácil.
 
 <p align="center">
 <img src="https://wmbr.s3.amazonaws.com/img/dashboard_webmaniabr_01.jpg">
@@ -61,4 +61,4 @@ Você pode gerenciar todas as Notas Fiscais e realizar a impressão do Danfe no 
 
 ## Suporte
 
-Qualquer dúvida acesse o [Painel WebmaniaBR®](https://webmaniabr.com/painel/) para *abrir um chamado* ou conversar em tempo real no *chat*.
+Qualquer dúvida acesse o [Painel Webmania®](https://webmaniabr.com/painel/) para *abrir um chamado* ou conversar em tempo real no *chat*.
