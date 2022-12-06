@@ -479,7 +479,7 @@ class NFeFunctions {
 
       $languages = $class->getLanguages();
 
-      if(count($languages->rows > 0)){
+      if(isset($languages->rows) && is_array($languages->rows) && count($languages->rows) > 0){
 
         foreach($languages->rows as $language){
 
