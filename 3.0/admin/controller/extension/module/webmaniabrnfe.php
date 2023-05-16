@@ -839,6 +839,22 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
   }
 
+  /**
+	 * Get file content from URL using curl
+	 * 
+	 * @param string $url
+	 * @return mixed
+	 */
+	public function curl_get_file_contents($url) {
+		$c = curl_init();
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($c, CURLOPT_URL, $url);
+		$contents = curl_exec($c);
+		curl_close($c);
+
+		return $contents ?? false;
+	}
+
   public function createPdf($links) {
 
     $directory = __DIR__ . '/../pdf/pdf_files/';
@@ -850,8 +866,11 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
     foreach($links as $link) {
 
-      file_put_contents("{$directory}/{$link['chave']}.pdf", file_get_contents($link['url']));
-			$pdf->addPDF("{$directory}/{$link['chave']}.pdf", 'all');
+      $fileContent = $this->curl_get_file_contents($link['url']);
+      if ($fileContent) {
+        file_put_contents("{$directory}/{$link['chave']}.pdf", $fileContent);
+        $pdf->addPDF("{$directory}/{$link['chave']}.pdf", 'all');
+      }
 
     }
 
