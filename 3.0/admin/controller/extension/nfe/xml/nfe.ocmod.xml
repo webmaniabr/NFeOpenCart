@@ -278,6 +278,22 @@
         {% endif %}
       ]]></add>
     </operation>
+    <operation info="Disable the NF-e action button">
+      <search position="after"><![CDATA[
+      $('#button-shipping, #button-invoice').prop('disabled', true);
+      ]]></search>
+      <add><![CDATA[
+      $('#button-emitir-nfe, #button-imprimir-danfe, #button-imprimir-danfe-simples, #button-imprimir-danfe-etiqueta').prop('disabled', true);
+      ]]></add>
+    </operation>
+    <operation info="Enable the NF-e action button">
+      <search position="after"><![CDATA[
+      $('#button-invoice').prop('disabled', false);
+      ]]></search>
+      <add><![CDATA[
+      $('#button-emitir-nfe, #button-imprimir-danfe, #button-imprimir-danfe-simples, #button-imprimir-danfe-etiqueta').prop('disabled', false);
+      ]]></add>
+    </operation>
   </file>
 
   <file name="admin/controller/common/footer.php">
