@@ -184,11 +184,26 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 			$imposto = $imposto_row->row['classe_imposto'];
 			$peso = $product_info['weight'];
 
-			$kg = explode('.', $peso);
-			if (strlen($kg[0]) >= 3) {
+			// 1 - Kilogram, 2 - Gram, 5 - Pound, 6 - Ounce
+			if (!empty($product_info['weight_class_id']) && in_array($product_info['weight_class_id'], ['1', '2', '5', '6'])) {
 
-				$peso = $peso / 1000;
+				switch ($product_info['weight_class_id']) {
+					case '2': //Gram
+						$peso /= 1000;
+						break;
+					case '5': //Pound
+						$peso *= 0.453592;
+						break;
+					case '6': //Ounce
+						$peso *= 0.0283495;
+						break;
+				}
+			} else {
+				$kg = explode('.', $peso);
+				if (strlen($kg[0]) >= 3) {
 
+					$peso = $peso / 1000;
+				}
 			}
 
 			$peso = number_format($peso, 3, '.', '');
