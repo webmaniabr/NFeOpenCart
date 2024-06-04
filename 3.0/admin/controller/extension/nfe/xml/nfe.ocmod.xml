@@ -288,6 +288,7 @@
           <add><![CDATA[
             if(isset($this->request->get['route'])){
               $route = $this->request->get['route'];
+              $data['route'] = $route;
               if($route == 'customer/customer/add' || $route == 'customer/customer/edit' || $route == 'sale/order/add'){
                 $data['run_script'] = true;
                 $this->load->model('setting/setting');
@@ -326,11 +327,10 @@
   <file name="admin/view/template/common/footer.twig">
    <operation info="Include module CSS and JS">
      <search position="before" ><![CDATA[
-     <footer id="footer">{{ text_footer }}<br />{{ text_version }}</footer></div>
+     <footer id="footer">
      ]]></search>
      <add><![CDATA[
-        {{ app.request.parameter.get('route') }}
-        {% if app.request.parameter.get('route') is defined and app.request.parameter.get('route') == 'extension/module/webmaniabrnfe' %}
+        {% if route is defined and route == 'extension/module/webmaniabrnfe' %}
             <script type="text/javascript" src="./view/javascript/wmbr_scripts.js"></script>
         {% endif %}
         
