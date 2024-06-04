@@ -271,40 +271,54 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 
 		if($module_settings['webmaniabrnfe_transp_include'] == 'on'){
 
-			$method = $module_settings['webmaniabrnfe_transp_method'];
+			$transport_company_data = !empty($module_settings['webmaniabrnfe_transp_method']) ? $module_settings : null;
 
-			if($method.'.'.$method == $order_data['shipping_code']){
-
-				$data['transporte'] = array(
-					'cnpj'         => $module_settings['webmaniabrnfe_transp_cnpj'],
-					'razao_social' => $module_settings['webmaniabrnfe_transp_rs'],
-					'ie'           => $module_settings['webmaniabrnfe_transp_ie'],
-					'endereco'     => $module_settings['webmaniabrnfe_transp_address'],
-					'uf'           => $module_settings['webmaniabrnfe_transp_uf'],
-					'cidade'       => $module_settings['webmaniabrnfe_transp_city'],
-					'cep'          => $module_settings['webmaniabrnfe_transp_cep'],
-				);
-
-				$transporte_info = $this->load->controller('extension/module/webmaniabrnfe/get_order_transporte_info', $order_data['order_id']);
-
-				$transporte_keys = array(
-					'nfe_volume'       => 'volume',
-					'nfe_especie'      => 'especie',
-					'nfe_peso_bruto'   => 'peso_bruto',
-					'nfe_peso_liquido' => 'peso_liquido'
-				);
-
-				foreach($transporte_keys as $array_key => $api_key){
-					$value = $transporte_info[$array_key];
-					if($value){
-						$data['transporte'][$api_key] = $value;
+			if (!$transport_company_data && !empty($module_settings['webmaniabrnfe_carriers'])) {
+				$webmaniabrnfe_carriers = json_decode(stripslashes(html_entity_decode($module_settings['webmaniabrnfe_carriers'])), true);
+				foreach ($webmaniabrnfe_carriers as $webmaniabrnfe_carrier) {
+					$method = $webmaniabrnfe_carrier['method'];
+					if ($method . '.' . $method === $order_data['shipping_code']) {
+						$transport_company_data = $webmaniabrnfe_carrier;
+						break;
 					}
 				}
+			}
 
-				if($transporte_info['modalidade_frete']){
-					$data['pedido']['modalidade_frete'] = $transporte_info['modalidade_frete'];
+			if (!empty($transport_company_data)) {
+				$method = $transport_company_data['webmaniabrnfe_transp_method'] ?? $transport_company_data['method'];
+				if ($method . '.' . $method == $order_data['shipping_code']) {
+
+					$data['transporte'] = array(
+						'cnpj'         => $transport_company_data['webmaniabrnfe_transp_cnpj'] ?? $transport_company_data['cnpj'],
+						'razao_social' => $transport_company_data['webmaniabrnfe_transp_rs'] ?? $transport_company_data['razao_social'],
+						'ie'           => $transport_company_data['webmaniabrnfe_transp_ie'] ?? $transport_company_data['ie'],
+						'endereco'     => $transport_company_data['webmaniabrnfe_transp_address'] ?? $transport_company_data['address'],
+						'uf'           => $transport_company_data['webmaniabrnfe_transp_uf'] ?? $transport_company_data['uf'],
+						'cidade'       => $transport_company_data['webmaniabrnfe_transp_city'] ?? $transport_company_data['city'],
+						'cep'          => $transport_company_data['webmaniabrnfe_transp_cep'] ?? $transport_company_data['cep'],
+					);
+
+					$transporte_info = $this->load->controller('extension/module/webmaniabrnfe/get_order_transporte_info', $order_data['order_id']);
+
+					$transporte_keys = array(
+						'nfe_volume'       => 'volume',
+						'nfe_especie'      => 'especie',
+						'nfe_peso_bruto'   => 'peso_bruto',
+						'nfe_peso_liquido' => 'peso_liquido'
+					);
+
+					foreach($transporte_keys as $array_key => $api_key){
+						$value = $transporte_info[$array_key];
+						if($value){
+							$data['transporte'][$api_key] = $value;
+						}
+					}
+
+					if($transporte_info['modalidade_frete']){
+						$data['pedido']['modalidade_frete'] = $transporte_info['modalidade_frete'];
+					}
+
 				}
-
 			}
 
 		}
