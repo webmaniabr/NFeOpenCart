@@ -295,5 +295,17 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 		return $data;
 
 	}
+
+	public function setModuleStatus($value, $store_id = 0, $code = "webmaniabrnfe", $key = "module_webmaniabrnfe_status")
+	{
+		$query = $this->db->query("SELECT setting_id FROM `" . DB_PREFIX . "setting` WHERE `store_id` = '" . (int)$this->db->escape($store_id) . "' AND `code` = '" . $this->db->escape($code) . "' AND `key` = '" . $this->db->escape($key) . "'");
+		$setting_id = !empty($query->row["setting_id"]) ? $query->row["setting_id"] : null;
+
+		if (!$setting_id) {
+			$this->db->query("INSERT INTO " . DB_PREFIX . "setting (`store_id`, `code`, `key`, `value`, `serialized`) VALUES ('" . (int)$this->db->escape($store_id) . "', '" . $this->db->escape($code) . "', '" . $this->db->escape($key) . "', '" . $this->db->escape($value) . "', '0')");
+		} else {
+			$this->db->query("UPDATE " . DB_PREFIX . "setting SET value = '" . $this->db->escape($value) . "' WHERE setting_id = {$setting_id} ");
+		}
+	}
 }
 ?>

@@ -38,6 +38,10 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
     if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
       $this->model_setting_setting->editSetting('webmaniabrnfe', $this->request->post);
 
+      if (isset($this->request->post['module_webmaniabrnfe_status'])) {
+        if ($this->request->post['module_webmaniabrnfe_status'] === "1") $this->activeModule();
+        else $this->disableModule();
+      }
       // Displays the success text on data save
       $this->session->data['success'] = $this->language->get('text_success');
 
@@ -152,6 +156,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
     }
 
+    $data['module_webmaniabrnfe_status'] = isset($this->request->post['module_webmaniabrnfe_status']) ? $this->request->post['module_webmaniabrnfe_status'] : $this->config->get('module_webmaniabrnfe_status');
     $data['webmaniabrnfe_carriers_d'] = json_decode(stripslashes(html_entity_decode($data['webmaniabrnfe_carriers'])), true);
 
     $data['header'] = $this->load->controller('common/header');
@@ -213,7 +218,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
         'catalog/product/edit',
         'sale/order/info',
         'sale/order/edit',
-        'module/webmaniabrnfe'
+        'extension/module/webmaniabrnfe'
       ])
     ){
 
@@ -251,16 +256,8 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
    */
   public function install(){
 
-    // Install vqMod file
-    $filename = 'nfe.ocmod.xml';
-    $dest = __DIR__.'/../../../../vqmod/xml/';
-    $file_copy = __DIR__.'/../nfe/xml/nfe.ocmod.xml';
-    $oc_mod_exist = file_exists($dest.$filename);
-
-    // Copy vqMod
-    if ($oc_mod_exist === false){
-      copy($file_copy, $dest.$filename);
-    }
+    //Activate the module and place the XML in VQMod
+    $this->activeModule();
 
     // Try to insert Required custom Fields on Install
     $this->getCustomFieldsIds( $this );
@@ -349,13 +346,40 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
   public function uninstall(){
 
+    $this->load->model('extension/module/webmaniabrnfe');
+
     // Delete vqMod file
-    $filepath = __DIR__.'/../../../../vqmod/xml/nfe.ocmod.xml';
+    $filepath = __DIR__ . '/../../../../vqmod/xml/nfe.ocmod.xml';
     $oc_mod_exist = file_exists($filepath);
-    if($oc_mod_exist === true){
+    if ($oc_mod_exist === true) {
       unlink($filepath);
     }
 
+    $this->model_extension_module_webmaniabrnfe->setStatusModule('0');
+
+  }
+
+  private function disableModule()
+  {
+    $this->uninstall();
+  }
+
+  private function activeModule()
+  {
+    $this->load->model('extension/module/webmaniabrnfe');
+
+    // Install vqMod file
+    $filename = 'nfe.ocmod.xml';
+    $dest = __DIR__ . '/../../../../vqmod/xml/';
+    $file_copy = __DIR__ . '/../nfe/xml/nfe.ocmod.xml';
+    $oc_mod_exist = file_exists($dest . $filename);
+
+    // Copy vqMod
+    if ($oc_mod_exist === false) {
+      copy($file_copy, $dest . $filename);
+    }
+
+    $this->model_extension_module_webmaniabrnfe->setStatusModule('1');
   }
 
   /* Function that validates the data when Save Button is pressed */

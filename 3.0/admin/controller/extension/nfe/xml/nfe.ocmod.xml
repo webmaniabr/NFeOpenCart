@@ -1500,5 +1500,17 @@
           ]]></add>
       </operation>
   </file>
-</modification>                                                                                                                                                      
-                                                                                                                                                                                                                                                                                                                                                                                                   
+  <file name="admin/model/setting/setting.php">
+    <operation info="Add module status of Webmania to setting">
+      <search position="before"><![CDATA[
+      if (substr($key, 0, strlen($code)) == $code) {
+      ]]></search>
+      <add><![CDATA[
+      if($key === 'module_webmaniabrnfe_status' && $code === 'webmaniabrnfe'){
+        $this->load->model('extension/module/webmaniabrnfe');
+        $this->model_extension_module_webmaniabrnfe->setModuleStatus($value, $store_id);
+      }
+      ]]></add>
+    </operation>
+  </file>
+</modification>
