@@ -179,9 +179,9 @@
                   %}
                   {% for value, option in options %}
                     {% if value == webmaniabrnfe_product_source%}
-                      {{ '<option value="'~option~'" selected>'~option~'</option>' }}
+                      {{ '<option value="'~value~'" selected>'~option~'</option>' }}
                     {% else %}
-                      {{ '<option value="'~option~'">'~option~'</option>' }}
+                      {{ '<option value="'~value~'">'~option~'</option>' }}
                     {% endif %}
                   {% endfor %}
                 </select>
