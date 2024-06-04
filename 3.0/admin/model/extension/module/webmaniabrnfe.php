@@ -35,10 +35,12 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 
 		$notification_url = HTTP_CATALOG.'?retorno_nfe='.$uniq_key.'&order_id='.$order_data['order_id'];
 
-		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
-		$custom_fields_customer = @unserialize($customer_info['custom_field']);
-		if(!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
-
+		$custom_fields_customer = !empty($order_data['custom_field']) && is_array($order_data['custom_field']) ? $order_data['custom_field'] : null;
+		if (!$custom_fields_customer) {
+			$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
+			$custom_fields_customer = @unserialize($customer_info['custom_field']);
+			if(!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
+		}
 
 		$custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
 		$documento = $NFeFunctions->get_value_from_fields( 'tipo_pessoa', $custom_fields_ids, $custom_fields_customer );
@@ -224,7 +226,7 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 		if ($tipo_pessoa == 'cpf'){
 			$data['cliente'] = array(
 				'cpf' => $controller->cpf($document_number), // (pessoa fisica) Número do CPF
-				'nome_completo' => $order_data['customer'], // (pessoa fisica) Nome completo
+				'nome_completo' => $order_data['customer'] ?: ($order_data['firstname'] . " " . $order_data['lastname']), // (pessoa fisica) Nome completo
 				'endereco' => $order_data['shipping_address_1'],//$order_data['shipping_address_1'], // Endereço de entrega dos produtos
 				'complemento' => $complemento, //$address->other, // Complemento do endereço de entrega
 				'numero' => $address_number, //$address_custom['nfe_number'], // Número do endereço de entrega
