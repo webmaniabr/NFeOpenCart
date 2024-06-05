@@ -1355,11 +1355,13 @@
   </file>
   <file name="admin/model/catalog/product.php">
       <operation info="Update product with custom info">
-          <search position="after"><![CDATA[
-          public function editProduct($product_id, $data) {
+          <search position="before"><![CDATA[
+          if (isset($data['image'])) {
           ]]></search>
           <add><![CDATA[
+          try{
              $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape($data['classe_imposto']) . "', ean_barcode = '" . $this->db->escape($data['ean_barcode']) . "', gtin_tributavel = '" . $this->db->escape($data['gtin_tributavel']) . "', ncm_code = '" . $this->db->escape($data['ncm_code']) . "', cest_code = '" . $this->db->escape($data['cest_code']) . "', cnpj_fabricante = '" . $this->db->escape($data['cnpj_fabricante']) . "', ind_escala = '" . $this->db->escape($data['ind_escala']) . "', product_source = '" . $this->db->escape($data['product_source']) . "', ignorar_nfe = '" . $this->db->escape($data['ignorar_nfe']) . "' WHERE product_id = '" . (int)$product_id . "'");
+          }catch(Exception $e){}
           ]]></add>
       </operation>
     </file>
