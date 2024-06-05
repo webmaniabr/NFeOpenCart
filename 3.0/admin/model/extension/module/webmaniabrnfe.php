@@ -92,7 +92,7 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 		$data = array(
 			'ID' => (int)$order_data['order_id'], // Número do pedido
 			'url_notificacao' => $notification_url,
-			'origem' => 'opencart_2.3',
+			'origem' => 'opencart_3.0',
 			'operacao' => 1, // Tipo de Operação da Nota Fiscal
 			'natureza_operacao' => $module_settings['webmaniabrnfe_operation_nature'], // Natureza da Operação
 			'modelo' => 1, // Modelo da Nota Fiscal (NF-e ou NFC-e)
