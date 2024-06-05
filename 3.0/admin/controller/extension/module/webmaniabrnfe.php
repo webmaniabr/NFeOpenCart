@@ -355,7 +355,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
       unlink($filepath);
     }
 
-    $this->model_extension_module_webmaniabrnfe->setStatusModule('0');
+    $this->model_extension_module_webmaniabrnfe->setModuleStatus('0');
 
   }
 
@@ -379,7 +379,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
       copy($file_copy, $dest . $filename);
     }
 
-    $this->model_extension_module_webmaniabrnfe->setStatusModule('1');
+    $this->model_extension_module_webmaniabrnfe->setModuleStatus('1');
   }
 
   /* Function that validates the data when Save Button is pressed */
