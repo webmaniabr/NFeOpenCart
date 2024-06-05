@@ -829,7 +829,7 @@
  </file>
 
 
-  <file name="catalog/view/theme/*/template/account/register.twig">
+  <file name="catalog/view/theme/*/template/checkout/register.twig">
     <operation info="Insert loading div">
         <search position="after"><![CDATA[
         <fieldset id="address">
@@ -1061,6 +1061,14 @@
             {% if error_address_2 %}
               <div class="text-danger">{{ error_address_2 }}</div>
             {% endif %}
+          ]]></add>
+      </operation>
+      <operation info="Assign loading to the ZIP code search">
+          <search position="after"><![CDATA[
+            <div id="content" class="{{ class }}">
+          ]]></search>
+          <add><![CDATA[
+            <div class="correios-loading"></div>
           ]]></add>
       </operation>
   </file>
