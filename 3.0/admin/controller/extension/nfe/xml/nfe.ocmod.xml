@@ -1163,19 +1163,21 @@
   </file>
 
   <file name="admin/model/catalog/category.php">
-      <operation info="Save category NCM">
-          <search position="after"><![CDATA[
-          public function editCategory($category_id, $data) {
-          ]]></search>
-          <add><![CDATA[
-            try{
-              $this->db->query("UPDATE " . DB_PREFIX . "category SET category_ncm = '" .$data['category_ncm']. "' WHERE category_id = '" . (int)$category_id . "'");
-            }catch(Exception $e){
+    <operation info="Save category NCM">
+      <search position="before"><![CDATA[
+        if (isset($data['image'])) {
+      ]]></search>
+      <add><![CDATA[
+        if (isset($data['category_ncm'])) {
+          try{
+            $this->db->query("UPDATE " . DB_PREFIX . "category SET category_ncm = '" .$data['category_ncm']. "' WHERE category_id = '" . (int)$category_id . "'");
+          }catch(Exception $e){
 
-            }
-          ]]></add>
-      </operation>
-    </file>
+          }
+        }
+      ]]></add>
+    </operation>
+  </file>
 
     <file name="admin/controller/catalog/category.php">
       <operation info="Assign custom fields variables">
