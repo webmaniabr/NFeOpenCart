@@ -1052,6 +1052,18 @@
 
   </file>
 
+  <file name="catalog/view/theme/default/template/account/address_form.twig">
+      <operation info="Assign error div for address 2">
+          <search position="after"><![CDATA[
+          <input type="text" name="address_2" value="{{ address_2 }}" placeholder="{{ entry_address_2 }}" id="input-address-2" class="form-control" />
+          ]]></search>
+          <add><![CDATA[
+            {% if error_address_2 %}
+              <div class="text-danger">{{ error_address_2 }}</div>
+            {% endif %}
+          ]]></add>
+      </operation>
+  </file>
 
   <file name="catalog/controller/account/address.php">
       <operation info="Assign error variable">
