@@ -79,7 +79,7 @@
      </operation>
      <operation info="Add Backend Info">
        <search position="before" ><![CDATA[
-       // Payment Address
+       if ($order_info['payment_address_format']) {
        ]]></search>
        <add><![CDATA[
        $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
@@ -108,7 +108,7 @@
      </operation>
      <operation info="Add Backend Info">
        <search position="before" ><![CDATA[
-       // Shipping Address
+       if ($order_info['shipping_address_format']) {
        ]]></search>
        <add><![CDATA[
        $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
@@ -135,6 +135,21 @@
        'complemento' => $complemento,
        ]]></add>
      </operation>
+    <operation info="Insert number and complement into the format of the address details of the order">
+      <search position="replace" ><![CDATA[
+      . '{address_1}' .
+      ]]></search>
+      <add><![CDATA[. '{address_1} {address_number} {complemento}' .]]></add>
+    </operation>
+    <operation info="Insert number and complement into the find of the address details of the order">
+      <search position="after" ><![CDATA[
+      '{address_1}',
+      ]]></search>
+      <add><![CDATA[
+      '{address_number}',
+      '{complemento}',
+      ]]></add>
+    </operation>
      <operation info="Get Nfe Info">
        <search position="before" ><![CDATA[
        $this->response->setOutput($this->load->view('sale/order_info', $data));
