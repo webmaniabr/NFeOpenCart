@@ -947,7 +947,7 @@
                 $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
                   if($valid === false){
-                    $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
+                    $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
                     continue;
                   }
             }
@@ -960,7 +960,7 @@
                 $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
                 if($valid === false){
-                    $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
+                    $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
                     continue;
                 }
             }
