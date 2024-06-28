@@ -616,6 +616,12 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
   }
 
+  function get_value_from_fields( $data ){
+
+    return $this->NFeFunctions->get_value_from_fields($data["key"], $data["custom_fields_ids"], $data["custom_fields_customer"]);
+
+  }
+
   function is_cpf( $cpf = null ){
 
     return $this->NFeFunctions->is_cpf( $cpf );
@@ -736,13 +742,14 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
         $result = $this->createPdf($links);
       }
 
-      if ($result['result']) {
-        $url_redirect = HTTP_SERVER . "controller/extension/pdf/pdf_files/{$result['file']}";
-      }
-
     }
 
-    $this->response->redirect($url_redirect);
+    if(!isset($result['result']) || (empty($result['result']) || !file_exists($result['path']))){
+      $this->response->redirect($url_redirect);
+      die();
+    }
+
+    $this->showDanfe($result['path'], $result['file']);
   }
 
   public function imprimirDanfeEtiqueta() {
@@ -761,13 +768,14 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
         $result = $this->createPdf($links);
       }
 
-      if ($result['result']) {
-        $url_redirect = HTTP_SERVER . "controller/extension/pdf/pdf_files/{$result['file']}";
-      }
-
     }
 
-    $this->response->redirect($url_redirect);
+    if(!isset($result['result']) || (empty($result['result']) || !file_exists($result['path']))){
+      $this->response->redirect($url_redirect);
+      die();
+    }
+
+    $this->showDanfe($result['path'], $result['file']);
   }
 
   public function imprimirDanfeSimples() {
@@ -786,13 +794,14 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
         $result = $this->createPdf($links);
       }
 
-      if ($result['result']) {
-        $url_redirect = HTTP_SERVER . "controller/extension/pdf/pdf_files/{$result['file']}";
-      }
-
     }
 
-    $this->response->redirect($url_redirect);
+    if(!isset($result['result']) || (empty($result['result']) || !file_exists($result['path']))){
+      $this->response->redirect($url_redirect);
+      die();
+    }
+
+    $this->showDanfe($result['path'], $result['file']);
   }
 
   public function getLinksToPrint($ids, $type = 'normal') {
@@ -839,22 +848,6 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
   }
 
-  /**
-	 * Get file content from URL using curl
-	 * 
-	 * @param string $url
-	 * @return mixed
-	 */
-	public function curl_get_file_contents($url) {
-		$c = curl_init();
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($c, CURLOPT_URL, $url);
-		$contents = curl_exec($c);
-		curl_close($c);
-
-		return $contents ?? false;
-	}
-
   public function createPdf($links) {
 
     $directory = __DIR__ . '/../pdf/pdf_files/';
@@ -866,7 +859,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
 
     foreach($links as $link) {
 
-      $fileContent = $this->curl_get_file_contents($link['url']);
+      $fileContent = $this->NFe->curl_get_file_contents($link['url']);
       if ($fileContent) {
         file_put_contents("{$directory}/{$link['chave']}.pdf", $fileContent);
         $pdf->addPDF("{$directory}/{$link['chave']}.pdf", 'all');
@@ -875,11 +868,46 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
     }
 
     $filename = time()."-".random_int(1, 10000000000);
-		$result = $pdf->merge('file', "{$directory}/{$filename}.pdf");
+    $path = "{$directory}/{$filename}.pdf";
+		$result = $pdf->merge('file', $path);
 
+    foreach($links as $link) {
+      if(file_exists("{$directory}/{$link['chave']}.pdf")) unlink("{$directory}/{$link['chave']}.pdf");
+    }
 
-		return array("result" => $result, "file" => "{$filename}.pdf");
+		return array("result" => $result, "file" => "{$filename}.pdf", "path" => $path);
 
+  }
+
+  public function showDanfe($path, $file){
+      
+    header('Content-Type: application/pdf');
+    header("Content-Disposition: inline; filename=$file");
+    header('Content-Length: ' . filesize($path));
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    ob_clean();
+    flush();
+    $handle = fopen($path, "rb");
+    while (!feof($handle)) {
+      echo fread($handle, 8192);
+      flush();
+    }
+    fclose($handle);
+
+    unlink($path);
+  }
+
+  public function createSecureTokenDFe( $data ){
+
+    $password = preg_replace("/[^0-9]/", '', $data['password']);
+    $key = hash('sha256', $password . ':' . $data['uuid'], true);
+    $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('AES-256-CBC'));
+    $encryptedData = openssl_encrypt(time(), 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+    $tokenData = json_encode(['data' => base64_encode($encryptedData), 'iv' => base64_encode($iv)]);
+    return urlencode(base64_encode($tokenData));
+  
   }
 
 }
