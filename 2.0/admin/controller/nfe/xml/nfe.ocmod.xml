@@ -144,6 +144,9 @@
         if (!$nfe_info) {
           $nfe_info = @unserialize(utf8_decode(base64_decode($query->rows[0]['nfe_info'])));
         }
+        if (!$nfe_info) {
+          $nfe_info = array();
+        }
 
         $custom_fields_customer = !empty($order_info['custom_field']) && is_array($order_info['custom_field']) ? $order_info['custom_field'] : null;
         if(!$custom_fields_customer){
