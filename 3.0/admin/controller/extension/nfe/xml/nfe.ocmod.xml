@@ -165,23 +165,17 @@
         $route_get_value_from_fields = 'extension/module/webmaniabrnfe/get_value_from_fields';
         $data_get_value_from_fields = ['key' => 'tipo_pessoa', 'custom_fields_ids' => $custom_fields_ids, 'custom_fields_customer' => $custom_fields_customer,];
 
-        $documento = $this->load->controller($route_get_value_from_fields, $data_get_value_from_fields);
-		    $password = '';
-        if($documento == $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'pessoa_fisica']))){
-			    $password = $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'cpf']));
-        }elseif($documento == $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'pessoa_juridica']))){
-			    $password = $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'cnpj']));
+        $document_type = $this->load->controller($route_get_value_from_fields, $data_get_value_from_fields);
+		    $document = '';
+        if($document_type == $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'pessoa_fisica']))){
+			    $document = $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'cpf']));
+        }elseif($document_type == $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'pessoa_juridica']))){
+			    $document = $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'cnpj']));
         }
 
         foreach ($nfe_info as $key => $nfe) {
-          if(!empty($nfe['documento'])) $password = $nfe['documento'];
-          $tokens = [
-            "danfe" => $this->load->controller('extension/module/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
-            "danfe_simples" => $this->load->controller('extension/module/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
-            "danfe_etiqueta" => $this->load->controller('extension/module/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
-            "xml" => $this->load->controller('extension/module/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
-          ] ;
-
+          $password = !empty($nfe['documento']) ? $nfe['documento'] : $document;
+          
           if (!$nfe['url_danfe_simples']) {
             $nfe_info[$key]['url_danfe_simples'] = str_replace('/danfe/', '/danfe/simples/', $nfe['url_danfe']); 
           }
@@ -190,11 +184,20 @@
             $nfe_info[$key]['url_danfe_etiqueta'] = str_replace('/danfe/', '/danfe/etiqueta/', $nfe['url_danfe']); 
           }
 
-          $nfe_info[$key]['url_danfe'] = $nfe_info[$key]['url_danfe'] . '?token=' . $tokens['danfe'];
-          $nfe_info[$key]['url_danfe_simples'] = $nfe_info[$key]['url_danfe_simples'] . '?token=' . $tokens['danfe_simples'];
-          $nfe_info[$key]['url_danfe_etiqueta'] = $nfe_info[$key]['url_danfe_etiqueta'] . '?token=' . $tokens['danfe_etiqueta'];
-          $nfe_info[$key]['url_xml'] = $nfe_info[$key]['url_xml'] . '?token=' . $tokens['xml'];
+          if(!empty($password)){
+            $tokens = [
+              "danfe" => $this->load->controller('extension/module/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
+              "danfe_simples" => $this->load->controller('extension/module/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
+              "danfe_etiqueta" => $this->load->controller('extension/module/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
+              "xml" => $this->load->controller('extension/module/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
+            ];
 
+            $nfe_info[$key]['url_danfe'] = $nfe_info[$key]['url_danfe'] . '?token=' . $tokens['danfe'];
+            $nfe_info[$key]['url_danfe_simples'] = $nfe_info[$key]['url_danfe_simples'] . '?token=' . $tokens['danfe_simples'];
+            $nfe_info[$key]['url_danfe_etiqueta'] = $nfe_info[$key]['url_danfe_etiqueta'] . '?token=' . $tokens['danfe_etiqueta'];
+            $nfe_info[$key]['url_xml'] = $nfe_info[$key]['url_xml'] . '?token=' . $tokens['xml'];
+
+          }
         }
 
         $data['nfe_info'] = $nfe_info;
