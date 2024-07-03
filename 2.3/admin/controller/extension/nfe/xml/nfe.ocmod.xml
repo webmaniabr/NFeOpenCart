@@ -146,6 +146,38 @@
         if (!$nfe_info) {
           $nfe_info = @unserialize(utf8_decode(base64_decode($query->rows[0]['nfe_info'])));
         }
+        if (!$nfe_info) {
+          $nfe_info = array();
+        }
+
+        $custom_fields_customer = !empty($order_info['custom_field']) && is_array($order_info['custom_field']) ? $order_info['custom_field'] : null;
+        if(!$custom_fields_customer){
+          $customer_info = $this->model_customer_customer->getCustomer($order_info['customer_id']);
+          $custom_fields_customer = @unserialize($customer_info['custom_field']);
+          if (!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
+        }
+		    $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
+        $route_get_value_from_fields = 'extension/module/webmaniabrnfe/get_value_from_fields';
+        $data_get_value_from_fields = ['key' => 'tipo_pessoa', 'custom_fields_ids' => $custom_fields_ids, 'custom_fields_customer' => $custom_fields_customer,];
+        $document_type = $this->load->controller($route_get_value_from_fields, $data_get_value_from_fields);
+		    $document = '';
+        if($document_type == $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'pessoa_fisica']))){
+			    $document = $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'cpf']));
+        }elseif($document_type == $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'pessoa_juridica']))){
+			    $document = $this->load->controller($route_get_value_from_fields, array_merge($data_get_value_from_fields, ['key' => 'cnpj']));
+        }
+        foreach ($nfe_info as $key => $nfe) {
+          $password = !empty($nfe['documento']) ? $nfe['documento'] : $document;
+          if(!empty($password)){
+            $tokens = [
+              "danfe" => $this->load->controller('extension/module/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
+              "xml" => $this->load->controller('extensionmodule/webmaniabrnfe/createSecureTokenDFe', ["password" => $password, "uuid" => $nfe['uuid']]),
+            ];
+            $nfe_info[$key]['url_danfe'] = $nfe_info[$key]['url_danfe'] . '?token=' . $tokens['danfe'];
+            $nfe_info[$key]['url_xml'] = $nfe_info[$key]['url_xml'] . '?token=' . $tokens['xml'];
+          }
+        }
+
         $data['nfe_info'] = $nfe_info;
         $data['url'] = $url;
        }else{
