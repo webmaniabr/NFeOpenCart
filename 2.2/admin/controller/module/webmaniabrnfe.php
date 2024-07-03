@@ -516,6 +516,7 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
             'n_serie'      => (int) $response->serie,
             'url_xml'      => (string) $response->xml,
             'url_danfe'    => (string) $response->danfe,
+            'documento'    => (string) ($data['cliente']['cpf'] ?? $data['cliente']['cnpj'] ?? ''),
             'data'         => date('d/m/Y'),
           );
 
@@ -568,6 +569,12 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
         unset($this->session->data['certificado_last_check']);
       }
     }
+
+  }
+
+  function get_value_from_fields( $data ){
+
+    return $this->NFeFunctions->get_value_from_fields($data["key"], $data["custom_fields_ids"], $data["custom_fields_customer"]);
 
   }
 
@@ -673,6 +680,17 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
       return $data;
 
 		}
+
+  }
+
+  public function createSecureTokenDFe( $data ){
+
+    $password = preg_replace("/[^0-9]/", '', $data['password']);
+    $key = hash('sha256', $password . ':' . $data['uuid'], true);
+    $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('AES-256-CBC'));
+    $encryptedData = openssl_encrypt(time(), 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+    $tokenData = json_encode(['data' => base64_encode($encryptedData), 'iv' => base64_encode($iv)]);
+    return urlencode(base64_encode($tokenData));
 
   }
 
