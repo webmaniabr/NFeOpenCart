@@ -79,7 +79,7 @@
      </operation>
      <operation info="Add Backend Info">
        <search position="before" ><![CDATA[
-       // Payment Address
+       if ($order_info['payment_address_format']) {
        ]]></search>
        <add><![CDATA[
        $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
@@ -108,7 +108,7 @@
      </operation>
      <operation info="Add Backend Info">
        <search position="before" ><![CDATA[
-       // Shipping Address
+       if ($order_info['shipping_address_format']) {
        ]]></search>
        <add><![CDATA[
        $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
@@ -135,6 +135,21 @@
        'complemento' => $complemento,
        ]]></add>
      </operation>
+    <operation info="Insert number and complement into the format of the address details of the order">
+      <search position="replace" ><![CDATA[
+      . '{address_1}' .
+      ]]></search>
+      <add><![CDATA[. '{address_1} {address_number} {complemento}' .]]></add>
+    </operation>
+    <operation info="Insert number and complement into the find of the address details of the order">
+      <search position="after" ><![CDATA[
+      '{address_1}',
+      ]]></search>
+      <add><![CDATA[
+      '{address_number}',
+      '{complemento}',
+      ]]></add>
+    </operation>
      <operation info="Get Nfe Info">
        <search position="before" ><![CDATA[
        $this->response->setOutput($this->load->view('sale/order_info', $data));
@@ -317,6 +332,22 @@
         {% endif %}
       ]]></add>
     </operation>
+    <operation info="Disable the NF-e action button">
+      <search position="after"><![CDATA[
+      $('#button-shipping, #button-invoice').prop('disabled', true);
+      ]]></search>
+      <add><![CDATA[
+      $('#button-emitir-nfe, #button-imprimir-danfe, #button-imprimir-danfe-simples, #button-imprimir-danfe-etiqueta').prop('disabled', true);
+      ]]></add>
+    </operation>
+    <operation info="Enable the NF-e action button">
+      <search position="after"><![CDATA[
+      $('#button-invoice').prop('disabled', false);
+      ]]></search>
+      <add><![CDATA[
+      $('#button-emitir-nfe, #button-imprimir-danfe, #button-imprimir-danfe-simples, #button-imprimir-danfe-etiqueta').prop('disabled', false);
+      ]]></add>
+    </operation>
   </file>
 
   <file name="admin/controller/common/footer.php">
@@ -327,6 +358,7 @@
           <add><![CDATA[
             if(isset($this->request->get['route'])){
               $route = $this->request->get['route'];
+              $data['route'] = $route;
               if($route == 'customer/customer/add' || $route == 'customer/customer/edit' || $route == 'sale/order/add'){
                 $data['run_script'] = true;
                 $this->load->model('setting/setting');
@@ -365,11 +397,10 @@
   <file name="admin/view/template/common/footer.twig">
    <operation info="Include module CSS and JS">
      <search position="before" ><![CDATA[
-     <footer id="footer">{{ text_footer }}<br />{{ text_version }}</footer></div>
+     <footer id="footer">
      ]]></search>
      <add><![CDATA[
-        {{ app.request.parameter.get('route') }}
-        {% if app.request.parameter.get('route') is defined and app.request.parameter.get('route') == 'extension/module/webmaniabrnfe' %}
+        {% if route is defined and route == 'extension/module/webmaniabrnfe' %}
             <script type="text/javascript" src="./view/javascript/wmbr_scripts.js"></script>
         {% endif %}
         
@@ -852,7 +883,7 @@
  </file>
 
 
-  <file name="catalog/view/theme/*/template/account/register.twig">
+  <file name="catalog/view/theme/*/template/checkout/register.twig">
     <operation info="Insert loading div">
         <search position="after"><![CDATA[
         <fieldset id="address">
@@ -955,7 +986,7 @@
                 $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
                   if($valid === false){
-                    $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
+                    $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
                     continue;
                   }
             }
@@ -968,7 +999,7 @@
                 $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
                 if($valid === false){
-                    $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
+                    $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
                     continue;
                 }
             }
@@ -1075,6 +1106,26 @@
 
   </file>
 
+  <file name="catalog/view/theme/default/template/account/address_form.twig">
+      <operation info="Assign error div for address 2">
+          <search position="after"><![CDATA[
+          <input type="text" name="address_2" value="{{ address_2 }}" placeholder="{{ entry_address_2 }}" id="input-address-2" class="form-control" />
+          ]]></search>
+          <add><![CDATA[
+            {% if error_address_2 %}
+              <div class="text-danger">{{ error_address_2 }}</div>
+            {% endif %}
+          ]]></add>
+      </operation>
+      <operation info="Assign loading to the ZIP code search">
+          <search position="after"><![CDATA[
+            <div id="content" class="{{ class }}">
+          ]]></search>
+          <add><![CDATA[
+            <div class="correios-loading"></div>
+          ]]></add>
+      </operation>
+  </file>
 
   <file name="catalog/controller/account/address.php">
       <operation info="Assign error variable">
@@ -1186,19 +1237,21 @@
   </file>
 
   <file name="admin/model/catalog/category.php">
-      <operation info="Save category NCM">
-          <search position="after"><![CDATA[
-          public function editCategory($category_id, $data) {
-          ]]></search>
-          <add><![CDATA[
-            try{
-              $this->db->query("UPDATE " . DB_PREFIX . "category SET category_ncm = '" .$data['category_ncm']. "' WHERE category_id = '" . (int)$category_id . "'");
-            }catch(Exception $e){
+    <operation info="Save category NCM">
+      <search position="before"><![CDATA[
+        if (isset($data['image'])) {
+      ]]></search>
+      <add><![CDATA[
+        if (isset($data['category_ncm'])) {
+          try{
+            $this->db->query("UPDATE " . DB_PREFIX . "category SET category_ncm = '" .$data['category_ncm']. "' WHERE category_id = '" . (int)$category_id . "'");
+          }catch(Exception $e){
 
-            }
-          ]]></add>
-      </operation>
-    </file>
+          }
+        }
+      ]]></add>
+    </operation>
+  </file>
 
     <file name="admin/controller/catalog/category.php">
       <operation info="Assign custom fields variables">
@@ -1243,7 +1296,7 @@
               <div class="form-group">
                 <label class="col-sm-2 control-label" for="input-ignorar-nfe">Ignorar produto ao emitir NFe</label>
                 <div class="col-sm-10">
-                  <input type="checkbox" name="ignorar_nfe" value="1" id="input-ignorar-nfe" class="form-control" style="margin-top:15px;" {% if ifnorar_nfe == '1' %} {{ 'checked' }} {% endif %} />
+                  <input type="checkbox" name="ignorar_nfe" value="1" id="input-ignorar-nfe" class="form-control" style="margin-top:15px;" {% if ignorar_nfe == '1' %} {{ 'checked' }} {% endif %} />
                 </div>
               </div>
               <div class="form-group">
@@ -1297,7 +1350,7 @@
                   }
                   %}
                   {% for value, option in options %}
-                    {% if value == webmaniabrnfe_ind_escala%}
+                    {% if value == ind_escala%}
                       {{ '<option value="'~value~'" selected>'~option~'</option>' }}
                     {% else %}
                       {{ '<option value="'~value~'">'~option~'</option>' }}
@@ -1325,10 +1378,10 @@
                   }
                   %}
                   {% for value, option in options %}
-                    {% if value == webmaniabrnfe_product_source%}
-                      {{ '<option value="'~option~'" selected>'~option~'</option>' }}
+                    {% if value == product_source%}
+                      {{ '<option value="'~value~'" selected>'~option~'</option>' }}
                     {% else %}
-                      {{ '<option value="'~option~'">'~option~'</option>' }}
+                      {{ '<option value="'~value~'">'~option~'</option>' }}
                     {% endif %}
                   {% endfor %}
                 </select>
@@ -1341,11 +1394,13 @@
   </file>
   <file name="admin/model/catalog/product.php">
       <operation info="Update product with custom info">
-          <search position="after"><![CDATA[
-          public function editProduct($product_id, $data) {
+          <search position="before"><![CDATA[
+          if (isset($data['image'])) {
           ]]></search>
           <add><![CDATA[
+          try{
              $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape($data['classe_imposto']) . "', ean_barcode = '" . $this->db->escape($data['ean_barcode']) . "', gtin_tributavel = '" . $this->db->escape($data['gtin_tributavel']) . "', ncm_code = '" . $this->db->escape($data['ncm_code']) . "', cest_code = '" . $this->db->escape($data['cest_code']) . "', cnpj_fabricante = '" . $this->db->escape($data['cnpj_fabricante']) . "', ind_escala = '" . $this->db->escape($data['ind_escala']) . "', product_source = '" . $this->db->escape($data['product_source']) . "', ignorar_nfe = '" . $this->db->escape($data['ignorar_nfe']) . "' WHERE product_id = '" . (int)$product_id . "'");
+          }catch(Exception $e){}
           ]]></add>
       </operation>
     </file>
@@ -1539,5 +1594,17 @@
           ]]></add>
       </operation>
   </file>
-</modification>                                                                                                                                                      
-                                                                                                                                                                                                                                                                                                                                                                                                   
+  <file name="admin/model/setting/setting.php">
+    <operation info="Add module status of Webmania to setting">
+      <search position="before"><![CDATA[
+      if (substr($key, 0, strlen($code)) == $code) {
+      ]]></search>
+      <add><![CDATA[
+      if($key === 'module_webmaniabrnfe_status' && $code === 'webmaniabrnfe'){
+        $this->load->model('extension/module/webmaniabrnfe');
+        $this->model_extension_module_webmaniabrnfe->setModuleStatus($value, $store_id);
+      }
+      ]]></add>
+    </operation>
+  </file>
+</modification>

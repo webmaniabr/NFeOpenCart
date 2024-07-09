@@ -35,10 +35,12 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 
 		$notification_url = HTTP_CATALOG.'?retorno_nfe='.$uniq_key.'&order_id='.$order_data['order_id'];
 
-		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
-		$custom_fields_customer = @unserialize($customer_info['custom_field']);
-		if(!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
-
+		$custom_fields_customer = !empty($order_data['custom_field']) && is_array($order_data['custom_field']) ? $order_data['custom_field'] : null;
+		if (!$custom_fields_customer) {
+			$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
+			$custom_fields_customer = @unserialize($customer_info['custom_field']);
+			if(!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
+		}
 
 		$custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
 		$documento = $NFeFunctions->get_value_from_fields( 'tipo_pessoa', $custom_fields_ids, $custom_fields_customer );
@@ -90,7 +92,7 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 		$data = array(
 			'ID' => (int)$order_data['order_id'], // Número do pedido
 			'url_notificacao' => $notification_url,
-			'origem' => 'opencart_2.3',
+			'origem' => 'opencart_3.0',
 			'operacao' => 1, // Tipo de Operação da Nota Fiscal
 			'natureza_operacao' => $module_settings['webmaniabrnfe_operation_nature'], // Natureza da Operação
 			'modelo' => 1, // Modelo da Nota Fiscal (NF-e ou NFC-e)
@@ -182,11 +184,26 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 			$imposto = $imposto_row->row['classe_imposto'];
 			$peso = $product_info['weight'];
 
-			$kg = explode('.', $peso);
-			if (strlen($kg[0]) >= 3) {
+			// 1 - Kilogram, 2 - Gram, 5 - Pound, 6 - Ounce
+			if (!empty($product_info['weight_class_id']) && in_array($product_info['weight_class_id'], ['1', '2', '5', '6'])) {
 
-				$peso = $peso / 1000;
+				switch ($product_info['weight_class_id']) {
+					case '2': //Gram
+						$peso /= 1000;
+						break;
+					case '5': //Pound
+						$peso *= 0.453592;
+						break;
+					case '6': //Ounce
+						$peso *= 0.0283495;
+						break;
+				}
+			} else {
+				$kg = explode('.', $peso);
+				if (strlen($kg[0]) >= 3) {
 
+					$peso = $peso / 1000;
+				}
 			}
 
 			$peso = number_format($peso, 3, '.', '');
@@ -224,7 +241,7 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 		if ($tipo_pessoa == 'cpf'){
 			$data['cliente'] = array(
 				'cpf' => $controller->cpf($document_number), // (pessoa fisica) Número do CPF
-				'nome_completo' => $order_data['customer'], // (pessoa fisica) Nome completo
+				'nome_completo' => $order_data['customer'] ?: ($order_data['firstname'] . " " . $order_data['lastname']), // (pessoa fisica) Nome completo
 				'endereco' => $order_data['shipping_address_1'],//$order_data['shipping_address_1'], // Endereço de entrega dos produtos
 				'complemento' => $complemento, //$address->other, // Complemento do endereço de entrega
 				'numero' => $address_number, //$address_custom['nfe_number'], // Número do endereço de entrega
@@ -254,46 +271,72 @@ class ModelExtensionModuleWebmaniaBRNFe extends Model {
 
 		if($module_settings['webmaniabrnfe_transp_include'] == 'on'){
 
-			$method = $module_settings['webmaniabrnfe_transp_method'];
+			$transport_company_data = !empty($module_settings['webmaniabrnfe_transp_method']) ? $module_settings : null;
 
-			if($method.'.'.$method == $order_data['shipping_code']){
-
-				$data['transporte'] = array(
-					'cnpj'         => $module_settings['webmaniabrnfe_transp_cnpj'],
-					'razao_social' => $module_settings['webmaniabrnfe_transp_rs'],
-					'ie'           => $module_settings['webmaniabrnfe_transp_ie'],
-					'endereco'     => $module_settings['webmaniabrnfe_transp_address'],
-					'uf'           => $module_settings['webmaniabrnfe_transp_uf'],
-					'cidade'       => $module_settings['webmaniabrnfe_transp_city'],
-					'cep'          => $module_settings['webmaniabrnfe_transp_cep'],
-				);
-
-				$transporte_info = $this->load->controller('extension/module/webmaniabrnfe/get_order_transporte_info', $order_data['order_id']);
-
-				$transporte_keys = array(
-					'nfe_volume'       => 'volume',
-					'nfe_especie'      => 'especie',
-					'nfe_peso_bruto'   => 'peso_bruto',
-					'nfe_peso_liquido' => 'peso_liquido'
-				);
-
-				foreach($transporte_keys as $array_key => $api_key){
-					$value = $transporte_info[$array_key];
-					if($value){
-						$data['transporte'][$api_key] = $value;
+			if (!$transport_company_data && !empty($module_settings['webmaniabrnfe_carriers'])) {
+				$webmaniabrnfe_carriers = json_decode(stripslashes(html_entity_decode($module_settings['webmaniabrnfe_carriers'])), true);
+				foreach ($webmaniabrnfe_carriers as $webmaniabrnfe_carrier) {
+					$method = $webmaniabrnfe_carrier['method'];
+					if ($method . '.' . $method === $order_data['shipping_code']) {
+						$transport_company_data = $webmaniabrnfe_carrier;
+						break;
 					}
 				}
+			}
 
-				if($transporte_info['modalidade_frete']){
-					$data['pedido']['modalidade_frete'] = $transporte_info['modalidade_frete'];
+			if (!empty($transport_company_data)) {
+				$method = $transport_company_data['webmaniabrnfe_transp_method'] ?? $transport_company_data['method'];
+				if ($method . '.' . $method == $order_data['shipping_code']) {
+
+					$data['transporte'] = array(
+						'cnpj'         => $transport_company_data['webmaniabrnfe_transp_cnpj'] ?? $transport_company_data['cnpj'],
+						'razao_social' => $transport_company_data['webmaniabrnfe_transp_rs'] ?? $transport_company_data['razao_social'],
+						'ie'           => $transport_company_data['webmaniabrnfe_transp_ie'] ?? $transport_company_data['ie'],
+						'endereco'     => $transport_company_data['webmaniabrnfe_transp_address'] ?? $transport_company_data['address'],
+						'uf'           => $transport_company_data['webmaniabrnfe_transp_uf'] ?? $transport_company_data['uf'],
+						'cidade'       => $transport_company_data['webmaniabrnfe_transp_city'] ?? $transport_company_data['city'],
+						'cep'          => $transport_company_data['webmaniabrnfe_transp_cep'] ?? $transport_company_data['cep'],
+					);
+
+					$transporte_info = $this->load->controller('extension/module/webmaniabrnfe/get_order_transporte_info', $order_data['order_id']);
+
+					$transporte_keys = array(
+						'nfe_volume'       => 'volume',
+						'nfe_especie'      => 'especie',
+						'nfe_peso_bruto'   => 'peso_bruto',
+						'nfe_peso_liquido' => 'peso_liquido'
+					);
+
+					foreach($transporte_keys as $array_key => $api_key){
+						$value = $transporte_info[$array_key];
+						if($value){
+							$data['transporte'][$api_key] = $value;
+						}
+					}
+
+					if($transporte_info['modalidade_frete']){
+						$data['pedido']['modalidade_frete'] = $transporte_info['modalidade_frete'];
+					}
+
 				}
-
 			}
 
 		}
 
 		return $data;
 
+	}
+
+	public function setModuleStatus($value, $store_id = 0, $code = "webmaniabrnfe", $key = "module_webmaniabrnfe_status")
+	{
+		$query = $this->db->query("SELECT setting_id FROM `" . DB_PREFIX . "setting` WHERE `store_id` = '" . (int)$this->db->escape($store_id) . "' AND `code` = '" . $this->db->escape($code) . "' AND `key` = '" . $this->db->escape($key) . "'");
+		$setting_id = !empty($query->row["setting_id"]) ? $query->row["setting_id"] : null;
+
+		if (!$setting_id) {
+			$this->db->query("INSERT INTO " . DB_PREFIX . "setting (`store_id`, `code`, `key`, `value`, `serialized`) VALUES ('" . (int)$this->db->escape($store_id) . "', '" . $this->db->escape($code) . "', '" . $this->db->escape($key) . "', '" . $this->db->escape($value) . "', '0')");
+		} else {
+			$this->db->query("UPDATE " . DB_PREFIX . "setting SET value = '" . $this->db->escape($value) . "' WHERE setting_id = {$setting_id} ");
+		}
 	}
 }
 ?>
