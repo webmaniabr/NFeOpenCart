@@ -13,7 +13,7 @@ Através do emissor de Nota Fiscal da Webmania®, você conta com a emissão e a
 
 ## Requisitos
 
-- Contrate um dos planos de Nota Fiscal Eletrônica da Webmania® (Teste 30 dias grátis): [Assine Agora](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
+- Contrate um dos planos de Nota Fiscal Eletrônica da Webmania®: [Assine Agora](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
 - Instale o módulo grátis do OpenCart da Webmania® e configure conforme instruções.
 
 ## Instalação
