@@ -860,7 +860,7 @@ class ControllerExtensionModuleWebmaniaBRNFe extends Controller {
           $url = ($data['url_danfe_simples']) ? $data['url_danfe_simples'] : str_replace('/danfe/', '/danfe/simples/', $data['url_danfe']);
         }
         else if ($type == 'etiqueta') {
-          $url = ($danfe['url_danfe_etiqueta']) ? $data['url_danfe_etiqueta'] : str_replace('/danfe/', '/danfe/etiqueta/', $data['url_danfe']);
+          $url = ($data['url_danfe_etiqueta']) ? $data['url_danfe_etiqueta'] : str_replace('/danfe/', '/danfe/etiqueta/', $data['url_danfe']);
         }
 
         $links[] = array('chave' => $data['chave_acesso'], 'url' => $url);
