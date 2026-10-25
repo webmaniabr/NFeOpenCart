@@ -47,25 +47,25 @@
           <div class="form-group">
             <label class="control-label col-sm-2">Consumer Key:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_consumer_key" value="{{ webmaniabrnfe_consumer_key }}"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_consumer_key" value="{{ webmaniabrnfe_consumer_key }}"/>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2">Consumer Secret:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_consumer_secret" value="{{ webmaniabrnfe_consumer_secret }}"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_consumer_secret" value="{{ webmaniabrnfe_consumer_secret }}"/>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2">Access Token:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_access_token" value="{{ webmaniabrnfe_access_token }}"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_access_token" value="{{ webmaniabrnfe_access_token }}"/>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2">Access Token Secret:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_access_token_secret" value="{{ webmaniabrnfe_access_token_secret }}"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_access_token_secret" value="{{ webmaniabrnfe_access_token_secret }}"/>
             </div>
           </div>
           <div class="form-group">
@@ -342,7 +342,8 @@
                 {% endif %}
 
                 {% for carrier in arr %}
-                  {{ '<div class="carrier-item" data-id="'~carrier.id~'"><p>'~carrier.razao_social~'<br/>(<span>Editar</span>)</p><span class="delete">x</span></div>' }}
+                  {# Carrier JSON is HTML-decoded before rendering (OpenCart autoescape is off): encode the stored values. #}
+                  {{ '<div class="carrier-item" data-id="'~(carrier.id|e)~'"><p>'~(carrier.razao_social|e)~'<br/>(<span>Editar</span>)</p><span class="delete">x</span></div>' }}
                 {% endfor %}
               </div>
               <button type="button" class="btn btn-primary btn--add-carrier" data-toggle="modal" data-target="#add-carrier-modal">Adicionar transportadora</button>

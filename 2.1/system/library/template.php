@@ -1,12 +1,14 @@
 <?php
 class Template {
 	private $data = array();
+	private $template;
 
   public function __construct($driver) {
 	    $class = 'Template\\' . $driver;
 
 		if (class_exists($class)) {
-			$this->template = new $class($expire);
+			// Drivers take no constructor arguments; $expire was undefined (notice on every order view).
+			$this->template = new $class();
 		} else {
 			exit('Error: Could not load template driver ' . $driver . ' cache!');
 		}

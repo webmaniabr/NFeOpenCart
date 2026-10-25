@@ -16,7 +16,7 @@ jQuery(document).ready(function(){
     }
     
     
-    var id = $('input[name="current-edit"').val();
+    var id = $('input[name="current-edit"]').val();
     
     var data = {
       method       : $('select[name="webmaniabrnfe_transp_method"]').val(),
@@ -43,7 +43,7 @@ jQuery(document).ready(function(){
           inputValue[i].city         = data.city;
           inputValue[i].uf           = data.uf;
           
-          $('.carrier-item[data-id="'+id+'"]').find('p').html(data.razao_social+' (<br/><span>Editar</span>)');
+          $('.carrier-item[data-id="'+id+'"]').find('p').text(data.razao_social).append($('<br>'), $('<span>').text('Editar'));
           
         }
       }
@@ -79,7 +79,7 @@ jQuery(document).ready(function(){
     
     $('.modal-title').html('Editar Transportadora');
     $('.btn--confirm-carrier').html('Salvar');
-    $('input[name="current-edit').val(id);
+    $('input[name="current-edit"]').val(id);
     
     $('#add-carrier-modal').modal('show');
 
@@ -123,7 +123,7 @@ jQuery(document).ready(function(){
     $('input[name="webmaniabrnfe_transp_cep"]').val('');
     $('input[name="webmaniabrnfe_transp_city"]').val('');
     $('input[name="webmaniabrnfe_transp_uf"]').val('');
-    $('input[name="current-edit').val('');
+    $('input[name="current-edit"]').val('');
     
     $('.modal-title').html('Nova Transportadora');
     $('.btn--confirm-carrier').html('Adicionar');
@@ -159,7 +159,7 @@ jQuery(document).ready(function(){
     var $carrier = $('<div class="carrier-item" data-id="'+data.id+'"></div>');
     var carrier_name = $('option[value="'+data.method+'"]').html();
     
-    $carrier.append('<p>'+data.razao_social+' <br/>(<span>Editar</span>)</p>');
+    $carrier.append($('<p>').text(data.razao_social).append($('<br>'), $('<span>').text('Editar')));
     $carrier.append('<span class="delete">x</span>');
     
     $carrier.appendTo('.carriers-list');

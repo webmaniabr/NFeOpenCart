@@ -27,7 +27,7 @@
         }
 
         $this->load->controller('extension/module/webmaniabrnfe/save_order_transporte_info', $request);
-        $transporte_info = $this->load->controller('extension/module/webmaniabrnfe/get_order_transporte_info', $order_id);
+        $transporte_info = $this->load->controller('extension/module/webmaniabrnfe/get_order_transporte_info', (int)$order_id);
 
 
         $template = new Template('twig');
@@ -156,14 +156,12 @@
        ]]></search>
        <add><![CDATA[
        $order_table = (DB_PREFIX) ? "order" : "`order`";
-       $query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
+       require_once DIR_APPLICATION . 'controller/extension/nfe/Security.php';
+       $query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = " . (int)$order_id);
        $url = $this->url->link('extension/module/webmaniabrnfe/updateNFe', 'user_token=' . $this->session->data['user_token'], true);
 
        if(isset($query->rows[0]['nfe_info'])){
-        $nfe_info = @unserialize($query->rows[0]['nfe_info']);
-        if (!$nfe_info) {
-            $nfe_info = @unserialize(utf8_decode(base64_decode($query->rows[0]['nfe_info'])));
-        }
+        $nfe_info = \WebmaniaNFeSecurity::invoices($query->rows[0]['nfe_info']);
         if (!$nfe_info) {
             $nfe_info = array();
         }
@@ -171,8 +169,8 @@
         $custom_fields_customer = !empty($order_info['custom_field']) && is_array($order_info['custom_field']) ? $order_info['custom_field'] : null;
         if (!$custom_fields_customer) {
           $customer_info = $this->model_customer_customer->getCustomer($order_info['customer_id']);
-          $custom_fields_customer = @unserialize($customer_info['custom_field']);
-          if(!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
+          $custom_fields_customer = \WebmaniaNFeSecurity::decode(isset($customer_info['custom_field']) ? $customer_info['custom_field'] : '');
+          if(!$custom_fields_customer) $custom_fields_customer = json_decode(isset($customer_info['custom_field']) ? $customer_info['custom_field'] : '', true);
         }
 		
         $custom_fields_ids = $this->load->controller('extension/module/webmaniabrnfe/getCustomFieldsIds');
@@ -387,7 +385,7 @@
               $data['cpf'] = $custom_fields_ids['cpf'];
               $data['cnpj'] = $custom_fields_ids['cnpj'];
               if(isset($this->request->post['custom_field']['account'])){
-                $data['option_selected'] = $this->request->post['custom_field']['account'];
+                $data['option_selected'] = is_array($this->request->post['custom_field']['account']) ? array_map('intval', array_filter($this->request->post['custom_field']['account'], 'is_scalar')) : array();
               }
             }
 
@@ -416,7 +414,7 @@
                correios.init( 'qS4SKlmAXR21h7wrBMcs0SZyXauLqo5m', 'nkKkInYJ5QvogYn1xj4lk7w3hkhA8qzruoKzuLf6UyBtSIJL' );
                $('input[name="postcode"]').correios( 'input[name="address_1"]', 'input[name="address_2"]', 'input[name="city"]', 'input[name="zone_id"]', '.correios-loading' );
                $('#input-payment-cpf').mask('999.999.999-99');
-               $('#input-payment-cnpj').mask('99.999.999/9999-99');
+               $('#input-payment-cnpj').mask('AA.AAA.AAA/AAAA-00');
              });
            </script>
         {% endif %}
@@ -437,7 +435,7 @@
                if(cnpj_element.length == 0) cnpj_element = $('input[name="custom_field['+pj_id+']"]');
 
                cpf_element.mask('999.999.999-99');
-               cnpj_element.mask('99.999.999/9999-99');
+               cnpj_element.mask('AA.AAA.AAA/AAAA-00');
                cep_element.mask('99999-999');
             </script>
         {% endif %}
@@ -577,11 +575,11 @@
        ]]></search>
        <add><![CDATA[
          if($custom_field['location'] == 'account'){
-         $tipo_pessoa = $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']];
+         $tipo_pessoa = isset($this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']]) ? $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']] : '';
          if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
 
            if($custom_field['name'] == 'CPF'){
-           $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+           $value = isset($this->request->post['custom_field'][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['custom_field_id']] : '';
            $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
              if($valid === false){
                $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
@@ -594,7 +592,7 @@
            }
          }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
          if($custom_field['name'] == 'CNPJ'){
-         $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+         $value = isset($this->request->post['custom_field'][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['custom_field_id']] : '';
          $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
            if($valid === false){
              $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
@@ -625,11 +623,11 @@
        ]]></search>
        <add><![CDATA[
          if($custom_field['location'] == 'account'){
-         $tipo_pessoa = $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']];
+         $tipo_pessoa = isset($this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']]) ? $this->request->post['custom_field'][$custom_fields_ids['tipo_pessoa']] : '';
          if($tipo_pessoa == $custom_fields_ids['pessoa_fisica']){
 
            if($custom_field['name'] == 'CPF'){
-           $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+           $value = isset($this->request->post['custom_field'][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['custom_field_id']] : '';
            $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
              if($valid === false){
                $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
@@ -642,7 +640,7 @@
            }
          }elseif($tipo_pessoa == $custom_fields_ids['pessoa_juridica']){
          if($custom_field['name'] == 'CNPJ'){
-         $value = $this->request->post['custom_field'][$custom_field['custom_field_id']];
+         $value = isset($this->request->post['custom_field'][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['custom_field_id']] : '';
          $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
            if($valid === false){
              $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
@@ -712,7 +710,7 @@
               $data['cpf'] = $custom_fields_ids['cpf'];
               $data['cnpj'] = $custom_fields_ids['cnpj'];
               if(isset($this->request->post['custom_field']['account'])){
-                $data['option_selected'] = $this->request->post['custom_field']['account'];
+                $data['option_selected'] = is_array($this->request->post['custom_field']['account']) ? array_map('intval', array_filter($this->request->post['custom_field']['account'], 'is_scalar')) : array();
               }
             }
 
@@ -740,7 +738,7 @@
                correios.init( 'qS4SKlmAXR21h7wrBMcs0SZyXauLqo5m', 'nkKkInYJ5QvogYn1xj4lk7w3hkhA8qzruoKzuLf6UyBtSIJL' );
                $('input[name="postcode"]').correios( 'input[name="address_1"]', 'input[name="address_2"]', 'input[name="city"]', 'input[name="zone_id"]', '.correios-loading' );
                $('#input-payment-cpf').mask('999.999.999-99');
-               $('#input-payment-cnpj').mask('99.999.999/9999-99');
+               $('#input-payment-cnpj').mask('AA.AAA.AAA/AAAA-00');
              });
            </script>
        {% endif %}
@@ -761,7 +759,7 @@
                if(cnpj_element.length == 0) cnpj_element = $('input[name="custom_field['+pj_id+']"]');
 
                cpf_element.mask('999.999.999-99');
-               cnpj_element.mask('99.999.999/9999-99');
+               cnpj_element.mask('AA.AAA.AAA/AAAA-00');
                cep_element.mask('99999-999');
            </script>
        {% endif %}
@@ -908,12 +906,12 @@
         ]]></search>
         <add><![CDATA[
           if ($custom_field['name'] == 'Tipo de Pessoa') {
-            $tipo_pessoa = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+            $tipo_pessoa = isset($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']] : '';
           }
 
           if ($tipo_pessoa == '1') {
             if ($custom_field['name'] == 'CPF') {
-                $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+                $value = isset($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']] : '';
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
                   if($valid === false){
                     $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
@@ -926,7 +924,7 @@
           }
           else if ($tipo_pessoa == '2') {
             if($custom_field['name'] == 'CNPJ'){
-                $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+                $value = isset($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']] : '';
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
                 if($valid === false){
                     $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
@@ -978,12 +976,12 @@
         ]]></search>
         <add><![CDATA[
           if ($custom_field['name'] == 'Tipo de Pessoa') {
-            $tipo_pessoa = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+            $tipo_pessoa = isset($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']] : '';
           }
 
           if ($tipo_pessoa == '1') {
             if ($custom_field['name'] == 'CPF') {
-                $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+                $value = isset($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']] : '';
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
                   if($valid === false){
                     $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CPF inválido!';
@@ -996,7 +994,7 @@
           }
           else if ($tipo_pessoa == '2') {
             if($custom_field['name'] == 'CNPJ'){
-                $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+                $value = isset($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']] : '';
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
                 if($valid === false){
                     $json['error']['custom_field' . $custom_field['custom_field_id']] = 'CNPJ inválido!';
@@ -1071,12 +1069,12 @@
         ]]></search>
         <add><![CDATA[
           if ($custom_field['name'] == 'Tipo de Pessoa') {
-            $tipo_pessoa = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+            $tipo_pessoa = isset($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']] : '';
           }
 
           if ($tipo_pessoa == '1') {
             if ($custom_field['name'] == 'CPF') {
-                $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+                $value = isset($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']] : '';
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cpf', array($value));
                   if($valid === false){
                     $this->error['custom_field'][$custom_field['custom_field_id']] = 'CPF inválido!';
@@ -1089,7 +1087,7 @@
           }
           else if ($tipo_pessoa == '2') {
             if($custom_field['name'] == 'CNPJ'){
-                $value = $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']];
+                $value = isset($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']]) ? $this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']] : '';
                 $valid = $this->load->controller('extension/module/webmaniabrnfe/is_cnpj', array($value));
                 if($valid === false){
                     $this->error['custom_field'][$custom_field['custom_field_id']] = 'CNPJ inválido!';
@@ -1244,7 +1242,7 @@
       <add><![CDATA[
         if (isset($data['category_ncm'])) {
           try{
-            $this->db->query("UPDATE " . DB_PREFIX . "category SET category_ncm = '" .$data['category_ncm']. "' WHERE category_id = '" . (int)$category_id . "'");
+            $this->db->query("UPDATE " . DB_PREFIX . "category SET category_ncm = '" . $this->db->escape(isset($data['category_ncm']) && is_scalar($data['category_ncm']) ? (string)$data['category_ncm'] : '') . "' WHERE category_id = '" . (int)$category_id . "'");
           }catch(Exception $e){
 
           }
@@ -1399,7 +1397,7 @@
           ]]></search>
           <add><![CDATA[
           try{
-             $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape($data['classe_imposto']) . "', ean_barcode = '" . $this->db->escape($data['ean_barcode']) . "', gtin_tributavel = '" . $this->db->escape($data['gtin_tributavel']) . "', ncm_code = '" . $this->db->escape($data['ncm_code']) . "', cest_code = '" . $this->db->escape($data['cest_code']) . "', cnpj_fabricante = '" . $this->db->escape($data['cnpj_fabricante']) . "', ind_escala = '" . $this->db->escape($data['ind_escala']) . "', product_source = '" . $this->db->escape($data['product_source']) . "', ignorar_nfe = '" . $this->db->escape($data['ignorar_nfe']) . "' WHERE product_id = '" . (int)$product_id . "'");
+             $this->db->query("UPDATE " . DB_PREFIX . "product SET classe_imposto = '" . $this->db->escape(isset($data['classe_imposto']) && is_scalar($data['classe_imposto']) ? (string)$data['classe_imposto'] : '') . "', ean_barcode = '" . $this->db->escape(isset($data['ean_barcode']) && is_scalar($data['ean_barcode']) ? (string)$data['ean_barcode'] : '') . "', gtin_tributavel = '" . $this->db->escape(isset($data['gtin_tributavel']) && is_scalar($data['gtin_tributavel']) ? (string)$data['gtin_tributavel'] : '') . "', ncm_code = '" . $this->db->escape(isset($data['ncm_code']) && is_scalar($data['ncm_code']) ? (string)$data['ncm_code'] : '') . "', cest_code = '" . $this->db->escape(isset($data['cest_code']) && is_scalar($data['cest_code']) ? (string)$data['cest_code'] : '') . "', cnpj_fabricante = '" . $this->db->escape(isset($data['cnpj_fabricante']) && is_scalar($data['cnpj_fabricante']) ? (string)$data['cnpj_fabricante'] : '') . "', ind_escala = '" . $this->db->escape(isset($data['ind_escala']) && is_scalar($data['ind_escala']) ? (string)$data['ind_escala'] : '') . "', product_source = '" . $this->db->escape(isset($data['product_source']) && is_scalar($data['product_source']) ? (string)$data['product_source'] : '') . "', ignorar_nfe = '" . $this->db->escape(isset($data['ignorar_nfe']) && is_scalar($data['ignorar_nfe']) ? (string)$data['ignorar_nfe'] : '') . "' WHERE product_id = '" . (int)$product_id . "'");
           }catch(Exception $e){}
           ]]></add>
       </operation>
@@ -1533,19 +1531,19 @@
                       </thead>
                       <tbody>
                         {% for order_nfe in nfe_info %}
-                            <tr><td class="column-columnname">{{ order_nfe.data }}</td>
-                          <td class="column-columnname">{{ order_nfe.n_serie }}</td>
-                          <td class="column-columnname">{{ order_nfe.n_nfe }}</td>
-                          <td class="column-columnname">{{ order_nfe.n_recibo }}</td>
-                          <td class="column-columnname">{{ order_nfe.chave_acesso }}</td>
-                          <td class="column-columnname"><a target="_blank" href="{{ order_nfe.url_xml }}">Download XML</a></td>
+                            <tr><td class="column-columnname">{{ order_nfe.data|e }}</td>
+                          <td class="column-columnname">{{ order_nfe.n_serie|e }}</td>
+                          <td class="column-columnname">{{ order_nfe.n_nfe|e }}</td>
+                          <td class="column-columnname">{{ order_nfe.n_recibo|e }}</td>
+                          <td class="column-columnname">{{ order_nfe.chave_acesso|e }}</td>
+                          <td class="column-columnname"><a target="_blank" href="{{ order_nfe.url_xml|e }}">Download XML</a></td>
                           <td class="column-columnname">
-                            <a target="_blank" href="{{ order_nfe.url_danfe }}">Danfe </a>|
-                            <a target="_blank" href="{{ order_nfe.url_danfe_simples }}"> Danfe Simples </a>|
-                            <a target="_blank" href="{{ order_nfe.url_danfe_etiqueta }}"> Danfe Etiqueta</a>
+                            <a target="_blank" href="{{ order_nfe.url_danfe|e }}">Danfe </a>|
+                            <a target="_blank" href="{{ order_nfe.url_danfe_simples|e }}"> Danfe Simples </a>|
+                            <a target="_blank" href="{{ order_nfe.url_danfe_etiqueta|e }}"> Danfe Etiqueta</a>
                           </td>
                           <td class="column-columnname" style="padding: 10px 10px;">
-                            <span class="nfe-status {{ order_nfe.status }}">{{ order_nfe.status }}</span>
+                            <span class="nfe-status {{ order_nfe.status|e }}">{{ order_nfe.status|e }}</span>
                             <a href="{{ url~'&order_id='~order_id~'&atualizar=1&chave_acesso='~order_nfe.chave_acesso }}">Atualizar Status</a>
                             </td></tr>
                         {% endfor %}

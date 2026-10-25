@@ -1,0 +1,386 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="submit" form="form-module" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-save"></i></button>
+        <a href="{{ cancel }}" data-bs-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-secondary"><i class="fa-solid fa-reply"></i></a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          {% for breadcrumb in breadcrumbs %}
+            <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+          {% endfor %}
+        </ol>
+      </nav>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+      <div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-exclamation-circle"></i> {{ error_warning }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endif %}
+    {% if success_message %}
+      <div class="alert alert-success alert-dismissible"><i class="fa-solid fa-check-circle"></i> {{ success_message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endif %}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-edit"></i> {{ text_edit }}</h3>
+      </div>
+      <div class="card-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-module" class="row g-3">
+          <div class="col-12">
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Status:</label>
+              <div class="col-sm-10">
+                <select class="form-select" name="module_webmaniabrnfe_status">
+                  {% if module_webmaniabrnfe_status %}
+                    <option value="1" selected="selected">{{ text_enabled }}</option>
+                    <option value="0">{{ text_disabled }}</option>
+                  {% else %}
+                    <option value="1">{{ text_enabled }}</option>
+                    <option value="0" selected="selected">{{ text_disabled }}</option>
+                  {% endif %}
+                </select>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Consumer Key:</label>
+              <div class="col-sm-10">
+                <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_consumer_key" value="{{ webmaniabrnfe_consumer_key }}"/>
+                <small class="form-text text-muted">Chave do consumidor da API WebmaniaBR</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Consumer Secret:</label>
+              <div class="col-sm-10">
+                <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_consumer_secret" value="{{ webmaniabrnfe_consumer_secret }}"/>
+                <small class="form-text text-muted">Chave secreta do consumidor da API WebmaniaBR</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Access Token:</label>
+              <div class="col-sm-10">
+                <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_access_token" value="{{ webmaniabrnfe_access_token }}"/>
+                <small class="form-text text-muted">Token de acesso da API WebmaniaBR</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Access Token Secret:</label>
+              <div class="col-sm-10">
+                <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_access_token_secret" value="{{ webmaniabrnfe_access_token_secret }}"/>
+                <small class="form-text text-muted">Token secreto de acesso da API WebmaniaBR</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Natureza da Operação:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_operation_nature" value="{{ webmaniabrnfe_operation_nature }}"/>
+                <small class="form-text text-muted">Ex: Venda de mercadoria</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Ambiente SEFAZ:</label>
+              <div class="col-sm-10">
+                <select class="form-select" name="webmaniabrnfe_sefaz_env">
+                  <option value="1" {% if webmaniabrnfe_sefaz_env == '1' %}selected{% endif %}>Produção</option>
+                  <option value="2" {% if webmaniabrnfe_sefaz_env == '2' %}selected{% endif %}>Homologação</option>
+                </select>
+                <small class="form-text text-muted">Ambiente para emissão das notas fiscais</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Envio de E-mail:</label>
+              <div class="col-sm-10">
+                <select class="form-select" name="webmaniabrnfe_envio_email">
+                  <option value="on" {% if webmaniabrnfe_envio_email == 'on' %}selected{% endif %}>Sim</option>
+                  <option value="off" {% if webmaniabrnfe_envio_email == 'off' %}selected{% endif %}>Não</option>
+                </select>
+                <small class="form-text text-muted">Enviar NF-e por e-mail para o cliente</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Classe de Imposto Padrão:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_tax_class" value="{{ webmaniabrnfe_tax_class }}"/>
+                <small class="form-text text-muted">ID da classe de imposto padrão</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Código EAN Padrão:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_ean_barcode" value="{{ webmaniabrnfe_ean_barcode }}"/>
+                <small class="form-text text-muted">Código de barras padrão para produtos</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">NCM Padrão:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_ncm_code" value="{{ webmaniabrnfe_ncm_code }}"/>
+                <small class="form-text text-muted">Código NCM padrão para produtos</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">CEST Padrão:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_cest_code" value="{{ webmaniabrnfe_cest_code }}"/>
+                <small class="form-text text-muted">Código CEST padrão para produtos</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Origem do Produto:</label>
+              <div class="col-sm-10">
+                <select class="form-select" name="webmaniabrnfe_product_source">
+                  <option value="0" {% if webmaniabrnfe_product_source == '0' %}selected{% endif %}>0 - Nacional</option>
+                  <option value="1" {% if webmaniabrnfe_product_source == '1' %}selected{% endif %}>1 - Estrangeira - Importação direta</option>
+                  <option value="2" {% if webmaniabrnfe_product_source == '2' %}selected{% endif %}>2 - Estrangeira - Adquirida no mercado interno</option>
+                  <option value="3" {% if webmaniabrnfe_product_source == '3' %}selected{% endif %}>3 - Nacional, mercadoria ou bem com Conteúdo de Importação superior a 40%</option>
+                  <option value="4" {% if webmaniabrnfe_product_source == '4' %}selected{% endif %}>4 - Nacional, cuja produção tenha sido feita em conformidade com os processos produtivos básicos</option>
+                  <option value="5" {% if webmaniabrnfe_product_source == '5' %}selected{% endif %}>5 - Nacional, mercadoria ou bem com Conteúdo de Importação inferior ou igual a 40%</option>
+                  <option value="6" {% if webmaniabrnfe_product_source == '6' %}selected{% endif %}>6 - Estrangeira - Importação direta, sem similar nacional, constante em lista da CAMEX</option>
+                  <option value="7" {% if webmaniabrnfe_product_source == '7' %}selected{% endif %}>7 - Estrangeira - Adquirida no mercado interno, sem similar nacional, constante lista CAMEX</option>
+                  <option value="8" {% if webmaniabrnfe_product_source == '8' %}selected{% endif %}>8 - Nacional, mercadoria ou bem com Conteúdo de Importação superior a 70%</option>
+                </select>
+              </div>
+            </div>
+            
+            <hr>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Incluir Transportadora:</label>
+              <div class="col-sm-10">
+                <select class="form-select" name="webmaniabrnfe_transp_include">
+                  <option value="on" {% if webmaniabrnfe_transp_include == 'on' %}selected{% endif %}>Sim</option>
+                  <option value="off" {% if webmaniabrnfe_transp_include == 'off' %}selected{% endif %}>Não</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Intermediador:</label>
+              <div class="col-sm-10">
+                <select class="form-select" name="webmaniabrnfe_intermediador">
+                  <option value="0" {% if webmaniabrnfe_intermediador == '0' %}selected{% endif %}>0 - Operação sem intermediador</option>
+                  <option value="1" {% if webmaniabrnfe_intermediador == '1' %}selected{% endif %}>1 - Operação em site ou plataforma de terceiros</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">CNPJ do Intermediador:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_intermediador_cnpj" value="{{ webmaniabrnfe_intermediador_cnpj }}"/>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">ID do Intermediador:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_intermediador_id" value="{{ webmaniabrnfe_intermediador_id }}"/>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Informações Complementares ao Fisco:</label>
+              <div class="col-sm-10">
+                <textarea class="form-control" name="webmaniabrnfe_fisco_inf" rows="3">{{ webmaniabrnfe_fisco_inf }}</textarea>
+                <small class="form-text text-muted">Máximo 2000 caracteres</small>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Informações Complementares ao Consumidor:</label>
+              <div class="col-sm-10">
+                <textarea class="form-control" name="webmaniabrnfe_cons_inf" rows="3">{{ webmaniabrnfe_cons_inf }}</textarea>
+                <small class="form-text text-muted">Máximo 2000 caracteres</small>
+              </div>
+            </div>
+
+            <hr>
+            
+            <h4 class="mb-3"><i class="fa-solid fa-cog"></i> Configurações Adicionais</h4>
+            
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">GTIN Tributável Padrão:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_gtin_tributavel" value="{{ webmaniabrnfe_gtin_tributavel }}"/>
+                <small class="form-text text-muted">GTIN tributável padrão para produtos</small>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">CNPJ do Fabricante Padrão:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" name="webmaniabrnfe_cnpj_fabricante" value="{{ webmaniabrnfe_cnpj_fabricante }}"/>
+                <small class="form-text text-muted">CNPJ do fabricante padrão</small>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Indicador de Escala:</label>
+              <div class="col-sm-10">
+                <select class="form-select" name="webmaniabrnfe_ind_escala">
+                  <option value="" {% if not webmaniabrnfe_ind_escala %}selected{% endif %}>Não se aplica</option>
+                  <option value="S" {% if webmaniabrnfe_ind_escala == 'S' %}selected{% endif %}>S - Produzido em escala relevante</option>
+                  <option value="N" {% if webmaniabrnfe_ind_escala == 'N' %}selected{% endif %}>N - Produzido em escala não relevante</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Auto-preenchimento de Endereços:</label>
+              <div class="col-sm-10">
+                <select class="form-select" name="webmaniabrnfe_fill_address">
+                  <option value="on" {% if webmaniabrnfe_fill_address == 'on' %}selected{% endif %}>Sim</option>
+                  <option value="off" {% if webmaniabrnfe_fill_address == 'off' %}selected{% endif %}>Não</option>
+                </select>
+                <small class="form-text text-muted">Auto-preencher campos de endereço no checkout</small>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label">Aplicar Máscara nos Campos:</label>
+              <div class="col-sm-10">
+                <select class="form-select" name="webmaniabrnfe_mask_fields">
+                  <option value="on" {% if webmaniabrnfe_mask_fields == 'on' %}selected{% endif %}>Sim</option>
+                  <option value="off" {% if webmaniabrnfe_mask_fields == 'off' %}selected{% endif %}>Não</option>
+                </select>
+                <small class="form-text text-muted">Aplicar máscaras automáticas em CPF, CNPJ, CEP</small>
+              </div>
+            </div>
+            
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-info-circle"></i> Informações do Sistema</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h5>Compatibilidade</h5>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                OpenCart 4.0/4.1
+                <span class="badge bg-success rounded-pill">✓ Compatível</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                PHP 8.1+
+                <span class="badge bg-success rounded-pill">✓ Compatível</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Bootstrap 5
+                <span class="badge bg-success rounded-pill">✓ Ativo</span>
+              </li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h5>Funcionalidades</h5>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Tipagem Forte PHP
+                <span class="badge bg-success rounded-pill">✓ Implementado</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Validação de Segurança
+                <span class="badge bg-success rounded-pill">✓ Aprimorado</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Performance Otimizada
+                <span class="badge bg-success rounded-pill">✓ Melhorado</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Character counter for textareas
+    const textareas = document.querySelectorAll('textarea[name="webmaniabrnfe_fisco_inf"], textarea[name="webmaniabrnfe_cons_inf"]');
+    textareas.forEach(function(textarea) {
+        const maxLength = 2000;
+        const counterDiv = document.createElement('div');
+        counterDiv.className = 'text-muted mt-1';
+        counterDiv.innerHTML = '<small>Caracteres restantes: <span class="counter">' + maxLength + '</span></small>';
+        textarea.parentNode.appendChild(counterDiv);
+        
+        const counter = counterDiv.querySelector('.counter');
+        
+        textarea.addEventListener('input', function() {
+            const remaining = maxLength - this.value.length;
+            counter.textContent = remaining;
+            
+            if (remaining < 100) {
+                counter.className = 'text-warning';
+            } else if (remaining < 0) {
+                counter.className = 'text-danger';
+                this.value = this.value.substring(0, maxLength);
+                counter.textContent = '0';
+            } else {
+                counter.className = '';
+            }
+        });
+        
+        // Trigger initial count
+        textarea.dispatchEvent(new Event('input'));
+    });
+
+    // Form validation
+    const form = document.getElementById('form-module');
+    // Saved credentials are not sent back to the browser; empty fields keep them on save.
+    const credentialsSaved = {{ webmaniabrnfe_credentials_saved ? 'true' : 'false' }};
+    form.addEventListener('submit', function(e) {
+        if (credentialsSaved) {
+            return;
+        }
+        const requiredFields = ['webmaniabrnfe_consumer_key', 'webmaniabrnfe_consumer_secret', 'webmaniabrnfe_access_token', 'webmaniabrnfe_access_token_secret'];
+        let hasErrors = false;
+
+        requiredFields.forEach(function(fieldName) {
+            const field = document.querySelector('input[name="' + fieldName + '"]');
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                hasErrors = true;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        if (hasErrors) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios de credenciais da API.');
+        }
+    });
+});
+</script>
+
+{{ footer }}

@@ -1,26 +1,45 @@
 <p align="center">
-  <img src="https://wmbr.s3.amazonaws.com/img/logo_webmaniabr_github2.png">
+  <img src="docs/assets/webmania-logo.png" width="396" alt="Webmania">
 </p>
 
 # Nota Fiscal Eletrônica para OpenCart
 
 Através do emissor de Nota Fiscal da Webmania®, você conta com a emissão e arquivamento das suas notas fiscais, cálculo automático de impostos, geração do Danfe para impressão e envio automático de e-mails para os clientes.
 
-- **Módulo compatível com as versões 2.0, 2.2, 2.3 e 3.0.**
+- **Distribuições para OpenCart 2.0, 2.1, 2.2, 2.3, 3.0 e 4.x; consulte os ambientes verificados abaixo.**
 - **Faça download da última versão do módulo: [Clique aqui](https://github.com/webmaniabr/NFeOpenCart/releases)**
-- Emissor de Nota Fiscal Webmania®: [Saiba mais](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
+- Emissor de Nota Fiscal Webmania®: [Saiba mais](https://webmaniabr.com/nota-fiscal-eletronica/)
 - Documentação da REST API: [Visualizar](https://webmaniabr.com/docs/rest-api-nfe/)
+
+## Compatibilidade verificada
+
+| OpenCart | Pasta / pacote | PHP verificado |
+| --- | --- | --- |
+| 2.0.3.1 | `2.0` / `opencart-2.0.zip` | 5.6 |
+| 2.1.0.2 | `2.1` / `opencart-2.1.zip` | 5.6 |
+| 2.2.0.0 | `2.2` / `opencart-2.2.zip` | 5.6 |
+| 2.3.0.2 | `2.3` / `opencart-2.3.zip` | 5.6 |
+| 3.0.5.1 | `3.0` / `opencart-3.0.zip` | 7.4 |
+| 4.0.2.3 e 4.1.0.4 | `4.X` / `webmaniabrnfe.ocmod.zip` | 8.3 |
+
+O código da distribuição `4.X` também passou nas verificações adicionais em PHP 8.5. As distribuições antigas e a distribuição 4.X têm pacotes e versões internas próprios.
+
+A tabela registra os ambientes exercitados. Use o PHP exigido pela versão da sua plataforma e valide as integrações da loja em homologação antes de atualizar.
 
 ## Requisitos
 
-- Contrate um dos planos de Nota Fiscal Eletrônica da Webmania®: [Assine Agora](https://webmaniabr.com/smartsales/nota-fiscal-eletronica/)
-- Instale o módulo grátis do OpenCart da Webmania® e configure conforme instruções.
+- Contrate um dos planos de Nota Fiscal Eletrônica da Webmania®: [Assine Agora](https://webmaniabr.com/nota-fiscal-eletronica/)
+- Instale o módulo do OpenCart da Webmania® e configure conforme instruções.
 
 ## Instalação
 
-Após realizar o download da última versão ([Clique aqui](https://github.com/webmaniabr/NFeOpenCart/releases)), descompacte o arquivo zip e envie todos os arquivos na pasta raiz da sua loja virtual. A transferência pode ser realizada através do acesso FTP da sua hospedagem.
+Baixe o [release mais recente](https://github.com/webmaniabr/NFeOpenCart/releases/latest) e selecione o pacote da sua versão.
 
-## Ativação
+**OpenCart 2.x e 3.x:** descompacte `opencart-<versão>.zip` e envie seu conteúdo para a raiz da loja, preservando as pastas `admin/`, `catalog/` e `vqmod/`. Se o diretório administrativo foi renomeado, envie o conteúdo de `admin/` para o diretório utilizado pela sua loja. Instale o vQmod e habilite o módulo conforme a seção de ativação abaixo.
+
+**OpenCart 4.x:** envie `webmaniabrnfe.ocmod.zip` em **Extensões > Instalador**, instale o pacote e habilite **Webmania NF-e** em **Extensões > Extensões > Módulos**. Esse pacote contém `install.json` na raiz e usa os eventos nativos do OpenCart 4; não utiliza o vQmod das distribuições antigas.
+
+## Ativação no OpenCart 2.x e 3.x
 
 - Acesse o menu Extensões > Módulos. Localize o módulo chamado **WebmaniaBR NF-e** e clique no botão Instalar.
 
@@ -42,7 +61,7 @@ Consulte o nosso guia passo a passo para começar a emitir as notas fiscais com 
 - [Configurar impostos](https://ajuda.webmaniabr.com/hc/pt-br/articles/360013122032-Configurar-impostos-no-OpenCart)
 - [Emitir Nota Fiscal](https://ajuda.webmaniabr.com/hc/pt-br/articles/360013352631-Emiss%C3%A3o-de-NF-e-no-OpenCart)
 
-## Adaptar página Finalizar Compra
+## Adaptar página Finalizar Compra no OpenCart 2.x e 3.x
 
 O módulo utiliza vQmod para inserir os campos obrigatórios na página de Finalizar Compra, Cadastro de novo cliente e Painel de controle para que as notas fiscais sejam emitidas corretamente. É importante que o tema da loja virtual siga o checkout padrão para que possa inserir os campos necessários, porém alterações podem ser feitas nos seguintes arquivos
 
@@ -58,6 +77,13 @@ Você pode gerenciar todas as Notas Fiscais e realizar a impressão do Danfe no 
 <p align="center">
 <img src="https://wmbr.s3.amazonaws.com/img/dashboard_webmaniabr_01.jpg">
 </p>
+
+## Atualizações desta versão
+
+- Aceita CNPJ numérico e alfanumérico nos formulários e na integração.
+- Reforça permissões administrativas, vínculo dos documentos ao cliente e proteção das credenciais.
+- Preserva os campos fiscais omitidos em atualizações parciais e o funcionamento das edições antigas.
+- Inclui a distribuição própria para OpenCart 4 e atualiza a geração de PDFs.
 
 ## Suporte
 

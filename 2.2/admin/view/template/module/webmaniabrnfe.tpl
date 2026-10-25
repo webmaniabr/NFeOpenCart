@@ -34,25 +34,25 @@
           <div class="form-group">
             <label class="control-label col-sm-2">Consumer Key:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_consumer_key" value="<?php echo $webmaniabrnfe_consumer_key; ?>"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_consumer_key" value="<?php echo $webmaniabrnfe_consumer_key; ?>"/>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2">Consumer Secret:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_consumer_secret" value="<?php echo $webmaniabrnfe_consumer_secret; ?>"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_consumer_secret" value="<?php echo $webmaniabrnfe_consumer_secret; ?>"/>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2">Access Token:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_access_token" value="<?php echo $webmaniabrnfe_access_token; ?>"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_access_token" value="<?php echo $webmaniabrnfe_access_token; ?>"/>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2">Access Token Secret:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_access_token_secret" value="<?php echo $webmaniabrnfe_access_token_secret; ?>"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_access_token_secret" value="<?php echo $webmaniabrnfe_access_token_secret; ?>"/>
             </div>
           </div>
           <div class="form-group">
@@ -318,8 +318,10 @@
                   if(!is_array($arr)) $arr = array();
                   
                   foreach($arr as $carrier){
-                    echo '<div class="carrier-item" data-id="'.$carrier['id'].'">
-                            <p>'.$carrier['razao_social'].' <br/>(<span>Editar</span>)</p>
+                    // Carrier JSON is HTML-decoded above, so encode the stored values on output.
+                    if(!is_array($carrier)) continue;
+                    echo '<div class="carrier-item" data-id="'.htmlspecialchars(isset($carrier['id']) ? (string) $carrier['id'] : '', ENT_QUOTES, 'UTF-8').'">
+                            <p>'.htmlspecialchars(isset($carrier['razao_social']) ? (string) $carrier['razao_social'] : '', ENT_QUOTES, 'UTF-8').' <br/>(<span>Editar</span>)</p>
                             <span class="delete">x</span>
                           </div>';
                   }
@@ -355,7 +357,7 @@
 
           foreach($methods as $id => $title){
             $selected = '';
-            if($id == $webmaniabrnfe_transp_method){
+            if($id == (isset($webmaniabrnfe_transp_method) ? $webmaniabrnfe_transp_method : '')){
               $selected = 'selected';
             }
             echo '<option value="'.$id.'" '.$selected.'>'.$title.'</option>';

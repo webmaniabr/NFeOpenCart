@@ -34,25 +34,25 @@
           <div class="form-group">
             <label class="control-label col-sm-2">Consumer Key:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_consumer_key" value="<?php echo $webmaniabrnfe_consumer_key; ?>"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_consumer_key" value="<?php echo $webmaniabrnfe_consumer_key; ?>"/>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2">Consumer Secret:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_consumer_secret" value="<?php echo $webmaniabrnfe_consumer_secret; ?>"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_consumer_secret" value="<?php echo $webmaniabrnfe_consumer_secret; ?>"/>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2">Access Token:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_access_token" value="<?php echo $webmaniabrnfe_access_token; ?>"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_access_token" value="<?php echo $webmaniabrnfe_access_token; ?>"/>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2">Access Token Secret:</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="webmaniabrnfe_access_token_secret" value="<?php echo $webmaniabrnfe_access_token_secret; ?>"/>
+              <input type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o valor salvo" class="form-control" name="webmaniabrnfe_access_token_secret" value="<?php echo $webmaniabrnfe_access_token_secret; ?>"/>
             </div>
           </div>
           <div class="form-group">
@@ -220,7 +220,7 @@
 
           foreach($methods as $id => $title){
             $selected = '';
-            if($id == $webmaniabrnfe_transp_method){
+            if($id == (isset($webmaniabrnfe_transp_method) ? $webmaniabrnfe_transp_method : '')){
               $selected = 'selected';
             }
             echo '<option value="'.$id.'" '.$selected.'>'.$title.'</option>';

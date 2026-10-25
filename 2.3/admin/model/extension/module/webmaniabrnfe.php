@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../controller/extension/nfe/Security.php';
 class ModelModuleWebmaniaBRNFe extends Model {
 
 	public function getNfeInfo($order_data, $products_data){
@@ -27,7 +28,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		if(!$uniq_key){
 
-			$uniq_key = md5(uniqid(rand(), true));
+			$uniq_key = \WebmaniaNFeSecurity::randomToken();
 			$module_settings['webmaniabrnfe_uniq_get_key'] = $uniq_key;
 			$this->model_setting_setting->editSetting('webmaniabrnfe', $module_settings);
 
@@ -36,7 +37,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 		$notification_url = HTTP_CATALOG.'?retorno_nfe='.$uniq_key.'&order_id='.$order_data['order_id'];
 
 		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
-		$custom_fields_customer = @unserialize($customer_info['custom_field']);
+		$custom_fields_customer = \WebmaniaNFeSecurity::decode($customer_info['custom_field']);
 		if(!$custom_fields_customer) $custom_fields_customer = json_decode($customer_info['custom_field'], true);
 
 
