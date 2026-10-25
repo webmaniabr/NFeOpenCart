@@ -1,7 +1,7 @@
 jQuery(document).ready(function($){
   console.log('hello');
 
-  $('input[name="webmaniabrnfe_intermediador_cnpj"]').mask('99.999.999/9999-99');
+  $('input[name="webmaniabrnfe_intermediador_cnpj"]').mask('AA.AAA.AAA/AAAA-00');
 
   update_payment_desc_label = function() {
       

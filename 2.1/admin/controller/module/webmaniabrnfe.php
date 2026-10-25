@@ -1,6 +1,7 @@
 <?php
 
 class ControllerModuleWebmaniabrNfe extends Controller {
+    protected $NFeFunctions;
 
   private $error = array();
   public  $NFe = null;
@@ -36,6 +37,13 @@ class ControllerModuleWebmaniabrNfe extends Controller {
 
     // Save settings if valid
     if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
+      $saved = $this->model_setting_setting->getSetting('webmaniabrnfe');
+      foreach (array('consumer_key', 'consumer_secret', 'access_token', 'access_token_secret', 'uniq_get_key') as $field) {
+          $key = 'webmaniabrnfe_' . $field;
+          if ($field === 'uniq_get_key' || !isset($this->request->post[$key]) || $this->request->post[$key] === '' || !is_string($this->request->post[$key])) {
+              $this->request->post[$key] = isset($saved[$key]) ? $saved[$key] : '';
+          }
+      }
       $this->model_setting_setting->editSetting('webmaniabrnfe', $this->request->post);
 
       // Displays the success text on data save
@@ -149,6 +157,9 @@ class ControllerModuleWebmaniabrNfe extends Controller {
       }
     }
 
+    foreach (array('consumer_key', 'consumer_secret', 'access_token', 'access_token_secret') as $field) {
+        $data['webmaniabrnfe_' . $field] = '';
+    }
     $data['header'] = $this->load->controller('common/header');
     $data['column_left'] = $this->load->controller('common/column_left');
     $data['footer'] = $this->load->controller('common/footer');
@@ -180,8 +191,8 @@ class ControllerModuleWebmaniabrNfe extends Controller {
   public function cleanCache(){
 
     if (
-      $_GET &&
-      $_GET['route'] &&
+      isset($_GET['route']) &&
+      is_string($_GET['route']) &&
       in_array($_GET['route'], [ 
         'catalog/product/edit',
         'sale/order/info',
@@ -209,7 +220,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
           // Update cache
           $cached++;
           $id = $query->row['setting_id'];
-          $this->db->query("UPDATE " . DB_PREFIX . "setting SET value = '$cached' WHERE setting_id = '$id'");
+          $this->db->query("UPDATE " . DB_PREFIX . "setting SET value = '$cached' WHERE store_id = '$store_id' AND code = 'webmaniabr_cache'");
 
         }
 
@@ -223,6 +234,8 @@ class ControllerModuleWebmaniabrNfe extends Controller {
    * Install
    */
   public function install(){
+        if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe') && !$this->user->hasPermission('modify', 'extension/module')) { return; }
+
 
     // Install vqMod file
     $filename = 'nfe.ocmod.xml';
@@ -298,7 +311,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     // Cache
     $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE store_id = '$store_id' AND code = 'webmaniabr_cache'");
     if ($query->num_rows > 0){
-      $this->db->query("UPDATE " . DB_PREFIX . "setting SET value = '0' WHERE setting_id = '$id'");
+      $this->db->query("UPDATE " . DB_PREFIX . "setting SET value = '0' WHERE store_id = '$store_id' AND code = 'webmaniabr_cache'");
     } else {
       $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '$store_id', code = 'webmaniabr_cache', value = '0', serialized = '0'");
     }
@@ -306,6 +319,8 @@ class ControllerModuleWebmaniabrNfe extends Controller {
   }
 
   public function uninstall(){
+        if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe') && !$this->user->hasPermission('modify', 'extension/module')) { return; }
+
 
     // Delete vqMod file
     $filepath = __DIR__.'/../../../vqmod/xml/nfe.ocmod.xml';
@@ -377,10 +392,10 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     if( !is_object($this->NFe) ){
       $module_settings = $this->getModuleSettings();
       $settings = array(
-        'oauth_access_token'        => $module_settings['webmaniabrnfe_access_token'],
-        'oauth_access_token_secret' => $module_settings['webmaniabrnfe_access_token_secret'],
-        'consumer_key'              => $module_settings['webmaniabrnfe_consumer_key'],
-        'consumer_secret'           => $module_settings['webmaniabrnfe_consumer_secret'],
+        'oauth_access_token'        => isset($module_settings['webmaniabrnfe_access_token']) ? $module_settings['webmaniabrnfe_access_token'] : '',
+        'oauth_access_token_secret' => isset($module_settings['webmaniabrnfe_access_token_secret']) ? $module_settings['webmaniabrnfe_access_token_secret'] : '',
+        'consumer_key'              => isset($module_settings['webmaniabrnfe_consumer_key']) ? $module_settings['webmaniabrnfe_consumer_key'] : '',
+        'consumer_secret'           => isset($module_settings['webmaniabrnfe_consumer_secret']) ? $module_settings['webmaniabrnfe_consumer_secret'] : '',
       );
       $this->NFe = new NFe($settings);
     }
@@ -390,10 +405,12 @@ class ControllerModuleWebmaniabrNfe extends Controller {
   }
 
   public function updateNFe(){
+        if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe')) { return; }
+
 
     if( isset($this->request->get['atualizar']) && isset($this->request->get['chave_acesso']) ){
       $chave_acesso =  $this->request->get['chave_acesso'];
-      $order_id = (int) $this->request->get['order_id'];
+      $order_id = isset($this->request->get['order_id']) ? (int) $this->request->get['order_id'] : 0;
 
       $response = $this->getNFe()->consultaNotaFiscal( $chave_acesso );
 
@@ -407,10 +424,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
         $new_status = $response->status;
         $order_table = (DB_PREFIX) ? "order" : "`order`";
         $query_nfe_data = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
-        $nfe_data = @unserialize($query_nfe_data->rows[0]['nfe_info']);
-        if (!$nfe_data) {
-          $nfe_data = @unserialize(utf8_decode(base64_decode($query_nfe_data->rows[0]['nfe_info'])));
-        }
+        $nfe_data = \WebmaniaNFeSecurity::invoices(isset($query_nfe_data->rows[0]['nfe_info']) ? $query_nfe_data->rows[0]['nfe_info'] : '');
 
         foreach($nfe_data as &$order_nfe){
           if($order_nfe['chave_acesso'] == $chave_acesso){
@@ -418,7 +432,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
           }
         }
 
-        $nfe_data_str = base64_encode(utf8_encode(serialize($nfe_data)));
+        $nfe_data_str = base64_encode(\WebmaniaNFeSecurity::legacyEncode(serialize($nfe_data)));
 
         $query = $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_info = '$nfe_data_str' WHERE order_id = $order_id");
         $this->session->data['success'] = '<p><i class="fa fa-check-circle"></i> NF-e atualizada com sucesso';
@@ -434,8 +448,10 @@ class ControllerModuleWebmaniabrNfe extends Controller {
 
   //Get order and customer info from Model and emit
   public function emitirNfe(){
+        if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe')) { return; }
 
-    if (isset($this->request->post['selected'])) {
+
+    if (isset($this->request->post['selected']) && is_array($this->request->post['selected'])) {
       $this->load->model('sale/order');
       $this->load->model('module/webmaniabrnfe');
       $success = '';
@@ -444,7 +460,14 @@ class ControllerModuleWebmaniabrNfe extends Controller {
 
 
       foreach ($this->request->post['selected'] as $order_id) {
+        if (!is_scalar($order_id) || !ctype_digit((string) $order_id)) { continue; }
+        $order_id = (int) $order_id;
         $order_info = $this->model_sale_order->getOrder($order_id);
+        if (!$order_info) {
+          // Unknown/deleted order: report it instead of sending an empty NF-e request.
+          $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida';
+          continue;
+        }
         $products_info = $this->model_sale_order->getOrderProducts($order_id);
         $data = $this->model_module_webmaniabrnfe->getNfeInfo($order_info, $products_info);
 
@@ -453,8 +476,8 @@ class ControllerModuleWebmaniabrNfe extends Controller {
         if (isset($response->error) || $response->status == 'reprovado'){
           if(isset($response->error)){
             $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida ( '.$response->error.' )';
-          }elseif(isset($response->log->aProt[0]->xMotivo)){
-            $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida ( '.$response->log->aProt[0]->xMotivo.' )';
+          }elseif(isset($response->log->aProt[0]->xMotivo) && is_scalar($response->log->aProt[0]->xMotivo)){
+            $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida ( '.htmlspecialchars((string) $response->log->aProt[0]->xMotivo, ENT_QUOTES, 'UTF-8').' )';
           }else{
             $error .= '<p><i class="fa fa-close"></i> NF-e do pedido #'.$order_id.' não emitida';
           }
@@ -462,10 +485,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
 
           $order_table = (DB_PREFIX) ? "order" : "`order`";
           $previous_info_query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
-          $previous_info = @unserialize($previous_info_query->rows[0]['nfe_info']);
-          if (!$previous_info) {
-            $previous_info = @unserialize(utf8_decode(base64_decode($previous_info_query->rows[0]['nfe_info'])));
-          }
+          $previous_info = \WebmaniaNFeSecurity::invoices(isset($previous_info_query->rows[0]['nfe_info']) ? $previous_info_query->rows[0]['nfe_info'] : '');
           if(!$previous_info){
             $previous_info = array();
           }
@@ -481,13 +501,13 @@ class ControllerModuleWebmaniabrNfe extends Controller {
             'url_danfe'    => (string) $response->danfe,
             'url_danfe_simples'    => (string) $response->danfe_simples,
             'url_danfe_etiqueta'    => (string) $response->danfe_etiqueta,
-            'documento'    => (string) ($data['cliente']['cpf'] ?? $data['cliente']['cnpj'] ?? ''),
+            'documento'    => (string) (isset($data['cliente']['cpf']) ? $data['cliente']['cpf'] : (isset($data['cliente']['cnpj']) ? $data['cliente']['cnpj'] : '')),
             'data'         => date('d/m/Y'),
           );
 
           $previous_info[] = $order_nfe_info;
 
-          $nfe_info_str = base64_encode(utf8_encode(serialize($previous_info)));
+          $nfe_info_str = base64_encode(\WebmaniaNFeSecurity::legacyEncode(serialize($previous_info)));
 
           $query = $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");
           $query = $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET status_nfe = '1' WHERE order_id = $order_id");
@@ -504,7 +524,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
         $this->session->data['success'] = $success;
       }
 
-      $this->response->redirect($this->url->link('sale/order', 'token=' . $this->session->data['token'] . $url, 'SSL'));
+      $this->response->redirect($this->url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL'));
     }
 
   }
@@ -611,49 +631,38 @@ class ControllerModuleWebmaniabrNfe extends Controller {
   }
 
   public function save_order_transporte_info($request){
+        if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe')) { return; }
+        if (!is_array($request) || empty($request['nfe-save-transporte-info']) || empty($request['order_id']) ||
+            !is_scalar($request['order_id']) || !ctype_digit((string) $request['order_id'])) { return; }
+        $fields = array('modalidade_frete', 'volume', 'especie', 'peso_bruto', 'peso_liquido');
+        $values = array();
+        foreach ($fields as $field) {
+            $key = 'webmaniabrnfe_' . $field;
+            $value = isset($request[$key]) && is_scalar($request[$key]) ? (string) $request[$key] : '';
+            $values[] = 'nfe_transporte_' . $field . " = '" . $this->db->escape($value) . "'";
+        }
+        $this->db->query('UPDATE `' . DB_PREFIX . 'order` SET ' . implode(', ', $values) . ' WHERE order_id = ' . (int) $request['order_id']);
 
-    if(isset($request['nfe-save-transporte-info']) && isset($request['order_id'])){
-
-      $order_id = $request['order_id'];
-
-			$modalidade_frete = $request['webmaniabrnfe_modalidade_frete'];
-			$volume           = $request['webmaniabrnfe_volume'];
-			$especie          = $request['webmaniabrnfe_especie'];
-			$peso_bruto       = $request['webmaniabrnfe_peso_bruto'];
-			$peso_liquido     = $request['webmaniabrnfe_peso_liquido'];
-
-			try{
-                $order_table = (DB_PREFIX) ? "order" : "`order`";
-				@$this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_transporte_modalidade_frete = '$modalidade_frete', nfe_transporte_volume = '$volume', nfe_transporte_especie = '$especie', nfe_transporte_peso_bruto = '$peso_bruto', nfe_transporte_peso_liquido = '$peso_liquido' WHERE order_id = '$order_id'");
-			}catch(Exception $e){}
-
-		}
-
-  }
+}
 
   public function get_order_transporte_info( $order_id ){
 
-    if(!$order_id) return array();
-
-    $data = array();
+    // Callers pass the raw order_id from the order-info URL; never interpolate it unconverted.
+    $order_id = is_scalar($order_id) ? (int) $order_id : 0;
+    $data = array('nfe_volume' => '', 'nfe_especie' => '', 'nfe_peso_bruto' => '', 'nfe_peso_liquido' => '', 'modalidade_frete' => '');
+    if(!$order_id) return $data;
 
         $order_table = (DB_PREFIX) ? "order" : "`order`";
-		@$query_transporte_info = $this->db->query("SELECT nfe_transporte_modalidade_frete, nfe_transporte_volume, nfe_transporte_especie, nfe_transporte_peso_bruto, nfe_transporte_peso_liquido FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
+		@$query_transporte_info = $this->db->query("SELECT nfe_transporte_modalidade_frete, nfe_transporte_volume, nfe_transporte_especie, nfe_transporte_peso_bruto, nfe_transporte_peso_liquido FROM " . DB_PREFIX . "$order_table WHERE order_id = " . $order_id);
 
     if($query_transporte_info){
 
       $transporte_info = $query_transporte_info->row;
-      $data['nfe_volume']       = $transporte_info['nfe_transporte_volume'];
-  		$data['nfe_especie']      = $transporte_info['nfe_transporte_especie'];
-  		$data['nfe_peso_bruto']   = $transporte_info['nfe_transporte_peso_bruto'];
-  		$data['nfe_peso_liquido'] = $transporte_info['nfe_transporte_peso_liquido'];
-      $data['modalidade_frete'] = $transporte_info['nfe_transporte_modalidade_frete'];
-    }else{
-      $data['nfe_volume']           = '';
-  		$data['nfe_especie']          = '';
-  		$data['nfe_peso_bruto']       = '';
-  		$data['nfe_peso_liquido']     = '';
-      $data['nfe_modalidade_frete'] = '';
+      $data['nfe_volume']       = isset($transporte_info['nfe_transporte_volume']) ? $transporte_info['nfe_transporte_volume'] : '';
+  		$data['nfe_especie']      = isset($transporte_info['nfe_transporte_especie']) ? $transporte_info['nfe_transporte_especie'] : '';
+  		$data['nfe_peso_bruto']   = isset($transporte_info['nfe_transporte_peso_bruto']) ? $transporte_info['nfe_transporte_peso_bruto'] : '';
+  		$data['nfe_peso_liquido'] = isset($transporte_info['nfe_transporte_peso_liquido']) ? $transporte_info['nfe_transporte_peso_liquido'] : '';
+      $data['modalidade_frete'] = isset($transporte_info['nfe_transporte_modalidade_frete']) ? $transporte_info['nfe_transporte_modalidade_frete'] : '';
     }
 
 
@@ -664,11 +673,13 @@ class ControllerModuleWebmaniabrNfe extends Controller {
   }
 
   public function imprimirDanfe() {
+        if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe')) { return; }
+
 
     $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
     $url_redirect = $url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL');
 
-    if (isset($this->request->post['selected'])) {
+    if (isset($this->request->post['selected']) && is_array($this->request->post['selected'])) {
 
       $this->load->model('sale/order');
       $this->load->model('module/webmaniabrnfe');
@@ -690,11 +701,13 @@ class ControllerModuleWebmaniabrNfe extends Controller {
   }
 
   public function imprimirDanfeEtiqueta() {
+        if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe')) { return; }
+
 
     $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
     $url_redirect = $url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL');
 
-    if (isset($this->request->post['selected'])) {
+    if (isset($this->request->post['selected']) && is_array($this->request->post['selected'])) {
 
       $this->load->model('sale/order');
       $this->load->model('module/webmaniabrnfe');
@@ -716,11 +729,13 @@ class ControllerModuleWebmaniabrNfe extends Controller {
   }
 
   public function imprimirDanfeSimples() {
+        if (!$this->user->hasPermission('modify', 'module/webmaniabrnfe')) { return; }
+
 
     $url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
     $url_redirect = $url->link('sale/order', 'token=' . $this->session->data['token'], 'SSL');
 
-    if (isset($this->request->post['selected'])) {
+    if (isset($this->request->post['selected']) && is_array($this->request->post['selected'])) {
 
       $this->load->model('sale/order');
       $this->load->model('module/webmaniabrnfe');
@@ -747,13 +762,11 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     $links = array();
 
     foreach ($ids as $order_id) {
+        $order_id = (int) $order_id;
 
       $query = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
       if(isset($query->rows[0]['nfe_info'])){
-        $nfe_info = @unserialize($query->rows[0]['nfe_info']);
-        if (!$nfe_info) {
-          $nfe_info = @unserialize(utf8_decode(base64_decode($query->rows[0]['nfe_info'])));
-        }
+        $nfe_info = \WebmaniaNFeSecurity::invoices(isset($query->rows[0]['nfe_info']) ? $query->rows[0]['nfe_info'] : '');
         if (!$nfe_info) {
           $nfe_info = array();
         }
@@ -772,7 +785,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
           $url = ($data['url_danfe_simples']) ? $data['url_danfe_simples'] : str_replace('/danfe/', '/danfe/simples/', $data['url_danfe']);
         }
         else if ($type == 'etiqueta') {
-          $url = ($danfe['url_danfe_etiqueta']) ? $data['url_danfe_etiqueta'] : str_replace('/danfe/', '/danfe/etiqueta/', $data['url_danfe']);
+          $url = ($data['url_danfe_etiqueta']) ? $data['url_danfe_etiqueta'] : str_replace('/danfe/', '/danfe/etiqueta/', $data['url_danfe']);
         }
 
         $links[] = array('chave' => $data['chave_acesso'], 'url' => $url);
@@ -785,38 +798,30 @@ class ControllerModuleWebmaniabrNfe extends Controller {
 
   }
 
-  public function createPdf($links) {
+  protected function createPdf($links) {
+        $directory = \WebmaniaNFeSecurity::privateDirectory();
+        $pdf = new \PDFMerger();
+        $sources = array();
+        foreach ($links as $link) {
+            if (!is_array($link) || !isset($link['url'])) { continue; }
+            $content = $this->getNFe()->curl_get_file_contents($link['url']);
+            if ($content === false) { continue; }
+            $source = $directory . \WebmaniaNFeSecurity::randomToken() . '.pdf';
+            if (file_put_contents($source, $content) !== false) { $sources[] = $source; $pdf->addPDF($source, 'all'); }
+        }
+        $filename = \WebmaniaNFeSecurity::randomToken() . '.pdf';
+        $path = $directory . $filename;
+        $result = false;
+        try { if ($sources) { $result = $pdf->merge('file', $path); } }
+        catch (\Exception $e) { $result = false; }
+        catch (\Throwable $e) { $result = false; }
+        foreach ($sources as $source) { if (is_file($source)) { unlink($source); } }
+        if (!$result) { if (is_file($path)) { unlink($path); } rmdir($directory); }
+        return array('result' => $result, 'file' => $filename, 'path' => $path);
 
-    $directory = __DIR__ . '/../pdf/pdf_files/';
-    if (!file_exists($directory)) {
-      mkdir($directory);
-    }
+}
 
-    $pdf = new PDFMerger();
-
-    foreach($links as $link) {
-
-      $fileContent = $this->NFe->curl_get_file_contents($link['url']);
-      if ($fileContent) {
-        file_put_contents("{$directory}/{$link['chave']}.pdf", $fileContent);
-        $pdf->addPDF("{$directory}/{$link['chave']}.pdf", 'all');
-      }
-
-    }
-
-    $filename = time()."-".random_int(1, 10000000000);
-    $path = "{$directory}/{$filename}.pdf";
-		$result = $pdf->merge('file', $path);
-
-    foreach($links as $link) {
-      if(file_exists("{$directory}/{$link['chave']}.pdf")) unlink("{$directory}/{$link['chave']}.pdf");
-    }
-
-    return array("result" => $result, "file" => "{$filename}.pdf", "path" => $path);
-
-  }
-
-  public function showDanfe($path, $file){
+  protected function showDanfe($path, $file){
 
     header('Content-Type: application/pdf');
     header("Content-Disposition: inline; filename=$file");
@@ -824,7 +829,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     header('Pragma: no-cache');
     header('Expires: 0');
 
-    ob_clean();
+    if (ob_get_level()) { ob_clean(); }
     flush();
     $handle = fopen($path, "rb");
     while (!feof($handle)) {
@@ -834,6 +839,7 @@ class ControllerModuleWebmaniabrNfe extends Controller {
     fclose($handle);
 
     unlink($path);
+    rmdir(dirname($path));
   }
 
   public function createSecureTokenDFe( $data ){

@@ -1,6 +1,7 @@
 <?php
 
 class ControllerModuleWebmaniaBRNFe extends Controller {
+    protected $NFeFunctions;
 
   function __construct( $registry ){
 
@@ -35,43 +36,39 @@ class ControllerModuleWebmaniaBRNFe extends Controller {
   }
 
   function listen_notification(){
-
-    if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['retorno_nfe']) && isset($_GET['order_id'])){
-
-      $this->load->model('setting/setting');
-      $module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
-
-      if($_GET['retorno_nfe'] == $module_settings['webmaniabrnfe_uniq_get_key']){
-
-        $order_id = (int)$_GET['order_id'];
-        $order_table = (DB_PREFIX) ? "order" : "`order`";
-        $raw_nfe_info = $this->db->query("SELECT nfe_info FROM " . DB_PREFIX . "$order_table WHERE order_id = $order_id");
-        $nfe_info = @unserialize($raw_nfe_info->row['nfe_info']);
-        if (!$nfe_info) {
-          $nfe_info = @unserialize(utf8_decode(base64_decode($raw_nfe_info->row['nfe_info'])));
+        $server = $this->request->server;
+        $query = $this->request->get;
+        $post = $this->request->post;
+        if (!isset($server['REQUEST_METHOD']) || $server['REQUEST_METHOD'] !== 'POST' ||
+            !isset($query['retorno_nfe'], $query['order_id'], $post['uuid']) ||
+            !is_scalar($query['order_id']) || !ctype_digit((string) $query['order_id']) || (int) $query['order_id'] < 1 ||
+            !\WebmaniaNFeSecurity::validUuid($post['uuid'])) { return; }
+        $this->load->model('setting/setting');
+        $settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
+        $secret = isset($settings['webmaniabrnfe_uniq_get_key']) ? $settings['webmaniabrnfe_uniq_get_key'] : '';
+        if (!\WebmaniaNFeSecurity::equals($secret, $query['retorno_nfe'])) { return; }
+        require_once __DIR__ . '/../../../admin/controller/nfe/NFe.php';
+        $order_id = (int) $query['order_id'];
+        $table = '`' . DB_PREFIX . 'order`';
+        $result = $this->db->query('SELECT nfe_info FROM ' . $table . ' WHERE order_id = ' . $order_id);
+        $invoices = \WebmaniaNFeSecurity::invoices(isset($result->row['nfe_info']) ? $result->row['nfe_info'] : '');
+        foreach ($invoices as $key => $invoice) {
+            if (!is_array($invoice) || !isset($invoice['uuid']) || $invoice['uuid'] !== $post['uuid']) { continue; }
+            $api = new \NFe(array(
+                'consumer_key' => isset($settings['webmaniabrnfe_consumer_key']) ? $settings['webmaniabrnfe_consumer_key'] : '',
+                'consumer_secret' => isset($settings['webmaniabrnfe_consumer_secret']) ? $settings['webmaniabrnfe_consumer_secret'] : '',
+                'oauth_access_token' => isset($settings['webmaniabrnfe_access_token']) ? $settings['webmaniabrnfe_access_token'] : '',
+                'oauth_access_token_secret' => isset($settings['webmaniabrnfe_access_token_secret']) ? $settings['webmaniabrnfe_access_token_secret'] : ''));
+            $response = $api->consultaNotaFiscal($post['uuid']);
+            if (isset($response->error) || !isset($response->uuid) || $response->uuid !== $post['uuid'] ||
+                (isset($response->ID) && (!is_scalar($response->ID) || (string) $response->ID !== (string) $order_id))) { return; }
+            $invoices[$key]['status'] = $response->status;
+            $encoded = base64_encode(\WebmaniaNFeSecurity::legacyEncode(serialize($invoices)));
+            $this->db->query('UPDATE ' . $table . " SET nfe_info = '" . $this->db->escape($encoded) . "' WHERE order_id = " . $order_id);
+            return;
         }
-        if(!$nfe_info) $nfe_info = array();
 
-        foreach($nfe_info as $key => $nfe){
-
-          $uuid = $nfe['uuid'];
-          $current_status = $nfe['status'];
-          $received_status = $_POST['status'];
-
-          if($uuid == $_POST['uuid'] && $current_status != $received_status){
-            $nfe_info[$key]['status'] = $received_status;
-            $nfe_info_str = base64_encode(utf8_encode(serialize($nfe_info)));
-            $this->db->query("UPDATE " . DB_PREFIX . "$order_table SET nfe_info = '$nfe_info_str' WHERE order_id = $order_id");
-            break;
-          }
-
-        }
-
-      }
-
-    }
-
-  }
+}
 
 }
 ?>

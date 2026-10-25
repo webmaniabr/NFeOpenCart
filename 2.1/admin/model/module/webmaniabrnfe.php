@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../controller/nfe/Security.php';
 class ModelModuleWebmaniaBRNFe extends Model {
 
 	public function getNfeInfo($order_data, $products_data){
@@ -20,29 +21,30 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 		$order_totals = $this->model_sale_order->getOrderTotals($order_data['order_id']);
 		$module_settings = $this->model_setting_setting->getSetting('webmaniabrnfe');
-		$uniq_key = @$module_settings['webmaniabrnfe_uniq_get_key'];
-		$envio_email = @$module_settings['webmaniabrnfe_envio_email'];
+		$uniq_key = (isset($module_settings['webmaniabrnfe_uniq_get_key']) ? $module_settings['webmaniabrnfe_uniq_get_key'] : null);
+		$envio_email = (isset($module_settings['webmaniabrnfe_envio_email']) ? $module_settings['webmaniabrnfe_envio_email'] : null);
 
 		if(!$envio_email) $envio_email = 'on';
 
 		if(!$uniq_key){
 
-			$uniq_key = md5(uniqid(rand(), true));
+			$uniq_key = \WebmaniaNFeSecurity::randomToken();
 			$module_settings['webmaniabrnfe_uniq_get_key'] = $uniq_key;
 			$this->model_setting_setting->editSetting('webmaniabrnfe', $module_settings);
 
 		}
 
+		// Settings saved by older releases may lack newer keys; read them as '' instead of raising notices.
+		$module_settings += array_fill_keys(array('webmaniabrnfe_cest_code', 'webmaniabrnfe_cons_inf', 'webmaniabrnfe_ean_barcode', 'webmaniabrnfe_ncm_code', 'webmaniabrnfe_product_source', 'webmaniabrnfe_tax_class', 'webmaniabrnfe_transp_address', 'webmaniabrnfe_transp_cep', 'webmaniabrnfe_transp_city', 'webmaniabrnfe_transp_cnpj', 'webmaniabrnfe_transp_ie', 'webmaniabrnfe_transp_include', 'webmaniabrnfe_transp_method', 'webmaniabrnfe_transp_rs', 'webmaniabrnfe_transp_uf'), '');
+
 		$notification_url = HTTP_CATALOG.'?retorno_nfe='.$uniq_key.'&order_id='.$order_data['order_id'];
 
 		// Custom fields
 		$customer_info = $this->model_customer_customer->getCustomer($order_data['customer_id']);
-		$custom_fields_customer = @unserialize($customer_info['custom_field']);
-		if (!$custom_fields_customer){
-			$custom_fields_customer = json_decode($customer_info['custom_field'], true);
-		}
+		$custom_fields_customer = \WebmaniaNFeSecurity::decode(isset($customer_info['custom_field']) ? $customer_info['custom_field'] : '');
 
 		$custom_fields_ids = $this->load->controller('module/webmaniabrnfe/getCustomFieldsIds');
+		$tipo_pessoa = '';
 		$documento = $NFeFunctions->get_value_from_fields( 'tipo_pessoa', $custom_fields_ids, $custom_fields_customer );
 
 		if($documento == $NFeFunctions->get_value_from_fields( 'pessoa_fisica', $custom_fields_ids, $custom_fields_customer )){
@@ -55,8 +57,10 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			$razao_social = $NFeFunctions->get_value_from_fields( 'razao_social', $custom_fields_ids, $custom_fields_customer );
 		}
 
-		$address_number = $order_data['shipping_custom_field'][$NFeFunctions->get_value_from_fields( 'numero', $custom_fields_ids, $custom_fields_customer )];
-		$complemento = $order_data['shipping_custom_field'][$NFeFunctions->get_value_from_fields( 'complemento', $custom_fields_ids, $custom_fields_customer )];
+		$address_number_field = $NFeFunctions->get_value_from_fields( 'numero', $custom_fields_ids, $custom_fields_customer );
+		$address_number = isset($order_data['shipping_custom_field'][$address_number_field]) ? $order_data['shipping_custom_field'][$address_number_field] : '';
+		$complemento_field = $NFeFunctions->get_value_from_fields( 'complemento', $custom_fields_ids, $custom_fields_customer );
+		$complemento = isset($order_data['shipping_custom_field'][$complemento_field]) ? $order_data['shipping_custom_field'][$complemento_field] : '';
 
 		$shipping_total = 0;
 		foreach($order_totals as $order_total){
@@ -74,7 +78,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 				$pos2 = strpos( $title, ')' );
 				$coupon_code = substr($order_total['title'], $pos1+1, ($pos2-$pos1)-1);
 				$coupon = $this->model_marketing_coupon->getCouponByCode($coupon_code);
-				if($coupon['type'] == 'P'){
+				if(isset($coupon['type']) && $coupon['type'] == 'P'){
 					$coupons[] = $coupon['discount'];
 				}
 			}
@@ -94,11 +98,11 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			'url_notificacao' => $notification_url,
 			'origem' => 'opencart_2.1',
 			'operacao' => 1, // Tipo de Operação da Nota Fiscal
-			'natureza_operacao' => @$module_settings['webmaniabrnfe_operation_nature'], // Natureza da Operação
+			'natureza_operacao' => (isset($module_settings['webmaniabrnfe_operation_nature']) ? $module_settings['webmaniabrnfe_operation_nature'] : null), // Natureza da Operação
 			'modelo' => 1, // Modelo da Nota Fiscal (NF-e ou NFC-e)
 			'emissao' => 1, // Tipo de Emissão da NF-e
 			'finalidade' => 1, // Finalidade de emissão da Nota Fiscal
-			'ambiente' => @(int)$module_settings['webmaniabrnfe_sefaz_env'], // Identificação do Ambiente do Sefaz //1 for production, 2 for development
+			'ambiente' => (isset($module_settings['webmaniabrnfe_sefaz_env']) ? (int)$module_settings['webmaniabrnfe_sefaz_env'] : 0), // Identificação do Ambiente do Sefaz //1 for production, 2 for development
 		);
 
 		$data['pedido'] = array(
@@ -111,7 +115,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 		);
 
 		//Informações COmplementares ao Fisco
-		$fiscoinf = @$module_settings['webmaniabrnfe_fisco_inf'];
+		$fiscoinf = (isset($module_settings['webmaniabrnfe_fisco_inf']) ? $module_settings['webmaniabrnfe_fisco_inf'] : null);
 
 		if(!empty($fiscoinf) && strlen($fiscoinf) <= 2000){
 			$data['pedido']['informacoes_fisco'] = $fiscoinf;
@@ -130,7 +134,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			$product_id = $product['product_id'];
 
 			$ignorar_nfe= $this->db->query('SELECT ignorar_nfe FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
-			if($ignorar_nfe->row['ignorar_nfe'] == 1){
+			if(isset($ignorar_nfe->row['ignorar_nfe']) && $ignorar_nfe->row['ignorar_nfe'] == 1){
 
 				$data['pedido']['total'] -= $product['total'];
 
@@ -148,20 +152,20 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			* Specific product values
 			*/
 			$codigo_ean_row = $this->db->query('SELECT ean_barcode FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
-			$codigo_ean = $codigo_ean_row->row['ean_barcode'];
+			$codigo_ean = isset($codigo_ean_row->row['ean_barcode']) ? $codigo_ean_row->row['ean_barcode'] : '';
 
 			$codigo_ncm_row = $this->db->query('SELECT ncm_code FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
-			$codigo_ncm = $codigo_ncm_row->row['ncm_code'];
+			$codigo_ncm = isset($codigo_ncm_row->row['ncm_code']) ? $codigo_ncm_row->row['ncm_code'] : '';
 
 			$codigo_cest_row = $this->db->query('SELECT cest_code FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
-			$codigo_cest = $codigo_cest_row->row['cest_code'];
+			$codigo_cest = isset($codigo_cest_row->row['cest_code']) ? $codigo_cest_row->row['cest_code'] : '';
 
 			$origem_row = $this->db->query('SELECT product_source FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
-			$origem = $origem_row->row['product_source'];
+			$origem = isset($origem_row->row['product_source']) ? $origem_row->row['product_source'] : '';
 
 			$imposto_row = $this->db->query('SELECT classe_imposto FROM '. DB_PREFIX .'product WHERE product_id = ' . (int)$product_id);
-			$imposto = $imposto_row->row['classe_imposto'];
-			$peso = $product_info['weight'];
+			$imposto = isset($imposto_row->row['classe_imposto']) ? $imposto_row->row['classe_imposto'] : '';
+			$peso = isset($product_info['weight']) ? $product_info['weight'] : 0;
 
 			$kg = explode('.', $peso);
 			if (strlen($kg[0]) >= 3) {
@@ -183,7 +187,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 
 					try{
 						$ncm_row = $this->db->query("SELECT category_ncm FROM " . DB_PREFIX . "category WHERE category_id = '" . (int)$cat_id . "'");
-						$codigo_ncm = $ncm_row->row['category_ncm'];
+						$codigo_ncm = isset($ncm_row->row['category_ncm']) ? $ncm_row->row['category_ncm'] : '';
 					}catch(Exception $e){}
 
 						if($codigo_ncm) break;
@@ -199,7 +203,7 @@ class ModelModuleWebmaniaBRNFe extends Model {
 			if (!$imposto) $imposto = $module_settings['webmaniabrnfe_tax_class'];
 			$data['produtos'][] = array(
 				'nome' => $product['name'], // Nome do produto
-				'sku' => $product_info['sku'], // Código identificador - SKU
+				'sku' => isset($product_info['sku']) ? $product_info['sku'] : '', // Código identificador - SKU
 				'ean' => $codigo_ean, // Código EAN
 				'ncm' => $codigo_ncm, // Código NCM
 				'cest' => $codigo_cest, // Código CEST
@@ -271,13 +275,13 @@ class ModelModuleWebmaniaBRNFe extends Model {
 				);
 
 				foreach($transporte_keys as $array_key => $api_key){
-					$value = $transporte_info[$array_key];
+					$value = isset($transporte_info[$array_key]) ? $transporte_info[$array_key] : '';
 					if($value){
 						$data['transporte'][$api_key] = $value;
 					}
 				}
 
-				if($transporte_info['modalidade_frete']){
+				if(!empty($transporte_info['modalidade_frete'])){
 					$data['pedido']['modalidade_frete'] = $transporte_info['modalidade_frete'];
 				}
 

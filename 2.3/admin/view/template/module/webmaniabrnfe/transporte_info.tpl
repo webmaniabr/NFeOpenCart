@@ -5,7 +5,7 @@
   <div class="panel-body">
     <p>Informações complementares na emissão de Nota Fiscal para pedidos enviados via Transportadora</p>
     <?php $action = $_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING']; ?>
-    <form class="form-horizontal" action="<?php echo $action ?>" method="POST">
+    <form class="form-horizontal" action="<?php echo htmlspecialchars($action, ENT_QUOTES, 'UTF-8'); ?>" method="POST">
       <div class="form-group">
         <label class="control-label col-sm-1">Modalidade do frete</label>
         <div class="col-sm-10">

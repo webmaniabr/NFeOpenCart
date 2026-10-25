@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/Security.php';
 
 class NFeFunctions {
 
@@ -33,13 +34,10 @@ class NFeFunctions {
 	}
 
 	function cnpj( $string ){
-
-		if (!$string) return;
-		$string = self::clear( $string );
-		$string = self::mask($string,'##.###.###/####-##');
-		return $string;
-
-	}
+        $string = \WebmaniaNFeSecurity::normalizeDocument($string);
+        if (!preg_match('/\A[A-Z0-9]{12}[0-9]{2}\z/', $string)) { return; }
+        return self::mask($string, '##.###.###/####-##');
+    }
 
 	function cep( $string ){
 
@@ -51,6 +49,8 @@ class NFeFunctions {
 	}
 
 	function clear( $string ) {
+        $string = is_scalar($string) ? (string) $string : '';
+
 
         $string = str_replace( array(',', '-', '!', '.', '/', '?', '(', ')', ' ', '$', 'R$', '€'), '', $string );
         return $string;
@@ -58,6 +58,8 @@ class NFeFunctions {
 	}
 
 	function mask($val, $mask) {
+        $val = is_scalar($val) ? (string) $val : '';
+
 	   $maskared = '';
 	   $k = 0;
 	   for($i = 0; $i<=strlen($mask)-1; $i++){
@@ -73,8 +75,12 @@ class NFeFunctions {
 	}
 
     function is_cpf($cpf = null){
+        if (is_array($cpf)) { $cpf = isset($cpf[0]) && is_scalar($cpf[0]) ? $cpf[0] : ''; }
+        if (!is_scalar($cpf)) { return false; }
+        $cpf = (string) $cpf;
 
-        if(is_array($cpf)) $cpf = $cpf[0];
+
+        
         $cpf = preg_replace( '/[^0-9]/', '', $cpf );
 
         if ( 11 != strlen( $cpf ) || preg_match( '/^([0-9])\1+$/', $cpf ) ) {
@@ -99,26 +105,8 @@ class NFeFunctions {
     }
 
     function is_cnpj($cnpj = null) {
-
-        if(is_array($cnpj)) $cnpj = $cnpj[0];
-        $cnpj = sprintf( '%014s', preg_replace( '{\D}', '', $cnpj ) );
-
-        if ( 14 != ( strlen( $cnpj ) ) || ( 0 == intval( substr( $cnpj, -4 ) ) ) ) {
-          return false;
-        }
-
-        for ( $t = 11; $t < 13; ) {
-          for ( $d = 0, $p = 2, $c = $t; $c >= 0; $c--, ( $p < 9 ) ? $p++ : $p = 2 ) {
-            $d += $cnpj[ $c ] * $p;
-          }
-
-          if ( $cnpj[ ++$t ] != ( $d = ( ( 10 * $d ) % 11 ) % 10 ) ) {
-            return false;
-          }
-        }
-
-        return true;
-
+        if (is_array($cnpj)) { $cnpj = isset($cnpj[0]) && is_scalar($cnpj[0]) ? $cnpj[0] : ''; }
+        return \WebmaniaNFeSecurity::validCnpj($cnpj);
     }
 
     function getCustomFieldsIds( $class, $amb = null ){
@@ -127,7 +115,7 @@ class NFeFunctions {
       $custom_fields = array();
       $saved_fields = $class->db->query("SELECT value FROM ".DB_PREFIX."setting WHERE `code` = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
       if ($saved_fields->num_rows == 0) $saved_fields = array();
-      else { $saved_fields = $saved_fields->row['value']; $saved_fields = unserialize($saved_fields); }
+      else { $saved_fields = $saved_fields->row['value']; $saved_fields = \WebmaniaNFeSecurity::decode($saved_fields); }
       $query = $class->db->query("SELECT a.custom_field_id, a.name, b.sort_order, b.location FROM ".DB_PREFIX."custom_field_description AS a INNER JOIN ".DB_PREFIX."custom_field AS b ON a.custom_field_id = b.custom_field_id WHERE a.language_id = '1' ORDER by b.sort_order ASC");
       $new_position_account = 6;
       $new_position_address = 4;
@@ -149,13 +137,13 @@ class NFeFunctions {
 
                   $id_pessoa_fisica = $class->db->query("SELECT custom_field_value_id FROM " . DB_PREFIX . "custom_field_value_description WHERE name = 'Pessoa Física'");
                   $id_pessoa_juridica = $class->db->query("SELECT custom_field_value_id FROM " . DB_PREFIX . "custom_field_value_description WHERE name = 'Pessoa Jurídica'");
-                  $id_pessoa_fisica = $id_pessoa_fisica->row['custom_field_value_id'];
-                  $id_pessoa_juridica = $id_pessoa_juridica->row['custom_field_value_id'];
+                  $id_pessoa_fisica = isset($id_pessoa_fisica->row['custom_field_value_id']) ? $id_pessoa_fisica->row['custom_field_value_id'] : null;
+                  $id_pessoa_juridica = isset($id_pessoa_juridica->row['custom_field_value_id']) ? $id_pessoa_juridica->row['custom_field_value_id'] : null;
 
                   if ($id_pessoa_fisica) $pessoa_fisica = true;
                   if ($id_pessoa_juridica) $pessoa_juridica = true;
 
-                  if (!$id_pessoa_fisica || !$id_pessoa_juridica) $class->session->data['error_warning'] == 'Por favor, configure corretamente o campo Tipo de Pessoa possuindo as opções de escolha de Pessoa Física e Pessoa Jurídica';
+                  if (!$id_pessoa_fisica || !$id_pessoa_juridica) $class->session->data['error_warning'] = 'Por favor, configure corretamente o campo Tipo de Pessoa possuindo as opções de escolha de Pessoa Física e Pessoa Jurídica';
 
                   $custom_fields['pessoa_fisica'] = $id_pessoa_fisica;
                   $custom_fields['pessoa_juridica'] = $id_pessoa_juridica;
@@ -241,9 +229,9 @@ class NFeFunctions {
               $id_tipo_pessoa = $class->db->query("SELECT custom_field_id FROM " . DB_PREFIX . "custom_field_description WHERE name LIKE '%Tipo de Pessoa%'");
               $id_pessoa_fisica = $class->db->query("SELECT custom_field_value_id FROM " . DB_PREFIX . "custom_field_value_description WHERE name = 'Pessoa Física'");
               $id_pessoa_juridica = $class->db->query("SELECT custom_field_value_id FROM " . DB_PREFIX . "custom_field_value_description WHERE name = 'Pessoa Jurídica'");
-              $id_tipo_pessoa = $id_tipo_pessoa->row['custom_field_id'];
-              $id_pessoa_fisica = $id_pessoa_fisica->row['custom_field_value_id'];
-              $id_pessoa_juridica = $id_pessoa_juridica->row['custom_field_value_id'];
+              $id_tipo_pessoa = isset($id_tipo_pessoa->row['custom_field_id']) ? $id_tipo_pessoa->row['custom_field_id'] : null;
+              $id_pessoa_fisica = isset($id_pessoa_fisica->row['custom_field_value_id']) ? $id_pessoa_fisica->row['custom_field_value_id'] : null;
+              $id_pessoa_juridica = isset($id_pessoa_juridica->row['custom_field_value_id']) ? $id_pessoa_juridica->row['custom_field_value_id'] : null;
 
               $custom_fields['tipo_pessoa'] = $id_tipo_pessoa;
               $custom_fields['pessoa_fisica'] = $id_pessoa_fisica;
@@ -256,7 +244,7 @@ class NFeFunctions {
               $class->load->model('sale/custom_field');
               $class->model_sale_custom_field->addCustomField($get_fields['CPF']);
               $id_cpf = $class->db->query("SELECT custom_field_id FROM " . DB_PREFIX . "custom_field_description WHERE name = 'CPF'" );
-              $id_cpf = $id_cpf->row['custom_field_id'];
+              $id_cpf = isset($id_cpf->row['custom_field_id']) ? $id_cpf->row['custom_field_id'] : null;
 
               $custom_fields['cpf'] = $id_cpf;
 
@@ -267,7 +255,7 @@ class NFeFunctions {
               $class->load->model('sale/custom_field');
               $class->model_sale_custom_field->addCustomField($get_fields['CNPJ']);
               $id_cnpj = $class->db->query("SELECT custom_field_id FROM " . DB_PREFIX . "custom_field_description WHERE name = 'CNPJ'" );
-              $id_cnpj = $id_cnpj->row['custom_field_id'];
+              $id_cnpj = isset($id_cnpj->row['custom_field_id']) ? $id_cnpj->row['custom_field_id'] : null;
 
                $custom_fields['cnpj'] = $id_cnpj;
 
@@ -278,7 +266,7 @@ class NFeFunctions {
               $class->load->model('sale/custom_field');
               $class->model_sale_custom_field->addCustomField($get_fields['Complemento']);
               $id_complemento = $class->db->query("SELECT custom_field_id FROM " . DB_PREFIX . "custom_field_description WHERE name LIKE '%Complemento%'" );
-              $id_complemento = $id_complemento->row['custom_field_id'];
+              $id_complemento = isset($id_complemento->row['custom_field_id']) ? $id_complemento->row['custom_field_id'] : null;
 
                $custom_fields['complemento'] = $id_complemento;
 
@@ -289,7 +277,7 @@ class NFeFunctions {
               $class->load->model('sale/custom_field');
               $class->model_sale_custom_field->addCustomField($get_fields['Número']);
               $id_numero = $class->db->query("SELECT custom_field_id FROM " . DB_PREFIX . "custom_field_description WHERE name LIKE '%Número%'" );
-              $id_numero = $id_numero->row['custom_field_id'];
+              $id_numero = isset($id_numero->row['custom_field_id']) ? $id_numero->row['custom_field_id'] : null;
 
               $custom_fields['numero'] = $id_numero;
 
@@ -300,7 +288,7 @@ class NFeFunctions {
               $class->load->model('sale/custom_field');
               $class->model_sale_custom_field->addCustomField($get_fields['Inscrição Estadual']);
               $id_ie = $class->db->query("SELECT custom_field_id FROM " . DB_PREFIX . "custom_field_description WHERE name LIKE '%Inscrição Estadual%'" );
-              $id_ie = $id_ie->row['custom_field_id'];
+              $id_ie = isset($id_ie->row['custom_field_id']) ? $id_ie->row['custom_field_id'] : null;
 
               $custom_fields['insc_est'] = $id_ie;
 
@@ -311,7 +299,7 @@ class NFeFunctions {
               $class->load->model('sale/custom_field');
               $class->model_sale_custom_field->addCustomField($get_fields['Razão Social']);
               $id_razao_social = $class->db->query("SELECT custom_field_id FROM " . DB_PREFIX . "custom_field_description WHERE name LIKE '%Razão Social%'" );
-              $id_razao_social = $id_razao_social->row['custom_field_id'];
+              $id_razao_social = isset($id_razao_social->row['custom_field_id']) ? $id_razao_social->row['custom_field_id'] : null;
 
               $custom_fields['razao_social'] = $id_razao_social;
 
@@ -328,7 +316,7 @@ class NFeFunctions {
 
               foreach ($custom_fields as $key => $value){
 
-                  if ($saved_fields[0][$key] != $value){
+                  if ((isset($saved_fields[0][$key]) ? $saved_fields[0][$key] : null) != $value){
 
                       $this->save_fields( $class, $saved_fields, $custom_fields, false );
                       break;
@@ -351,12 +339,12 @@ class NFeFunctions {
 
         $saved_fields[] = $custom_fields;
         $saved_fields = serialize($saved_fields);
-        if ($insert) $class->db->query("INSERT INTO ".DB_PREFIX."setting (`store_id`, `code`, `key`, `value`) VALUES (0, 'webmaniabrnfe', 'webmaniabrnfe_saved_fields', '$saved_fields')");
+        if ($insert) $class->db->query("INSERT INTO ".DB_PREFIX."setting (`store_id`, `code`, `key`, `value`) VALUES (0, 'webmaniabrnfe', 'webmaniabrnfe_saved_fields', '" . $class->db->escape($saved_fields) . "')");
         else {
 
             $query = $class->db->query("SELECT setting_id FROM ".DB_PREFIX."setting WHERE `code` = 'webmaniabrnfe' AND `key` = 'webmaniabrnfe_saved_fields'");
-            $setting_id = $query->row['setting_id'];
-            $class->db->query("UPDATE ".DB_PREFIX."setting SET value = '$saved_fields' WHERE setting_id = '$setting_id'");
+            $setting_id = isset($query->row['setting_id']) ? $query->row['setting_id'] : 0;
+            $class->db->query("UPDATE ".DB_PREFIX."setting SET value = '" . $class->db->escape($saved_fields) . "' WHERE setting_id = '" . (int)$setting_id . "'");
 
         }
 
